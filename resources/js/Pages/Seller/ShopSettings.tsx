@@ -106,7 +106,7 @@ export default function ShopSettings({ settings }: Props) {
                                         </div>
 
                                         <div>
-                                            <label className="block text-xs font-bold text-neutral-800 dark:text-neutral-200 mb-1 flex items-center gap-1.5">
+                                            <label className="text-xs font-bold text-neutral-800 dark:text-neutral-200 mb-1 flex items-center gap-1.5">
                                                 <Building className="h-3.5 w-3.5 text-neutral-500" />
                                                 Informasi Rekening Bank Pribadi Penjual (Wajib Diisi)
                                             </label>

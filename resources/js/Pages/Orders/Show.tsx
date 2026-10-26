@@ -296,7 +296,7 @@ export default function OrderShow({ order }: Props) {
                                             isBuyer ? (
                                                 <form onSubmit={submitTransferReceipt} className="space-y-3 p-4 bg-neutral-50 dark:bg-neutral-800/50 border rounded-lg">
                                                     <p className="text-[11px] text-neutral-600 dark:text-neutral-400">
-                                                        Unggah foto bukti transfer bank Anda. Gambar akan otomatis dioptimasi HD (&lt;300KB WebP) untuk server.
+                                                        Unggah foto bukti transfer bank Anda. Gambar akan otomatis dioptimasi HD (di bawah 300KB WebP) untuk server.
                                                     </p>
                                                     <input
                                                         type="file"
@@ -613,7 +613,7 @@ export default function OrderShow({ order }: Props) {
                                 className="block w-full text-xs text-neutral-500 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-neutral-200 file:text-neutral-800 hover:file:bg-neutral-300 cursor-pointer"
                             />
                             <p className="text-[10px] text-neutral-500 mt-1">
-                                Foto akan dikompresi otomatis ke format WebP HD (&lt;300KB) untuk arsip sistem dan dasar transparansi kas pengurus.
+                                Foto akan dikompresi otomatis ke format WebP HD (di bawah 300KB) untuk arsip sistem dan dasar transparansi kas pengurus.
                             </p>
 
                             {deliveryPreview && (
