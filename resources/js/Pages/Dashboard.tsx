@@ -70,17 +70,23 @@ export default function Dashboard({
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 w-full md:w-auto">
+                    <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
                         <Link href={route('seller.products.create')}>
                             <Button size="sm" variant="default" className="text-xs gap-1.5 font-bold">
                                 <PlusCircle className="h-4 w-4" />
-                                Jual Produk Baru
+                                Jual Produk
                             </Button>
                         </Link>
                         <Link href={route('seller.products.index')}>
                             <Button size="sm" variant="outline" className="text-xs gap-1.5 font-bold">
                                 <Package className="h-4 w-4" />
                                 Kelola Produk ({myProductsCount})
+                            </Button>
+                        </Link>
+                        <Link href={route('seller.shop.edit')}>
+                            <Button size="sm" variant="outline" className="text-xs gap-1.5 font-bold border-emerald-600 text-emerald-700 hover:bg-emerald-50">
+                                <Store className="h-4 w-4" />
+                                Pengaturan Toko
                             </Button>
                         </Link>
                     </div>

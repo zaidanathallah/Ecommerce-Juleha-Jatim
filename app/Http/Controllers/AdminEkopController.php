@@ -57,6 +57,18 @@ class AdminEkopController extends Controller
             ->paginate(15)
             ->through(fn($p) => $this->pricingService->formatForManagement($p, $user));
 
+        // Daftar pesanan dengan Hutang Margin Penjual ke Kas (karena Penjual mematikan PG DOKU)
+        $unsettledDebts = \App\Models\Order::with(['seller', 'items'])
+            ->when($regionCode, function ($q) use ($regionCode) {
+                $q->whereHas('seller', fn($sq) => $sq->where('region_code', $regionCode));
+            })
+            ->where('margin_settlement_status', \App\Models\Order::MARGIN_UNSETTLED_DEBT)
+            ->latest()
+            ->get();
+
+        $totalUnsettledEkop = $unsettledDebts->sum('total_ekop_margin');
+        $totalUnsettledSuper = $unsettledDebts->sum('total_super_margin');
+
         return Inertia::render('AdminEkop/Dashboard', [
             'regionName' => $user->region_name ?? 'Wilayah DPD Juleha',
             'regionCode' => $regionCode ?? 'ALL',
@@ -65,9 +77,13 @@ class AdminEkopController extends Controller
                 'waitingSuperAdmin' => $approvedEkopCount,
                 'liveProducts' => $liveCount,
                 'totalMembers' => $memberCount,
+                'unsettledDebtOrdersCount' => $unsettledDebts->count(),
+                'totalUnsettledEkopDebt' => (float) $totalUnsettledEkop,
+                'totalUnsettledSuperDebt' => (float) $totalUnsettledSuper,
             ],
             'reviewQueue' => $reviewQueue,
             'allProducts' => $allProducts,
+            'unsettledDebts' => $unsettledDebts,
         ]);
     }
 
@@ -120,5 +136,23 @@ class AdminEkopController extends Controller
         $product->save();
 
         return back()->with('success', "Produk '{$product->title}' telah ditolak dengan alasan: {$validated['rejection_reason']}");
+    }
+
+    /**
+     * Konfirmasi Pelunasan Setoran Margin Kas dari Penjual (Hutang Penjual ke Kas)
+     */
+    public function settleDebt(Request $request, \App\Models\Order $order): RedirectResponse
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        if (!$user->canManageRegion($order->seller->region_code ?? null)) {
+            abort(403, 'Anda tidak memiliki hak akses menagih toko di luar daerah Anda.');
+        }
+
+        $order->margin_settlement_status = \App\Models\Order::MARGIN_PAID_TREASURY;
+        $order->save();
+
+        return back()->with('success', "Setoran Margin Toko untuk Pesanan {$order->order_number} sebesar Rp " . number_format($order->total_ekop_margin + $order->total_super_margin, 0, ',', '.') . " berhasil ditandai LUNAS disetor ke Kas DPD/DPW.");
     }
 }

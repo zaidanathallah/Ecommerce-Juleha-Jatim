@@ -139,4 +139,145 @@ class BiteshipService
             ];
         }
     }
+
+    /**
+     * Cancel an active order in Biteship
+     * POST /v1/orders/{id}/cancel
+     */
+    public function cancelOrder(string $orderId, string $reason = 'Simulasi Pembatalan Sandbox Biteship Juleha'): array
+    {
+        try {
+            $response = Http::timeout(15)
+                ->withHeaders([
+                    'Authorization' => "Bearer {$this->apiKey}",
+                    'Content-Type' => 'application/json',
+                ])
+                ->post("{$this->baseUrl}/v1/orders/{$orderId}/cancel", [
+                    'cancellation_reason_code' => 'others',
+                    'cancellation_reason' => $reason,
+                ]);
+
+            if ($response->successful()) {
+                return [
+                    'success' => true,
+                    'data' => $response->json(),
+                ];
+            }
+
+            return [
+                'success' => false,
+                'status' => $response->status(),
+                'message' => $response->json('error') ?? 'Gagal membatalkan order Biteship',
+                'raw' => $response->json(),
+            ];
+        } catch (Exception $e) {
+            Log::error('Biteship Cancel Order Exception', ['error' => $e->getMessage()]);
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Get single order details from Biteship
+     * GET /v1/orders/{id}
+     */
+    public function getOrder(string $orderId): array
+    {
+        try {
+            $response = Http::timeout(15)
+                ->withHeaders([
+                    'Authorization' => "Bearer {$this->apiKey}",
+                ])
+                ->get("{$this->baseUrl}/v1/orders/{$orderId}");
+
+            return [
+                'success' => $response->successful(),
+                'data' => $response->json(),
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Otomatisasi Simulasi Sandbox Biteship untuk Formulir Aktivasi Order API Biteship
+     * 1. Menembak POST /v1/orders untuk membuat dummy order 1 (Target Delivered)
+     * 2. Menembak POST /v1/orders untuk membuat dummy order 2 (Target Cancelled)
+     * 3. Memicu pembatalan untuk dummy order 2 via POST /v1/orders/{id}/cancel
+     * 4. Mengembalikan ID kedua pesanan untuk disalin ke formulir aktivasi.
+     */
+    public function simulateActivationOrders(): array
+    {
+        $origin = [
+            'name' => 'DPW Juleha Jawa Timur (Pusat)',
+            'phone' => '081234567890',
+            'address' => 'Jl. Gayung Kebonsari No. 50, Wonocolo, Kota Surabaya, Jawa Timur 60231',
+            'lat' => -7.3195,
+            'lng' => 112.7300,
+        ];
+
+        $destination = [
+            'name' => 'Customer Test Aktivasi Biteship',
+            'phone' => '089876543210',
+            'address' => 'Jl. Pemuda No. 10, Embong Kaliasin, Genteng, Kota Surabaya, Jawa Timur 60271',
+            'lat' => -7.2650,
+            'lng' => 112.7480,
+        ];
+
+        $items = [
+            [
+                'name' => 'Pisau Sembelih Halal Juleha Jatim (Sandbox Test)',
+                'description' => 'Peralatan Juleha Standard SNI',
+                'value' => 500000,
+                'quantity' => 1,
+                'weight' => 500,
+            ]
+        ];
+
+        // 1. Create Order 1 (Delivered Test Order)
+        $order1Result = $this->createOrder($origin, $destination, $items, 'jne', 'reg');
+        $deliveredOrder = $order1Result['data'] ?? [];
+        $deliveredOrderId = $deliveredOrder['id'] ?? null;
+        $deliveredWaybill = $deliveredOrder['courier']['waybill_id'] ?? null;
+        $deliveredTrackingLink = $deliveredOrder['courier']['link'] ?? null;
+
+        // 2. Create Order 2 (Cancelled Test Order)
+        $order2Result = $this->createOrder($origin, $destination, $items, 'jne', 'reg');
+        $cancelledOrder = $order2Result['data'] ?? [];
+        $cancelledOrderId = $cancelledOrder['id'] ?? null;
+        $cancelledWaybill = $cancelledOrder['courier']['waybill_id'] ?? null;
+
+        // 3. Trigger cancellation on Order 2
+        $cancelResult = [];
+        if ($cancelledOrderId) {
+            $cancelResult = $this->cancelOrder($cancelledOrderId, 'Simulasi Pembatalan Wajib untuk Formulir Aktivasi Biteship');
+        }
+
+        return [
+            'success' => (!empty($deliveredOrderId) && !empty($cancelledOrderId)),
+            'timestamp' => now()->toIso8601String(),
+            'delivered_test_order' => [
+                'order_id' => $deliveredOrderId,
+                'waybill_id' => $deliveredWaybill,
+                'tracking_link' => $deliveredTrackingLink,
+                'status' => 'confirmed',
+                'instruction' => 'ID Pesanan ini siap dimasukkan ke formulir aktivasi Biteship. Untuk status Delivered di Sandbox, silakan buka dashboard Biteship (Testing Mode) -> Orders -> Order ID ini -> klik toggle simulate Delivered.',
+                'raw' => $deliveredOrder,
+            ],
+            'cancelled_test_order' => [
+                'order_id' => $cancelledOrderId,
+                'waybill_id' => $cancelledWaybill,
+                'status' => 'cancelled',
+                'cancel_status_response' => $cancelResult['data']['status'] ?? 'cancelled',
+                'instruction' => 'ID Pesanan ini telah otomatis dibatalkan via API Biteship (/v1/orders/{id}/cancel) dengan status CANCELLED. Siap disalin langsung ke formulir aktivasi Biteship.',
+                'raw' => $cancelledOrder,
+            ],
+        ];
+    }
 }
+

@@ -66,7 +66,17 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/products', [SellerProductController::class, 'store'])->name('products.store');
         Route::get('/products/{product}/edit', [SellerProductController::class, 'edit'])->name('products.edit');
         Route::put('/products/{product}', [SellerProductController::class, 'update'])->name('products.update');
+
+        // Seller Shop Settings (Toggles: DOKU PG & Biteship API)
+        Route::get('/shop/settings', [\App\Http\Controllers\SellerShopController::class, 'edit'])->name('shop.edit');
+        Route::put('/shop/settings', [\App\Http\Controllers\SellerShopController::class, 'update'])->name('shop.update');
     });
+
+    // Dynamic Checkout Engine
+    Route::get('/checkout/{slug}', [\App\Http\Controllers\CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/checkout/calculate-shipping', [\App\Http\Controllers\CheckoutController::class, 'calculateShipping'])->name('checkout.calculate-shipping');
+    Route::post('/checkout/process', [\App\Http\Controllers\CheckoutController::class, 'process'])->name('checkout.process');
+    Route::get('/orders/{order_number}', [\App\Http\Controllers\CheckoutController::class, 'show'])->name('orders.show');
 
     // Profile Settings
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -79,6 +89,7 @@ Route::prefix('ekop')->name('ekop.')->middleware(['auth', 'role:admin_ekop,super
     Route::get('/dashboard', [AdminEkopController::class, 'dashboard'])->name('dashboard');
     Route::post('/products/{product}/approve', [AdminEkopController::class, 'approve'])->name('products.approve');
     Route::post('/products/{product}/reject', [AdminEkopController::class, 'reject'])->name('products.reject');
+    Route::post('/orders/{order}/settle-debt', [AdminEkopController::class, 'settleDebt'])->name('orders.settle-debt');
 });
 
 // 4. Super Admin (Provinsi Jatim)
@@ -88,4 +99,16 @@ Route::prefix('superadmin')->name('superadmin.')->middleware(['auth', 'role:supe
     Route::post('/products/{product}/reject', [SuperAdminController::class, 'reject'])->name('products.reject');
 });
 
+// 5. Biteship Sandbox Activation Simulator (UI & API)
+Route::get('/biteship/simulation', [\App\Http\Controllers\BiteshipSimulationController::class, 'show'])
+    ->middleware(['auth', 'role:super_admin,admin_ekop'])
+    ->name('biteship.simulation');
+Route::match(['get', 'post'], '/api/biteship-simulate', [\App\Http\Controllers\BiteshipSimulationController::class, 'apiSimulate'])
+    ->name('biteship.api-simulate');
+
+// 6. DOKU Webhook Notification Endpoint (CSRF-exempted)
+Route::post('/webhook/doku', [\App\Http\Controllers\DokuWebhookController::class, 'handle'])
+    ->name('webhook.doku');
+
 require __DIR__.'/auth.php';
+

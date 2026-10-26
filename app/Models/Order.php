@@ -23,6 +23,16 @@ class Order extends Model
     public const SHIPPING_DELIVERED = 'delivered';
     public const SHIPPING_CANCELLED = 'cancelled';
 
+    public const PAYMENT_METHOD_DOKU = 'doku_snap';
+    public const PAYMENT_METHOD_MANUAL = 'manual_transfer';
+
+    public const SHIPPING_METHOD_BITESHIP = 'biteship';
+    public const SHIPPING_METHOD_MANUAL = 'manual_courier';
+
+    public const MARGIN_SETTLED_PG = 'settled_via_pg';
+    public const MARGIN_UNSETTLED_DEBT = 'unsettled_debt'; // Hutang Penjual ke Kas Organisasi
+    public const MARGIN_PAID_TREASURY = 'paid_to_treasury'; // Sudah disetor ke Kas Organisasi
+
     protected $fillable = [
         'order_number',
         'buyer_id',
@@ -36,6 +46,7 @@ class Order extends Model
         'grand_total',
         'shipping_courier',
         'shipping_service',
+        'shipping_method_type',
         'shipping_address',
         'biteship_order_id',
         'biteship_waybill_id',
@@ -45,7 +56,11 @@ class Order extends Model
         'doku_qris_content',
         'doku_va_number',
         'doku_channel',
+        'payment_method_type',
         'payment_status',
+        'margin_settlement_status',
+        'seller_bank_info_snapshot',
+        'manual_payment_proof',
         'shipping_status',
         'paid_at',
         'delivered_at',

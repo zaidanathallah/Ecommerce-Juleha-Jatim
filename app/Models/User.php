@@ -30,6 +30,9 @@ class User extends Authenticatable
         'ktp_url',
         'is_verified',
         'avatar_url',
+        'is_pg_active',
+        'is_shipping_api_active',
+        'seller_bank_details',
     ];
 
     protected $hidden = [
@@ -43,6 +46,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_verified' => 'boolean',
+            'is_pg_active' => 'boolean',
+            'is_shipping_api_active' => 'boolean',
             'lat' => 'float',
             'lng' => 'float',
         ];

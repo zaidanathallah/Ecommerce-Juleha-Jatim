@@ -41,6 +41,9 @@ class PricingService
                 'is_verified' => (bool) ($product->user->is_verified ?? true),
                 'lat' => $product->user->lat ?? null,
                 'lng' => $product->user->lng ?? null,
+                'is_pg_active' => (bool) ($product->user->is_pg_active ?? true),
+                'is_shipping_api_active' => (bool) ($product->user->is_shipping_api_active ?? true),
+                'seller_bank_details' => $product->user->seller_bank_details ?? null,
             ],
             'category' => $product->category ? [
                 'id' => $product->category->id,

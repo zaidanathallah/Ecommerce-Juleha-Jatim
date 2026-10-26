@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, router } from '@inertiajs/react';
 import MarketplaceLayout from '@/Layouts/MarketplaceLayout';
 import { ManagementProduct } from '@/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/Components/ui/card';
@@ -25,12 +25,16 @@ interface Props {
         waitingSuperAdmin: number;
         liveProducts: number;
         totalMembers: number;
+        unsettledDebtOrdersCount?: number;
+        totalUnsettledEkopDebt?: number;
+        totalUnsettledSuperDebt?: number;
     };
     reviewQueue: ManagementProduct[];
     allProducts: {
         data: ManagementProduct[];
         links: any[];
     };
+    unsettledDebts?: any[];
 }
 
 export default function AdminEkopDashboard({
@@ -39,6 +43,7 @@ export default function AdminEkopDashboard({
     stats,
     reviewQueue,
     allProducts,
+    unsettledDebts = [],
 }: Props) {
     const [selectedProduct, setSelectedProduct] = useState<ManagementProduct | null>(null);
     const [actionType, setActionType] = useState<'approve' | 'reject' | null>(null);
@@ -112,29 +117,37 @@ export default function AdminEkopDashboard({
                         </p>
                     </div>
 
-                    <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded border border-neutral-300 dark:border-neutral-700 text-right">
-                        <span className="text-[10px] text-neutral-500 uppercase font-bold block">
-                            Anggota Terdaftar Wilayah
-                        </span>
-                        <span className="text-xl font-mono font-black text-emerald-700">
-                            {stats.totalMembers} Anggota
-                        </span>
+                    <div className="flex items-center gap-2">
+                        <a 
+                            href="/biteship/simulation" 
+                            className="text-xs font-bold px-3 py-2 bg-neutral-100 dark:bg-neutral-800 rounded border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-200 inline-flex items-center gap-1.5 text-neutral-800 dark:text-neutral-200"
+                        >
+                            <span>📦</span> Simulator Biteship
+                        </a>
+                        <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded border border-neutral-300 dark:border-neutral-700 text-right">
+                            <span className="text-[10px] text-neutral-500 uppercase font-bold block">
+                                Anggota Wilayah
+                            </span>
+                            <span className="text-xl font-mono font-black text-emerald-700">
+                                {stats.totalMembers}
+                            </span>
+                        </div>
                     </div>
                 </div>
 
                 {/* KPI Metrics */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                     <Card className="border-l-4 border-l-amber-500">
                         <CardContent className="p-4 flex items-center justify-between">
                             <div>
                                 <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider block">
-                                    Butuh Persetujuan Ekop
+                                    Butuh ACC Ekop
                                 </span>
                                 <span className="text-2xl font-black text-amber-700">
                                     {stats.pendingReview} Produk
                                 </span>
                             </div>
-                            <Clock className="h-8 w-8 text-amber-500" />
+                            <Clock className="h-7 w-7 text-amber-500" />
                         </CardContent>
                     </Card>
 
@@ -142,13 +155,13 @@ export default function AdminEkopDashboard({
                         <CardContent className="p-4 flex items-center justify-between">
                             <div>
                                 <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider block">
-                                    Menunggu Super Admin Jatim
+                                    Menunggu SuperAdmin
                                 </span>
                                 <span className="text-2xl font-black text-sky-700">
                                     {stats.waitingSuperAdmin} Produk
                                 </span>
                             </div>
-                            <Shield className="h-8 w-8 text-sky-500" />
+                            <Shield className="h-7 w-7 text-sky-500" />
                         </CardContent>
                     </Card>
 
@@ -156,13 +169,30 @@ export default function AdminEkopDashboard({
                         <CardContent className="p-4 flex items-center justify-between">
                             <div>
                                 <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider block">
-                                    Live di Marketplace
+                                    Live Marketplace
                                 </span>
                                 <span className="text-2xl font-black text-emerald-700">
                                     {stats.liveProducts} Produk
                                 </span>
                             </div>
-                            <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+                            <CheckCircle2 className="h-7 w-7 text-emerald-500" />
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-l-4 border-l-rose-500">
+                        <CardContent className="p-4 flex items-center justify-between">
+                            <div>
+                                <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider block">
+                                    Hutang Margin Penjual
+                                </span>
+                                <span className="text-xl font-black text-rose-700">
+                                    {stats.unsettledDebtOrdersCount ?? 0} Pesanan
+                                </span>
+                                <span className="text-[10px] text-neutral-500 font-mono block mt-0.5">
+                                    Kas DPD: {formatRupiah(stats.totalUnsettledEkopDebt ?? 0)}
+                                </span>
+                            </div>
+                            <AlertCircle className="h-7 w-7 text-rose-500" />
                         </CardContent>
                     </Card>
                 </div>
@@ -387,6 +417,95 @@ export default function AdminEkopDashboard({
                         </div>
                     </div>
                 )}
+
+                {/* Penagihan Margin: Hutang Penjual ke Kas (Akibat Toko Non-PG DOKU) */}
+                <Card className="border-2 border-rose-300 dark:border-rose-900">
+                    <CardHeader className="bg-rose-50/50 dark:bg-rose-950/20">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <AlertCircle className="h-5 w-5 text-rose-700" />
+                                <div>
+                                    <CardTitle className="text-rose-950 dark:text-rose-200">
+                                        Penagihan Margin Toko: Hutang Penjual ke Kas ({unsettledDebts?.length ?? 0} Pesanan)
+                                    </CardTitle>
+                                    <CardDescription className="text-xs text-rose-700 dark:text-rose-400">
+                                        Pesanan berikut dibayar oleh pembeli via transfer langsung ke rekening pribadi penjual (Toko Non-PG). 
+                                        Penjual wajib menyetorkan margin DPD ({regionName}) dan DPW Jatim ke kas organisasi.
+                                    </CardDescription>
+                                </div>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        {!unsettledDebts || unsettledDebts.length === 0 ? (
+                            <div className="text-center py-6 text-xs text-neutral-500">
+                                Tidak ada hutang margin yang tertunda. Semua penjual tertib atau menggunakan sistem otomatis Payment Gateway DOKU.
+                            </div>
+                        ) : (
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Pesanan</TableHead>
+                                        <TableHead>Penjual / Toko</TableHead>
+                                        <TableHead>Rekening Penjual</TableHead>
+                                        <TableHead>Margin DPD ({regionCode})</TableHead>
+                                        <TableHead>Margin DPW Jatim</TableHead>
+                                        <TableHead>Total Tagihan Margin</TableHead>
+                                        <TableHead className="text-right">Tindakan</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {unsettledDebts.map((order: any) => (
+                                        <TableRow key={order.id}>
+                                            <TableCell>
+                                                <span className="font-mono font-bold text-xs text-neutral-900 dark:text-neutral-100 block">
+                                                    {order.order_number}
+                                                </span>
+                                                <span className="text-[10px] text-neutral-500 font-mono">
+                                                    {new Date(order.created_at).toLocaleDateString('id-ID')}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="text-xs font-bold text-neutral-900 dark:text-neutral-100">
+                                                    {order.seller?.name || 'Penjual'}
+                                                </div>
+                                                <span className="text-[10px] text-neutral-500 font-mono block">
+                                                    HP: {order.seller?.phone || '-'}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell className="text-xs font-mono">
+                                                {order.seller?.seller_bank_details || '-'}
+                                            </TableCell>
+                                            <TableCell className="font-mono text-xs font-bold text-amber-700">
+                                                {formatRupiah(order.total_ekop_margin)}
+                                            </TableCell>
+                                            <TableCell className="font-mono text-xs font-bold text-sky-700">
+                                                {formatRupiah(order.total_super_margin)}
+                                            </TableCell>
+                                            <TableCell className="font-mono font-black text-xs text-rose-700">
+                                                {formatRupiah(order.total_ekop_margin + order.total_super_margin)}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <Button
+                                                    size="sm"
+                                                    variant="default"
+                                                    onClick={() => {
+                                                        if (confirm(`Konfirmasi pelunasan setoran kas untuk ${order.order_number}?`)) {
+                                                            router.post(route('ekop.orders.settle-debt', order.id));
+                                                        }
+                                                    }}
+                                                    className="text-xs bg-emerald-700 hover:bg-emerald-800"
+                                                >
+                                                    Tandai Lunas
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        )}
+                    </CardContent>
+                </Card>
 
                 {/* All Regional Products Table */}
                 <Card>
