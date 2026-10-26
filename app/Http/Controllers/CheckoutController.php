@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\User;
 use App\Services\BiteshipService;
 use App\Services\DokuService;
+use App\Services\ImageUploadService;
 use App\Services\PricingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -23,7 +24,8 @@ class CheckoutController extends Controller
     public function __construct(
         protected PricingService $pricingService,
         protected BiteshipService $biteshipService,
-        protected DokuService $dokuService
+        protected DokuService $dokuService,
+        protected ImageUploadService $imageUploadService
     ) {}
 
     /**
@@ -269,5 +271,93 @@ class CheckoutController extends Controller
         return Inertia::render('Orders/Show', [
             'order' => $order,
         ]);
+    }
+
+    /**
+     * Upload Bukti Transfer Rekening Pribadi Penjual (Manual Payment)
+     */
+    public function uploadTransferReceipt(Request $request, string $orderNumber): RedirectResponse
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        $order = Order::where('order_number', $orderNumber)->firstOrFail();
+
+        if ($order->buyer_id !== $user->id) {
+            abort(403, 'Hanya pembeli yang berhak mengunggah bukti transfer.');
+        }
+
+        $request->validate([
+            'receipt' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+        ]);
+
+        $path = $this->imageUploadService->uploadAndCompress(
+            $request->file('receipt'),
+            'transfer_receipts'
+        );
+
+        $order->update([
+            'transfer_receipt_path' => $path,
+            'manual_payment_proof' => $path,
+            'payment_status' => Order::PAYMENT_AWAITING_CONFIRMATION,
+        ]);
+
+        return redirect()->route('orders.show', $order->order_number)
+            ->with('success', 'Bukti transfer berhasil diunggah. Status pesanan kini Menunggu Konfirmasi Penjual.');
+    }
+
+    /**
+     * Konfirmasi Terima Barang (Delivery Proof & Received Quantity)
+     */
+    public function confirmDelivery(Request $request, string $orderNumber): RedirectResponse
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        $order = Order::where('order_number', $orderNumber)->firstOrFail();
+
+        if ($order->buyer_id !== $user->id) {
+            abort(403, 'Hanya pembeli yang berhak mengonfirmasi penerimaan barang.');
+        }
+
+        $request->validate([
+            'received_quantity' => ['required', 'integer', 'min:1'],
+            'delivery_proof' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+        ]);
+
+        $path = $this->imageUploadService->uploadAndCompress(
+            $request->file('delivery_proof'),
+            'delivery_receipts'
+        );
+
+        $order->update([
+            'delivery_receipt_path' => $path,
+            'received_quantity' => (int) $request->input('received_quantity'),
+            'shipping_status' => Order::SHIPPING_DELIVERED,
+            'delivered_at' => now(),
+        ]);
+
+        return redirect()->route('orders.show', $order->order_number)
+            ->with('success', 'Konfirmasi penerimaan barang berhasil disimpan.');
+    }
+
+    /**
+     * Penjual mengonfirmasi pembayaran transfer manual lunas
+     */
+    public function confirmPaymentReceived(Request $request, string $orderNumber): RedirectResponse
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        $order = Order::where('order_number', $orderNumber)->firstOrFail();
+
+        if ($order->seller_id !== $user->id && !$user->isSuperAdmin() && !$user->isAdminEkop()) {
+            abort(403, 'Hanya penjual atau pengurus yang berhak mengonfirmasi pelunasan.');
+        }
+
+        $order->update([
+            'payment_status' => Order::PAYMENT_PAID,
+            'paid_at' => now(),
+        ]);
+
+        return redirect()->route('orders.show', $order->order_number)
+            ->with('success', 'Status pesanan berhasil diubah menjadi Lunas.');
     }
 }

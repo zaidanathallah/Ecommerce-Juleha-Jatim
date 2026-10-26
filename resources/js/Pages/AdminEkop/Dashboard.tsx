@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, useForm, router, Link } from '@inertiajs/react';
 import MarketplaceLayout from '@/Layouts/MarketplaceLayout';
 import { ManagementProduct } from '@/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/Components/ui/card';
@@ -447,10 +447,11 @@ export default function AdminEkopDashboard({
                                     <TableRow>
                                         <TableHead>Pesanan</TableHead>
                                         <TableHead>Penjual / Toko</TableHead>
-                                        <TableHead>Rekening Penjual</TableHead>
+                                        <TableHead>Bukti Transfer</TableHead>
+                                        <TableHead>Bukti Terima & Qty</TableHead>
                                         <TableHead>Margin DPD ({regionCode})</TableHead>
                                         <TableHead>Margin DPW Jatim</TableHead>
-                                        <TableHead>Total Tagihan Margin</TableHead>
+                                        <TableHead>Total Kas</TableHead>
                                         <TableHead className="text-right">Tindakan</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -458,9 +459,12 @@ export default function AdminEkopDashboard({
                                     {unsettledDebts.map((order: any) => (
                                         <TableRow key={order.id}>
                                             <TableCell>
-                                                <span className="font-mono font-bold text-xs text-neutral-900 dark:text-neutral-100 block">
+                                                <Link
+                                                    href={route('orders.show', order.order_number)}
+                                                    className="font-mono font-bold text-xs text-emerald-700 hover:underline block"
+                                                >
                                                     {order.order_number}
-                                                </span>
+                                                </Link>
                                                 <span className="text-[10px] text-neutral-500 font-mono">
                                                     {new Date(order.created_at).toLocaleDateString('id-ID')}
                                                 </span>
@@ -473,8 +477,55 @@ export default function AdminEkopDashboard({
                                                     HP: {order.seller?.phone || '-'}
                                                 </span>
                                             </TableCell>
-                                            <TableCell className="text-xs font-mono">
-                                                {order.seller?.seller_bank_details || '-'}
+                                            <TableCell>
+                                                {order.transfer_receipt_path ? (
+                                                    <a
+                                                        href={order.transfer_receipt_path}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="block"
+                                                    >
+                                                        <div className="w-14 h-12 border border-neutral-300 dark:border-neutral-700 rounded overflow-hidden bg-neutral-100">
+                                                            <img
+                                                                src={order.transfer_receipt_path}
+                                                                alt="Bukti Transfer"
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        </div>
+                                                        <span className="text-[9px] text-emerald-700 font-bold block mt-0.5">
+                                                            Lihat HD
+                                                        </span>
+                                                    </a>
+                                                ) : (
+                                                    <Badge variant="outline" className="text-[9px]">
+                                                        Belum Upload
+                                                    </Badge>
+                                                )}
+                                            </TableCell>
+                                            <TableCell>
+                                                {order.delivery_receipt_path ? (
+                                                    <a
+                                                        href={order.delivery_receipt_path}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="block"
+                                                    >
+                                                        <div className="w-14 h-12 border border-neutral-300 dark:border-neutral-700 rounded overflow-hidden bg-neutral-100">
+                                                            <img
+                                                                src={order.delivery_receipt_path}
+                                                                alt="Bukti Terima"
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        </div>
+                                                        <span className="text-[10px] font-bold text-neutral-900 dark:text-neutral-100 block mt-0.5">
+                                                            Qty: {order.received_quantity ?? 1} Unit
+                                                        </span>
+                                                    </a>
+                                                ) : (
+                                                    <Badge variant="warning" className="text-[9px]">
+                                                        Belum Diterima
+                                                    </Badge>
+                                                )}
                                             </TableCell>
                                             <TableCell className="font-mono text-xs font-bold text-amber-700">
                                                 {formatRupiah(order.total_ekop_margin)}
@@ -485,19 +536,25 @@ export default function AdminEkopDashboard({
                                             <TableCell className="font-mono font-black text-xs text-rose-700">
                                                 {formatRupiah(order.total_ekop_margin + order.total_super_margin)}
                                             </TableCell>
-                                            <TableCell className="text-right">
+                                            <TableCell className="text-right space-y-1">
                                                 <Button
                                                     size="sm"
                                                     variant="default"
                                                     onClick={() => {
-                                                        if (confirm(`Konfirmasi pelunasan setoran kas untuk ${order.order_number}?`)) {
+                                                        if (confirm(`Konfirmasi pelunasan setoran kas untuk ${order.order_number}? Pastikan bukti terima barang telah diperiksa.`)) {
                                                             router.post(route('ekop.orders.settle-debt', order.id));
                                                         }
                                                     }}
-                                                    className="text-xs bg-emerald-700 hover:bg-emerald-800"
+                                                    className="text-xs bg-emerald-700 hover:bg-emerald-800 w-full"
                                                 >
                                                     Tandai Lunas
                                                 </Button>
+                                                <Link
+                                                    href={route('orders.show', order.order_number)}
+                                                    className="block text-[10px] text-neutral-500 hover:text-emerald-700 font-bold"
+                                                >
+                                                    Detail &rarr;
+                                                </Link>
                                             </TableCell>
                                         </TableRow>
                                     ))}

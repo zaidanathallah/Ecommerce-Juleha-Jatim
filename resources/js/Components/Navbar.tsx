@@ -3,6 +3,7 @@ import { Link, router, usePage } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
+import TrackingWidget from '@/Components/TrackingWidget';
 import {
     Search,
     ShoppingBag,
@@ -53,15 +54,14 @@ export default function Navbar() {
 
     return (
         <header className="sticky top-0 z-50 w-full border-b border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-950">
-            {/* Top Bar Banner: Verified Notice */}
-            <div className="bg-emerald-800 text-white text-[11px] font-semibold py-1 px-4 flex justify-between items-center tracking-tight">
+            {/* Top Bar Banner: Verified Notice & Global Biteship Tracking */}
+            <div className="bg-emerald-900 text-white text-[11px] font-semibold py-1.5 px-4 flex flex-wrap justify-between items-center gap-2 tracking-tight">
                 <div className="flex items-center gap-2">
                     <span className="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
                     <span>Marketplace Resmi DPW Juru Sembelih Halal (Juleha) Jawa Timur</span>
                 </div>
-                <div className="hidden sm:flex items-center gap-4 text-emerald-100">
-                    <span>Sistem Terintegrasi members.julehajatim.com</span>
-                    <span>100% Produk Halal & Syar'i</span>
+                <div className="flex items-center gap-3">
+                    <TrackingWidget compact className="w-56 sm:w-64" />
                 </div>
             </div>
 

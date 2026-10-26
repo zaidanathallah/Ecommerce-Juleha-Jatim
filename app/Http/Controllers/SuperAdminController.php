@@ -50,6 +50,12 @@ class SuperAdminController extends Controller
         $totalKasProvinsi = Order::where('payment_status', Order::PAYMENT_PAID)->sum('total_super_margin');
         $totalKasDaerah = Order::where('payment_status', Order::PAYMENT_PAID)->sum('total_ekop_margin');
 
+        // Recent Orders with transaction & delivery proofs
+        $recentOrders = Order::with(['buyer', 'seller', 'items'])
+            ->latest()
+            ->take(15)
+            ->get();
+
         return Inertia::render('SuperAdmin/Dashboard', [
             'stats' => [
                 'waitingSuperReview' => $waitingSuperReviewCount,
@@ -62,6 +68,7 @@ class SuperAdminController extends Controller
             ],
             'approvalQueue' => $approvalQueue,
             'allProducts' => $allProducts,
+            'recentOrders' => $recentOrders,
         ]);
     }
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\ImageUploadService;
 use App\Services\MemberValidationService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
@@ -77,8 +78,7 @@ class RegisteredUserController extends Controller
         // 3. Handle upload KTP bila ada
         $ktpUrl = null;
         if ($request->hasFile('ktp')) {
-            $path = $request->file('ktp')->store('ktp_uploads', 'public');
-            $ktpUrl = '/storage/' . $path;
+            $ktpUrl = app(ImageUploadService::class)->uploadAndCompress($request->file('ktp'), 'ktp_uploads');
         }
 
         // 4. Create user

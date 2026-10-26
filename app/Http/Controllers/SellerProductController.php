@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\ImageUploadService;
 use App\Services\PricingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,7 +16,8 @@ use Inertia\Response;
 class SellerProductController extends Controller
 {
     public function __construct(
-        protected PricingService $pricingService
+        protected PricingService $pricingService,
+        protected ImageUploadService $imageService
     ) {}
 
     /**
@@ -70,8 +72,7 @@ class SellerProductController extends Controller
 
         $imageUrl = null;
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('product_images', 'public');
-            $imageUrl = '/storage/' . $path;
+            $imageUrl = $this->imageService->uploadAndCompress($request->file('image'), 'product_images');
         }
 
         $baseSlug = Str::slug($validated['title']);
@@ -148,8 +149,7 @@ class SellerProductController extends Controller
         $hasNewImage = $request->hasFile('image');
 
         if ($hasNewImage) {
-            $path = $request->file('image')->store('product_images', 'public');
-            $product->image_url = '/storage/' . $path;
+            $product->image_url = $this->imageService->uploadAndCompress($request->file('image'), 'product_images');
         }
 
         $product->category_id = $validated['category_id'];

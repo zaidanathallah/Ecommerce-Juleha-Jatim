@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from '@inertiajs/react';
 import { ShieldCheck, Truck, CreditCard, Award } from 'lucide-react';
+import TrackingWidget from '@/Components/TrackingWidget';
 
 export default function Footer() {
     return (
@@ -36,6 +37,13 @@ export default function Footer() {
                             <p className="text-[11px] text-neutral-400">Cek ongkir real-time & pickup kurir</p>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            {/* Tracking Widget Banner */}
+            <div className="border-b border-neutral-800 py-6 bg-neutral-950">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <TrackingWidget />
                 </div>
             </div>
 

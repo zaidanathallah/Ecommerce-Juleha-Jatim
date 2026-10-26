@@ -77,6 +77,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/checkout/calculate-shipping', [\App\Http\Controllers\CheckoutController::class, 'calculateShipping'])->name('checkout.calculate-shipping');
     Route::post('/checkout/process', [\App\Http\Controllers\CheckoutController::class, 'process'])->name('checkout.process');
     Route::get('/orders/{order_number}', [\App\Http\Controllers\CheckoutController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{order_number}/upload-transfer-receipt', [\App\Http\Controllers\CheckoutController::class, 'uploadTransferReceipt'])->name('orders.upload-transfer-receipt');
+    Route::post('/orders/{order_number}/confirm-delivery', [\App\Http\Controllers\CheckoutController::class, 'confirmDelivery'])->name('orders.confirm-delivery');
+    Route::post('/orders/{order_number}/confirm-payment', [\App\Http\Controllers\CheckoutController::class, 'confirmPaymentReceived'])->name('orders.confirm-payment');
 
     // Profile Settings
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

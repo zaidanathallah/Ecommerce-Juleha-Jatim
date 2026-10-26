@@ -12,6 +12,7 @@ class Order extends Model
     use HasFactory;
 
     public const PAYMENT_PENDING = 'pending';
+    public const PAYMENT_AWAITING_CONFIRMATION = 'awaiting_seller_confirmation';
     public const PAYMENT_PAID = 'paid';
     public const PAYMENT_EXPIRED = 'expired';
     public const PAYMENT_FAILED = 'failed';
@@ -61,6 +62,9 @@ class Order extends Model
         'margin_settlement_status',
         'seller_bank_info_snapshot',
         'manual_payment_proof',
+        'transfer_receipt_path',
+        'delivery_receipt_path',
+        'received_quantity',
         'shipping_status',
         'paid_at',
         'delivered_at',
@@ -77,6 +81,7 @@ class Order extends Model
             'shipping_cost' => 'decimal:2',
             'insurance_cost' => 'decimal:2',
             'grand_total' => 'decimal:2',
+            'received_quantity' => 'integer',
             'paid_at' => 'datetime',
             'delivered_at' => 'datetime',
         ];

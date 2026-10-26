@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, Link } from '@inertiajs/react';
 import MarketplaceLayout from '@/Layouts/MarketplaceLayout';
 import { ManagementProduct } from '@/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/Components/ui/card';
@@ -15,6 +15,8 @@ import {
     Users,
     Layers,
     ArrowUpRight,
+    PackageCheck,
+    CreditCard,
 } from 'lucide-react';
 
 interface Props {
@@ -32,12 +34,14 @@ interface Props {
         data: ManagementProduct[];
         links: any[];
     };
+    recentOrders?: any[];
 }
 
 export default function SuperAdminDashboard({
     stats,
     approvalQueue,
     allProducts,
+    recentOrders = [],
 }: Props) {
     const [selectedProduct, setSelectedProduct] = useState<ManagementProduct | null>(null);
     const [actionType, setActionType] = useState<'publish' | 'reject' | null>(null);
@@ -476,6 +480,146 @@ export default function SuperAdminDashboard({
                                 ))}
                             </TableBody>
                         </Table>
+                    </CardContent>
+                </Card>
+
+                {/* Audit Transaksi & Bukti Pesanan (Provinsi) */}
+                <Card>
+                    <CardHeader>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <CardTitle>Audit Transaksi & Bukti Pembayaran / Penerimaan</CardTitle>
+                                <CardDescription>
+                                    Transparansi bukti transfer bank manual dan bukti fisik terima barang dari seluruh kabupaten/kota se-Jawa Timur
+                                </CardDescription>
+                            </div>
+                            <Badge variant="outline" className="text-xs">
+                                {recentOrders.length} Pesanan Terakhir
+                            </Badge>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        {recentOrders.length === 0 ? (
+                            <div className="text-center py-6 text-xs text-neutral-500">
+                                Belum ada pesanan yang tercatat dalam sistem.
+                            </div>
+                        ) : (
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>No. Pesanan</TableHead>
+                                        <TableHead>Penjual / Toko</TableHead>
+                                        <TableHead>Pembeli</TableHead>
+                                        <TableHead>Metode Bayar</TableHead>
+                                        <TableHead>Bukti Transfer</TableHead>
+                                        <TableHead>Bukti Terima & Qty</TableHead>
+                                        <TableHead>Total Nilai</TableHead>
+                                        <TableHead>Kas Jatim</TableHead>
+                                        <TableHead className="text-right">Aksi</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {recentOrders.map((order: any) => (
+                                        <TableRow key={order.id}>
+                                            <TableCell>
+                                                <Link
+                                                    href={route('orders.show', order.order_number)}
+                                                    className="font-mono font-bold text-xs text-emerald-700 hover:underline block"
+                                                >
+                                                    {order.order_number}
+                                                </Link>
+                                                <span className="text-[10px] text-neutral-500 font-mono">
+                                                    {new Date(order.created_at).toLocaleDateString('id-ID')}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="text-xs font-bold text-neutral-900 dark:text-neutral-100">
+                                                    {order.seller?.name || 'Penjual'}
+                                                </div>
+                                                <span className="text-[10px] text-neutral-500">
+                                                    {order.seller?.region_name || '-'}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell className="text-xs">
+                                                {order.buyer?.name || 'Pembeli'}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge
+                                                    variant={order.payment_method_type === 'manual_transfer' ? 'warning' : 'success'}
+                                                    className="text-[10px]"
+                                                >
+                                                    {order.payment_method_type === 'manual_transfer' ? 'Rek. Pribadi' : 'DOKU SNAP'}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                {order.transfer_receipt_path ? (
+                                                    <a
+                                                        href={order.transfer_receipt_path}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="block"
+                                                    >
+                                                        <div className="w-12 h-10 border border-neutral-300 dark:border-neutral-700 rounded overflow-hidden bg-neutral-100">
+                                                            <img
+                                                                src={order.transfer_receipt_path}
+                                                                alt="Transfer"
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        </div>
+                                                        <span className="text-[9px] text-emerald-700 font-bold block mt-0.5">
+                                                            Lihat HD
+                                                        </span>
+                                                    </a>
+                                                ) : (
+                                                    <span className="text-[10px] text-neutral-400">
+                                                        {order.payment_method_type === 'manual_transfer' ? 'Belum Ada' : 'Otomatis PG'}
+                                                    </span>
+                                                )}
+                                            </TableCell>
+                                            <TableCell>
+                                                {order.delivery_receipt_path ? (
+                                                    <a
+                                                        href={order.delivery_receipt_path}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="block"
+                                                    >
+                                                        <div className="w-12 h-10 border border-neutral-300 dark:border-neutral-700 rounded overflow-hidden bg-neutral-100">
+                                                            <img
+                                                                src={order.delivery_receipt_path}
+                                                                alt="Terima"
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        </div>
+                                                        <span className="text-[10px] font-bold text-neutral-800 dark:text-neutral-200 block mt-0.5">
+                                                            {order.received_quantity ?? 1} Unit
+                                                        </span>
+                                                    </a>
+                                                ) : (
+                                                    <Badge variant="outline" className="text-[9px]">
+                                                        Belum Diterima
+                                                    </Badge>
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="font-mono text-xs font-bold">
+                                                {formatRupiah(order.grand_total)}
+                                            </TableCell>
+                                            <TableCell className="font-mono text-xs font-bold text-red-700">
+                                                {formatRupiah(order.total_super_margin)}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <Link
+                                                    href={route('orders.show', order.order_number)}
+                                                    className="inline-block text-xs font-bold text-emerald-700 hover:text-emerald-800 underline"
+                                                >
+                                                    Detail &rarr;
+                                                </Link>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        )}
                     </CardContent>
                 </Card>
             </div>
