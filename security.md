@@ -4,8 +4,8 @@
 Data rahasia berikut **DILARANG KERAS** di-push ke GitHub. Semuanya wajib disimpan di file `.env` di server Jagoan Hosting:
 ```env
 DOKU_CLIENT_ID=BRN-0216-xxxxxx
-DOKU_SECRET_KEY=SK-ZyRDS7MBHysv2Tav2ID5
-DOKU_API_KEY=doku_key_28b4722334024110b1479486feabbed5
+DOKU_SECRET_KEY=SK-ZyRDS7xxxx
+DOKU_API_KEY=doku_key_28b47224xxxxx
 DOKU_MERCHANT_PUBLIC_KEY="-----BEGIN PUBLIC KEY----- MIIBIj... -----END PUBLIC KEY-----"
 ```
 
