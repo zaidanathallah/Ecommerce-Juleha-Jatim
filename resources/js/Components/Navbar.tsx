@@ -219,7 +219,7 @@ export default function Navbar() {
 
                         <Link
                             href={route('quran.index')}
-                            className="block py-1.5 text-xs font-bold text-emerald-700 flex items-center gap-1.5"
+                            className="flex items-center gap-1.5 py-1.5 text-xs font-bold text-emerald-700"
                         >
                             <BookOpen className="h-3.5 w-3.5" />
                             <span>Al-Qur'an Digital 30 Juz</span>
