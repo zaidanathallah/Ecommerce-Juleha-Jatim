@@ -21,6 +21,7 @@ class RegistrationTest extends TestCase
         $response = $this->post('/register', [
             'account_type' => 'seller',
             'juleha_id' => 'SDA220003',
+            'shop_name' => 'Toko Hanief Sidoarjo',
             'name' => 'Hanief Adzhar',
             'email' => 'hanief.adzhar@example.com',
             'phone' => '081234567890',
@@ -52,7 +53,26 @@ class RegistrationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        // Point #3: Pembeli langsung diarahkan ke halaman produk
+        $response->assertRedirect(route('home', absolute: false));
+    }
+
+    public function test_general_public_cannot_register_as_seller_without_juleha_id(): void
+    {
+        User::where('email', 'fake.seller@example.com')->delete();
+
+        $response = $this->post('/register', [
+            'account_type' => 'seller',
+            'juleha_id' => '', // Empty ID
+            'name' => 'Fake Seller',
+            'email' => 'fake.seller@example.com',
+            'phone' => '089911223344',
+            'address' => 'Jl. Gubeng No. 10, Surabaya',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+        $response->assertSessionHasErrors(['juleha_id']);
+        $this->assertGuest();
     }
 }
-

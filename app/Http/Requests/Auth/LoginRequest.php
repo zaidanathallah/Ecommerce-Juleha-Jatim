@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -47,6 +48,18 @@ class LoginRequest extends FormRequest
         $isEmail = filter_var($loginInput, FILTER_VALIDATE_EMAIL);
 
         $field = $isEmail ? 'email' : 'juleha_id';
+
+        // 1. Cek keberadaan user terlebih dahulu untuk memberikan notifikasi spesifik
+        $user = User::where($field, $loginInput)->first();
+        if (! $user) {
+            RateLimiter::hit($this->throttleKey());
+            $label = $isEmail ? 'Alamat Email' : 'Nomor ID Juleha';
+            throw ValidationException::withMessages([
+                'login' => "{$label} '{$loginInput}' tidak terdaftar dalam sistem Juleha Jawa Timur. Silakan periksa kembali penulisan Anda atau daftar akun baru.",
+            ]);
+        }
+
+        // 2. Cek kecocokan password
         $credentials = [
             $field => $loginInput,
             'password' => $this->string('password'),
@@ -56,7 +69,7 @@ class LoginRequest extends FormRequest
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'login' => 'Kombinasi Email/ID Juleha dan password tidak sesuai.',
+                'password' => 'Kata sandi (password) yang Anda masukkan salah. Silakan klik ikon mata di kolom password untuk memeriksa kembali ketikan Anda.',
             ]);
         }
 

@@ -14,6 +14,9 @@ use Inertia\Inertia;
 Route::get('/', [MarketplaceController::class, 'index'])->name('home');
 Route::get('/products/{slug}', [MarketplaceController::class, 'show'])->name('products.show');
 Route::post('/products/{slug}/reviews', [MarketplaceController::class, 'storeReview'])->middleware('auth')->name('products.reviews.store');
+Route::get('/jadwal-sholat', [MarketplaceController::class, 'prayerSchedule'])->name('prayer.schedule');
+Route::post('/vouchers/apply', [MarketplaceController::class, 'applyVoucher'])->name('vouchers.apply');
+Route::post('/seller/vouchers', [MarketplaceController::class, 'storeVoucher'])->middleware('auth')->name('seller.vouchers.store');
 
 Route::get('/sitemap.xml', function () {
     $products = Product::live()->latest()->get(['slug', 'updated_at']);
@@ -47,6 +50,9 @@ Route::middleware(['auth'])->group(function () {
         }
         if ($user->isAdminEkop()) {
             return redirect()->route('ekop.dashboard');
+        }
+        if ($user->user_type === 'buyer') {
+            return redirect()->route('home');
         }
 
         // Regular Juleha Member stats

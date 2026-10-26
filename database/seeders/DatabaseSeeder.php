@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // 1. Super Admin (Provinsi Jawa Timur)
-        $superAdmin = User::firstOrCreate(
+        $superAdmin = User::updateOrCreate(
             ['email' => 'superadmin@julehajatim.com'],
             [
                 'juleha_id' => 'JTM-SUPER-01',
@@ -37,7 +37,7 @@ class DatabaseSeeder extends Seeder
         );
 
         // 2. Admin Ekop (Kabupaten Sidoarjo)
-        $adminEkop = User::firstOrCreate(
+        $adminEkop = User::updateOrCreate(
             ['email' => 'ekop.sidoarjo@julehajatim.com'],
             [
                 'juleha_id' => 'SDA-EKOP-01',
@@ -57,7 +57,7 @@ class DatabaseSeeder extends Seeder
         );
 
         // 3. User Anggota Penjual (Terhubung dengan data ID Juleha riil SDA220001)
-        $memberSeller = User::firstOrCreate(
+        $memberSeller = User::updateOrCreate(
             ['email' => 'slamet@julehajatim.com'],
             [
                 'juleha_id' => 'SDA220001',
@@ -253,60 +253,179 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Produk 2: APPROVED_EKOP
+        // Update Produk 1 menjadi Flash Sale
+        $product1->update([
+            'is_flash_sale' => true,
+            'flash_sale_price' => 590000.00,
+            'flash_sale_discount_percent' => 25,
+            'flash_sale_stock' => 8,
+            'flash_sale_end' => now()->addDays(2),
+        ]);
+
+        // Produk Flash Sale 2 (LIVE): Golok Jagal
         Product::updateOrCreate(
-            ['slug' => 'batu-asah-naniwa-professional-grit-3000-original'],
+            ['slug' => 'golok-jagal-sembelih-baja-per-willys-tempa-rph-28cm'],
             [
                 'user_id' => $memberSeller->id,
-                'category_id' => $categories['batu-dan-alat-asah']->id,
-                'title' => 'Batu Asah Naniwa Chosera Professional Grit 3000 Original Japan',
-                'slug' => 'batu-asah-naniwa-professional-grit-3000-original',
-                'description' => 'Batu asah sintetis magnesia bonded asli Jepang untuk finishing bilah sembelih agar mencapai tingkat ketajaman mirror finish cukur bulu.',
-                'image_url' => 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80',
-                'weight_gram' => 900,
-                'length_cm' => 22,
-                'width_cm' => 9,
-                'height_cm' => 5,
-                'base_price' => 950000.00,
+                'category_id' => $categories['golok-dan-bendo']->id,
+                'title' => 'Golok Jagal Sembelih Baja Per Willys Tempa RPH Panjang 28cm',
+                'slug' => 'golok-jagal-sembelih-baja-per-willys-tempa-rph-28cm',
+                'description' => 'Golok sembelih hand-forged dari baja per jip willys legendaris dengan sepuh oli tepat. Sangat tangguh untuk sembelih leher sapi kerbau tanpa gompal.',
+                'image_url' => 'https://images.unsplash.com/photo-1593618998160-e34014e67546?auto=format&fit=crop&w=800&q=80',
+                'weight_gram' => 550,
+                'base_price' => 450000.00,
                 'ekop_margin' => 30000.00,
-                'super_margin' => 0.00,
-                'final_price' => 980000.00,
-                'stock' => 5,
+                'super_margin' => 15000.00,
+                'final_price' => 495000.00,
+                'is_flash_sale' => true,
+                'flash_sale_price' => 345000.00,
+                'flash_sale_discount_percent' => 30,
+                'flash_sale_stock' => 12,
+                'flash_sale_end' => now()->addDays(2),
+                'stock' => 15,
                 'region_code' => 'SDA',
                 'region_name' => 'KABUPATEN SIDOARJO',
-                'status' => Product::STATUS_APPROVED_EKOP,
+                'status' => Product::STATUS_LIVE,
                 'reviewed_by_ekop_id' => $adminEkop->id,
+                'reviewed_by_super_id' => $superAdmin->id,
                 'rating_avg' => 5.0,
-                'reviews_count' => 1,
-                'sold_count' => 14,
+                'reviews_count' => 5,
+                'sold_count' => 42,
             ]
         );
 
-        // Produk 3: PENDING
+        // Produk Flash Sale 3 (LIVE): Batu Asah Alami
         Product::updateOrCreate(
-            ['slug' => 'apron-celemek-kulit-sapi-asli-juleha-anti-sayat'],
+            ['slug' => 'batu-asah-arkansas-natural-finishing-grit-6000'],
             [
                 'user_id' => $memberSeller->id,
-                'category_id' => $categories['wearpack-dan-apd']->id,
-                'title' => 'Apron Celemek Kulit Sapi Asli Juleha Full Protection Anti Sayat',
-                'slug' => 'apron-celemek-kulit-sapi-asli-juleha-anti-sayat',
-                'description' => 'Celemek khusus juru sembelih dari kulit sapi tebal tahan darah, cipratan air, dan goresan bilah tajam.',
-                'image_url' => 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=800&q=80',
-                'weight_gram' => 800,
-                'length_cm' => 30,
-                'width_cm' => 20,
-                'height_cm' => 6,
-                'base_price' => 280000.00,
-                'ekop_margin' => 0.00,
-                'super_margin' => 0.00,
-                'final_price' => 280000.00,
+                'category_id' => $categories['batu-dan-alat-asah']->id,
+                'title' => 'Batu Asah Alami White Arkansas Finishing Mirror Grit 6000',
+                'slug' => 'batu-asah-arkansas-natural-finishing-grit-6000',
+                'description' => 'Batu asah gunung asli berkarakter padat halus untuk meluruskan micro bevel dan mengkilapkan mata bilah sembelihan.',
+                'image_url' => 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80',
+                'weight_gram' => 600,
+                'base_price' => 230000.00,
+                'ekop_margin' => 20000.00,
+                'super_margin' => 10000.00,
+                'final_price' => 260000.00,
+                'is_flash_sale' => true,
+                'flash_sale_price' => 195000.00,
+                'flash_sale_discount_percent' => 25,
+                'flash_sale_stock' => 10,
+                'flash_sale_end' => now()->addDays(2),
                 'stock' => 20,
                 'region_code' => 'SDA',
                 'region_name' => 'KABUPATEN SIDOARJO',
-                'status' => Product::STATUS_PENDING,
-                'rating_avg' => 4.8,
-                'reviews_count' => 0,
-                'sold_count' => 6,
+                'status' => Product::STATUS_LIVE,
+                'reviewed_by_ekop_id' => $adminEkop->id,
+                'reviewed_by_super_id' => $superAdmin->id,
+                'rating_avg' => 4.9,
+                'reviews_count' => 4,
+                'sold_count' => 29,
+            ]
+        );
+
+        // Produk Flash Sale 4 (LIVE): Daging Sapi Segar
+        Product::updateOrCreate(
+            ['slug' => 'daging-sapi-segar-paha-depan-halal-juleha-1kg'],
+            [
+                'user_id' => $memberSeller->id,
+                'category_id' => $categories['daging-halal']->id,
+                'title' => 'Daging Sapi Segar Paha Depan (Chuck) Sembelih Halal Juleha 1 Kg',
+                'slug' => 'daging-sapi-segar-paha-depan-halal-juleha-1kg',
+                'description' => 'Daging sapi lokal segar kualitas premium disembelih oleh Juru Sembelih Halal bersertifikasi resmi, higienis, halal 100%, dan bebas bahan pengawet.',
+                'image_url' => 'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?auto=format&fit=crop&w=800&q=80',
+                'weight_gram' => 1000,
+                'base_price' => 120000.00,
+                'ekop_margin' => 10000.00,
+                'super_margin' => 5000.00,
+                'final_price' => 135000.00,
+                'is_flash_sale' => true,
+                'flash_sale_price' => 110000.00,
+                'flash_sale_discount_percent' => 18,
+                'flash_sale_stock' => 30,
+                'flash_sale_end' => now()->addDays(2),
+                'stock' => 50,
+                'region_code' => 'SDA',
+                'region_name' => 'KABUPATEN SIDOARJO',
+                'status' => Product::STATUS_LIVE,
+                'reviewed_by_ekop_id' => $adminEkop->id,
+                'reviewed_by_super_id' => $superAdmin->id,
+                'rating_avg' => 5.0,
+                'reviews_count' => 8,
+                'sold_count' => 87,
+            ]
+        );
+
+        // Produk 5: Wearpack APD Juleha (LIVE)
+        Product::updateOrCreate(
+            ['slug' => 'wearpack-apd-resmi-juleha-jatim-waterproof'],
+            [
+                'user_id' => $memberSeller->id,
+                'category_id' => $categories['wearpack-dan-apd']->id,
+                'title' => 'Wearpack Sembelih Resmi Juleha Jatim Bahan Drill Tebal Waterproof',
+                'slug' => 'wearpack-apd-resmi-juleha-jatim-waterproof',
+                'description' => 'Seragam kebanggaan Juru Sembelih Halal Jawa Timur dengan bordir logo resmi, nyaman, adem, dan dilapisi lapisan anti-darah untuk operasional RPH & Qurban.',
+                'image_url' => 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=800&q=80',
+                'weight_gram' => 700,
+                'base_price' => 220000.00,
+                'ekop_margin' => 15000.00,
+                'super_margin' => 10000.00,
+                'final_price' => 245000.00,
+                'stock' => 35,
+                'region_code' => 'SDA',
+                'region_name' => 'KABUPATEN SIDOARJO',
+                'status' => Product::STATUS_LIVE,
+                'reviewed_by_ekop_id' => $adminEkop->id,
+                'reviewed_by_super_id' => $superAdmin->id,
+                'rating_avg' => 4.9,
+                'reviews_count' => 6,
+                'sold_count' => 53,
+            ]
+        );
+
+        // 7. Seed Vouchers (Gratis Ongkir & Diskon Shopee-style)
+        \App\Models\Voucher::updateOrCreate(
+            ['code' => 'GRATISONGKIR'],
+            [
+                'title' => 'Gratis Ongkir s.d Rp 20.000',
+                'description' => 'Potongan ongkos kirim ke seluruh Jawa Timur dengan kurir Biteship.',
+                'type' => \App\Models\Voucher::TYPE_FREE_SHIPPING,
+                'discount_amount' => 20000.00,
+                'min_spend' => 50000.00,
+                'scope' => \App\Models\Voucher::SCOPE_GLOBAL,
+                'created_by' => $superAdmin->id,
+                'is_active' => true,
+            ]
+        );
+
+        \App\Models\Voucher::updateOrCreate(
+            ['code' => 'JULEHA10'],
+            [
+                'title' => 'Diskon 10% Spesial Halal',
+                'description' => 'Potongan 10% maksimal Rp 50.000 untuk semua perlengkapan sembelih.',
+                'type' => \App\Models\Voucher::TYPE_DISCOUNT_PERCENT,
+                'discount_amount' => 10.00,
+                'min_spend' => 100000.00,
+                'max_discount' => 50000.00,
+                'scope' => \App\Models\Voucher::SCOPE_GLOBAL,
+                'created_by' => $superAdmin->id,
+                'is_active' => true,
+            ]
+        );
+
+        \App\Models\Voucher::updateOrCreate(
+            ['code' => 'BAROKAH25'],
+            [
+                'title' => 'Voucher Barokah Rp 25.000',
+                'description' => 'Potongan langsung Rp 25.000 minimal belanja Rp 200.000.',
+                'type' => \App\Models\Voucher::TYPE_DISCOUNT_FIXED,
+                'discount_amount' => 25000.00,
+                'min_spend' => 200000.00,
+                'scope' => \App\Models\Voucher::SCOPE_GLOBAL,
+                'created_by' => $superAdmin->id,
+                'is_active' => true,
             ]
         );
     }

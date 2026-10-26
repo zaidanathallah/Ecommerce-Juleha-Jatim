@@ -125,6 +125,13 @@ export default function Navbar() {
                             <span>Al-Qur'an</span>
                         </Link>
 
+                        <Link
+                            href={route('prayer.schedule')}
+                            className="text-xs font-bold text-emerald-800 dark:text-emerald-400 hover:text-emerald-600 px-2 py-1 inline-flex items-center gap-1.5"
+                        >
+                            <span>Waktu Sholat</span>
+                        </Link>
+
                         {/* Shopee-style Cart Trigger */}
                         <button
                             type="button"
@@ -260,6 +267,13 @@ export default function Navbar() {
                         >
                             <BookOpen className="h-3.5 w-3.5" />
                             <span>Al-Qur'an Digital 30 Juz</span>
+                        </Link>
+
+                        <Link
+                            href={route('prayer.schedule')}
+                            className="flex items-center gap-1.5 py-1.5 text-xs font-bold text-emerald-700"
+                        >
+                            <span>Jadwal Waktu Sholat Realtime</span>
                         </Link>
 
                         {user ? (

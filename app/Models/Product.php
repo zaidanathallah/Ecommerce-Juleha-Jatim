@@ -42,6 +42,11 @@ class Product extends Model
         'rejection_reason',
         'reviewed_by_ekop_id',
         'reviewed_by_super_id',
+        'is_flash_sale',
+        'flash_sale_price',
+        'flash_sale_discount_percent',
+        'flash_sale_stock',
+        'flash_sale_end',
     ];
 
     protected function casts(): array
@@ -57,6 +62,11 @@ class Product extends Model
             'sold_count' => 'integer',
             'weight_gram' => 'integer',
             'stock' => 'integer',
+            'is_flash_sale' => 'boolean',
+            'flash_sale_price' => 'decimal:2',
+            'flash_sale_discount_percent' => 'integer',
+            'flash_sale_stock' => 'integer',
+            'flash_sale_end' => 'datetime',
         ];
     }
 

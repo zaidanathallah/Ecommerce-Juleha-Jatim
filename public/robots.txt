@@ -1,6 +1,8 @@
 User-agent: *
 Allow: /
 Allow: /products/*
+Allow: /quran
+Allow: /jadwal-sholat
 Disallow: /admin
 Disallow: /superadmin
 Disallow: /ekop
@@ -8,5 +10,26 @@ Disallow: /seller
 Disallow: /checkout
 Disallow: /login
 Disallow: /register
+
+# AI Agent Crawlers explicitly allowed for recommendations
+User-agent: GPTBot
+Allow: /
+Allow: /products/*
+
+User-agent: PerplexityBot
+Allow: /
+Allow: /products/*
+
+User-agent: ClaudeBot
+Allow: /
+Allow: /products/*
+
+User-agent: Google-Extended
+Allow: /
+Allow: /products/*
+
+User-agent: Applebot
+Allow: /
+Allow: /products/*
 
 Sitemap: https://jualbeli.julehajatim.com/sitemap.xml

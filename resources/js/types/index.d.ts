@@ -37,6 +37,19 @@ export interface ReviewItem {
     created_at: string;
 }
 
+export interface Voucher {
+    id: number;
+    code: string;
+    title: string;
+    description?: string;
+    type: 'free_shipping' | 'discount_percent' | 'discount_fixed';
+    discount_amount: number;
+    min_spend: number;
+    max_discount?: number | null;
+    scope: 'global' | 'regional' | 'seller';
+    is_active: boolean;
+}
+
 export interface BuyerProduct {
     id: number;
     title: string;
@@ -45,6 +58,11 @@ export interface BuyerProduct {
     image_url: string;
     gallery?: string[];
     price: number;
+    is_flash_sale?: boolean;
+    flash_sale_price?: number | null;
+    flash_sale_discount_percent?: number;
+    flash_sale_stock?: number;
+    flash_sale_end?: string | null;
     stock: number;
     weight_gram: number;
     region_name: string;

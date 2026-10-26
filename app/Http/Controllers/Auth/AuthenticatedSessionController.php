@@ -45,7 +45,12 @@ class AuthenticatedSessionController extends Controller
             return redirect()->intended(route('ekop.dashboard', absolute: false));
         }
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        if ($user->user_type === 'seller') {
+            return redirect()->intended(route('dashboard', absolute: false));
+        }
+
+        // Pembeli umum dan anggota yang bukan penjual langsung diarahkan ke halaman produk
+        return redirect()->intended(route('home', absolute: false));
     }
 
     /**

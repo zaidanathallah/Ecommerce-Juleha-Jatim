@@ -3,7 +3,6 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import MarketplaceLayout from '@/Layouts/MarketplaceLayout';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
-import { Badge } from '@/Components/ui/badge';
 import axios from 'axios';
 import {
     CheckCircle2,
@@ -18,6 +17,8 @@ import {
     Store,
     ShoppingBag,
     Sparkles,
+    Eye,
+    EyeOff,
 } from 'lucide-react';
 
 interface VerifiedMemberInfo {
@@ -33,10 +34,11 @@ interface VerifiedMemberInfo {
 
 export default function Register() {
     const [accountType, setAccountType] = useState<'buyer' | 'seller'>('buyer');
-    const [isJulehaMember, setIsJulehaMember] = useState(false);
     const [verificationState, setVerificationState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
     const [verificationError, setVerificationError] = useState<string | null>(null);
     const [verifiedMember, setVerifiedMember] = useState<VerifiedMemberInfo | null>(null);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm({
         account_type: 'buyer',
@@ -56,6 +58,8 @@ export default function Register() {
     const handleTabChange = (type: 'buyer' | 'seller') => {
         setAccountType(type);
         setData('account_type', type);
+        setVerificationState('idle');
+        setVerificationError(null);
     };
 
     const handleVerifyJulehaId = async () => {
@@ -84,13 +88,13 @@ export default function Register() {
                     name: member.name || prev.name,
                     phone: member.phone || prev.phone,
                     address: member.address || prev.address,
-                    shop_name: prev.shop_name || `Toko ${member.name}`,
+                    shop_name: prev.shop_name || `Sentra Halal ${member.name}`,
                 }));
             }
         } catch (err: any) {
             setVerificationState('error');
             setVerifiedMember(null);
-            const msg = err.response?.data?.message || 'Gagal memverifikasi ID Juleha. Pastikan koneksi server tersedia.';
+            const msg = err.response?.data?.message || 'Nomor ID Juleha tidak terdaftar atau tidak aktif di database keanggotaan Juleha Jawa Timur.';
             setVerificationError(msg);
         }
     };
@@ -125,32 +129,32 @@ export default function Register() {
         <MarketplaceLayout>
             <Head title="Pendaftaran Akun - Juleha Jatim" />
 
-            <div className="max-w-2xl mx-auto py-6">
-                <Card className="border border-neutral-300 dark:border-neutral-800 shadow-md rounded-2xl overflow-hidden bg-white dark:bg-neutral-900">
+            <div className="max-w-2xl mx-auto py-8 px-4">
+                <Card className="border border-neutral-200 dark:border-neutral-800 shadow-lg rounded-3xl overflow-hidden bg-white dark:bg-neutral-900">
                     <CardHeader className="bg-emerald-950 text-white p-6 sm:p-8">
                         <div className="flex items-center gap-2 mb-2">
                             <span className="p-1.5 rounded-lg bg-emerald-800 text-emerald-300">
                                 <Sparkles className="h-4 w-4" />
                             </span>
                             <span className="text-xs font-bold uppercase tracking-wider text-emerald-300">
-                                Pendaftaran Akun Marketplace
+                                Marketplace Resmi Juru Sembelih Halal Jawa Timur
                             </span>
                         </div>
-                        <CardTitle className="text-2xl font-black tracking-tight text-white">
-                            Selamat Datang di Juleha Jawa Timur
+                        <CardTitle className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+                            Pendaftaran Akun
                         </CardTitle>
-                        <CardDescription className="text-emerald-100/80 text-xs">
-                            Pendaftaran terbuka untuk seluruh masyarakat dunia, baik untuk berbelanja peralatan sembelih halal maupun untuk membuka toko penjualan.
+                        <CardDescription className="text-emerald-100/80 text-xs sm:text-sm mt-1">
+                            Pendaftaran pembeli terbuka untuk masyarakat umum seluruh dunia. Penjual khusus bagi anggota resmi Juleha Jatim terdaftar.
                         </CardDescription>
 
                         {/* Dual Registration Tabs */}
-                        <div className="grid grid-cols-2 gap-2 mt-6 p-1.5 bg-emerald-900/60 rounded-xl border border-emerald-800">
+                        <div className="grid grid-cols-2 gap-2 mt-6 p-1.5 bg-emerald-900/60 rounded-2xl border border-emerald-800">
                             <button
                                 type="button"
                                 onClick={() => handleTabChange('buyer')}
-                                className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs font-extrabold transition-none ${
+                                className={`flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-xs sm:text-sm font-extrabold transition-all ${
                                     accountType === 'buyer'
-                                        ? 'bg-white text-emerald-950 shadow-sm'
+                                        ? 'bg-white text-emerald-950 shadow-md scale-[1.01]'
                                         : 'text-emerald-100 hover:text-white hover:bg-emerald-800/40'
                                 }`}
                             >
@@ -161,126 +165,99 @@ export default function Register() {
                             <button
                                 type="button"
                                 onClick={() => handleTabChange('seller')}
-                                className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs font-extrabold transition-none ${
+                                className={`flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-xs sm:text-sm font-extrabold transition-all ${
                                     accountType === 'seller'
-                                        ? 'bg-white text-emerald-950 shadow-sm'
+                                        ? 'bg-white text-emerald-950 shadow-md scale-[1.01]'
                                         : 'text-emerald-100 hover:text-white hover:bg-emerald-800/40'
                                 }`}
                             >
                                 <Store className="h-4 w-4" />
-                                <span>Daftar Penjual (Buka Toko)</span>
+                                <span>Daftar Penjual (Khusus Anggota)</span>
                             </button>
                         </div>
                     </CardHeader>
 
                     <CardContent className="p-6 sm:p-8">
-                        {/* Tab Notice */}
-                        <div className="mb-6 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 flex items-center gap-2 text-xs text-emerald-900 dark:text-emerald-200">
+                        {/* Notice Box */}
+                        <div className="mb-6 p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 flex items-start gap-3 text-xs text-emerald-950 dark:text-emerald-200">
                             {accountType === 'buyer' ? (
                                 <>
-                                    <ShoppingBag className="h-4 w-4 shrink-0 text-emerald-700" />
-                                    <span>
-                                        <strong>Mode Pembeli:</strong> Siapapun dapat mendaftar tanpa syarat ID Juleha untuk langsung berbelanja produk sembelih halal berkualitas.
-                                    </span>
+                                    <ShoppingBag className="h-5 w-5 shrink-0 text-emerald-700 mt-0.5" />
+                                    <div className="leading-relaxed">
+                                        <p className="font-bold text-emerald-900 dark:text-emerald-300">Pendaftaran Pembeli Terbuka Untuk Umum</p>
+                                        <p className="mt-0.5 text-neutral-600 dark:text-neutral-400">Siapapun dari seluruh Indonesia & dunia dapat mendaftar untuk membeli peralatan sembelih, ternak qurban, daging segar halal, dan aneka perlengkapan.</p>
+                                    </div>
                                 </>
                             ) : (
                                 <>
-                                    <Store className="h-4 w-4 shrink-0 text-emerald-700" />
-                                    <span>
-                                        <strong>Mode Penjual:</strong> Buka toko Anda di Juleha Jatim. Anda dapat menjual pisau, perlengkapan sembelih, ternak, daging, maupun bumbu halal.
-                                    </span>
+                                    <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-700 mt-0.5" />
+                                    <div className="leading-relaxed">
+                                        <p className="font-bold text-emerald-900 dark:text-emerald-300">Penjualan Eksklusif Anggota Juleha Jawa Timur</p>
+                                        <p className="mt-0.5 text-neutral-600 dark:text-neutral-400">Untuk menjaga standar syariat sembelihan halal, hak membuka toko penjualan di platform ini HANYA diberikan kepada anggota resmi Juleha Jatim yang memiliki ID Anggota terverifikasi.</p>
+                                    </div>
                                 </>
                             )}
                         </div>
 
-                        {/* Optional Juleha ID Verification for Sellers */}
+                        {/* Mandatory Juleha ID Verification for Sellers ONLY */}
                         {accountType === 'seller' && (
-                            <div className="mb-6 p-4 bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-300 dark:border-neutral-700 rounded-xl space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <label className="text-xs font-bold text-neutral-900 dark:text-neutral-100">
-                                        Apakah Anda Anggota Resmi Juleha Jatim?
+                            <div className="mb-6 p-5 bg-gradient-to-r from-emerald-50/80 to-neutral-50 dark:bg-neutral-800/60 border border-emerald-300 dark:border-emerald-800 rounded-2xl space-y-3 shadow-sm">
+                                <div>
+                                    <label className="block text-xs font-black text-emerald-950 dark:text-emerald-300 uppercase tracking-wider mb-1">
+                                        Langkah 1: Masukkan Nomor ID Juleha Resmi Anda
                                     </label>
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setIsJulehaMember(false);
-                                                setData('juleha_id', '');
-                                                setVerificationState('idle');
+                                    <p className="text-[11px] text-neutral-600 dark:text-neutral-400 mb-2">
+                                        Contoh: SDA220001, SBY220001, atau ID resmi yang terdaftar di database pusat Juleha Jatim.
+                                    </p>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            placeholder="CONTOH: SDA220001"
+                                            value={data.juleha_id}
+                                            onChange={(e) => {
+                                                setData('juleha_id', e.target.value.toUpperCase());
+                                                if (verificationState !== 'idle') {
+                                                    setVerificationState('idle');
+                                                    setVerifiedMember(null);
+                                                }
                                             }}
-                                            className={`px-2.5 py-1 text-[11px] font-bold rounded-md ${
-                                                !isJulehaMember
-                                                    ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900'
-                                                    : 'bg-neutral-200 text-neutral-700 hover:bg-neutral-300'
-                                            }`}
-                                        >
-                                            Penjual Umum
-                                        </button>
-                                        <button
+                                            required
+                                            className="flex-1 text-sm uppercase font-mono font-bold tracking-wider rounded-xl border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700 py-2.5"
+                                        />
+                                        <Button
                                             type="button"
-                                            onClick={() => setIsJulehaMember(true)}
-                                            className={`px-2.5 py-1 text-[11px] font-bold rounded-md ${
-                                                isJulehaMember
-                                                    ? 'bg-emerald-700 text-white'
-                                                    : 'bg-neutral-200 text-neutral-700 hover:bg-neutral-300'
-                                            }`}
+                                            variant="default"
+                                            onClick={handleVerifyJulehaId}
+                                            disabled={verificationState === 'loading'}
+                                            className="text-xs font-bold gap-2 shrink-0 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl px-4 py-2.5 shadow-sm"
                                         >
-                                            Anggota Juleha
-                                        </button>
+                                            <Search className="h-4 w-4" />
+                                            {verificationState === 'loading' ? 'Memverifikasi...' : 'Verifikasi ID'}
+                                        </Button>
                                     </div>
                                 </div>
 
-                                {isJulehaMember && (
-                                    <div className="pt-2 border-t border-neutral-200 dark:border-neutral-700 space-y-2">
-                                        <label className="block text-[11px] font-bold text-neutral-700 dark:text-neutral-300">
-                                            Nomor ID Juleha Anda:
-                                        </label>
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                placeholder="Contoh: SDA220001 atau SBY220001"
-                                                value={data.juleha_id}
-                                                onChange={(e) => {
-                                                    setData('juleha_id', e.target.value);
-                                                    if (verificationState !== 'idle') {
-                                                        setVerificationState('idle');
-                                                        setVerifiedMember(null);
-                                                    }
-                                                }}
-                                                className="flex-1 text-xs uppercase font-mono font-bold tracking-wider rounded-lg border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700"
-                                            />
-                                            <Button
-                                                type="button"
-                                                variant="default"
-                                                size="sm"
-                                                onClick={handleVerifyJulehaId}
-                                                disabled={verificationState === 'loading'}
-                                                className="text-xs gap-1.5 shrink-0 bg-emerald-700 hover:bg-emerald-800"
-                                            >
-                                                <Search className="h-3.5 w-3.5" />
-                                                {verificationState === 'loading' ? 'Memverifikasi...' : 'Verifikasi ID'}
-                                            </Button>
+                                {verificationState === 'success' && verifiedMember && (
+                                    <div className="p-3 bg-emerald-100/70 dark:bg-emerald-950/60 border border-emerald-400 rounded-xl text-xs space-y-1">
+                                        <div className="flex items-center gap-1.5 text-emerald-900 dark:text-emerald-200 font-black">
+                                            <CheckCircle2 className="h-4 w-4 text-emerald-700" />
+                                            <span>ID Terverifikasi: Anggota Sah Juleha Jawa Timur</span>
                                         </div>
-
-                                        {verificationState === 'success' && verifiedMember && (
-                                            <div className="mt-2 p-2.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-400 rounded-lg text-xs space-y-1">
-                                                <div className="flex items-center gap-1.5 text-emerald-800 font-bold">
-                                                    <CheckCircle2 className="h-4 w-4" />
-                                                    <span>ID Juleha Terverifikasi & Aktif!</span>
-                                                </div>
-                                                <p className="text-[11px] text-neutral-700 dark:text-neutral-300">
-                                                    {verifiedMember.name} &bull; Daerah: {verifiedMember.region_name} ({verifiedMember.region_code})
-                                                </p>
-                                            </div>
-                                        )}
-
-                                        {verificationState === 'error' && verificationError && (
-                                            <div className="mt-2 p-2.5 bg-red-50 dark:bg-red-950/40 border border-red-300 rounded-lg text-xs flex items-start gap-1.5 text-red-700">
-                                                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                                                <span>{verificationError}</span>
-                                            </div>
-                                        )}
+                                        <p className="text-neutral-800 dark:text-neutral-300">
+                                            <strong>Nama:</strong> {verifiedMember.name} &bull; <strong>Wilayah:</strong> {verifiedMember.region_name} ({verifiedMember.region_code})
+                                        </p>
                                     </div>
+                                )}
+
+                                {verificationState === 'error' && verificationError && (
+                                    <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-300 rounded-xl text-xs flex items-start gap-2 text-red-800">
+                                        <AlertCircle className="h-4 w-4 shrink-0 text-red-600 mt-0.5" />
+                                        <span>{verificationError}</span>
+                                    </div>
+                                )}
+
+                                {errors.juleha_id && (
+                                    <p className="text-xs text-red-600 font-bold mt-1">{errors.juleha_id}</p>
                                 )}
                             </div>
                         )}
@@ -289,124 +266,124 @@ export default function Register() {
                             {/* Seller Shop Name */}
                             {accountType === 'seller' && (
                                 <div>
-                                    <label className="block text-xs font-bold text-neutral-800 dark:text-neutral-200 mb-1">
-                                        Nama Toko / Usaha Penjual
+                                    <label className="block text-xs font-bold text-neutral-800 dark:text-neutral-200 mb-1.5">
+                                        Nama Toko / Usaha Penjual <span className="text-red-500">*</span>
                                     </label>
                                     <div className="relative">
                                         <input
                                             type="text"
                                             value={data.shop_name}
                                             onChange={(e) => setData('shop_name', e.target.value)}
-                                            placeholder="Contoh: Sentra Bilah & Perlengkapan Halal"
+                                            placeholder="Contoh: Sentra Bilah & Perlengkapan Halal Sidoarjo"
                                             required
-                                            className="w-full text-xs pl-8 rounded-lg border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700"
+                                            className="w-full text-xs pl-9 py-2.5 rounded-xl border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700 font-medium"
                                         />
-                                        <Store className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-neutral-400" />
+                                        <Store className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
                                     </div>
-                                    {errors.shop_name && <p className="text-xs text-red-600 mt-1">{errors.shop_name}</p>}
+                                    {errors.shop_name && <p className="text-xs text-red-600 font-bold mt-1">{errors.shop_name}</p>}
                                 </div>
                             )}
 
-                            {/* Name & Phone */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-neutral-800 dark:text-neutral-200 mb-1">
-                                        Nama Lengkap
-                                    </label>
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            value={data.name}
-                                            onChange={(e) => setData('name', e.target.value)}
-                                            placeholder="Nama lengkap Anda"
-                                            required
-                                            className="w-full text-xs pl-8 rounded-lg border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700"
-                                        />
-                                        <UserIcon className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-neutral-400" />
-                                    </div>
-                                    {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name}</p>}
+                            {/* Full Name */}
+                            <div>
+                                <label className="block text-xs font-bold text-neutral-800 dark:text-neutral-200 mb-1.5">
+                                    Nama Lengkap <span className="text-red-500">*</span>
+                                </label>
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        value={data.name}
+                                        onChange={(e) => setData('name', e.target.value)}
+                                        placeholder="Nama lengkap Anda sesuai identitas"
+                                        required
+                                        className="w-full text-xs pl-9 py-2.5 rounded-xl border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700 font-medium"
+                                    />
+                                    <UserIcon className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
                                 </div>
+                                {errors.name && <p className="text-xs text-red-600 font-bold mt-1">{errors.name}</p>}
+                            </div>
 
+                            {/* Contact: Phone & Email */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs font-bold text-neutral-800 dark:text-neutral-200 mb-1">
-                                        Nomor WhatsApp / HP
+                                    <label className="block text-xs font-bold text-neutral-800 dark:text-neutral-200 mb-1.5">
+                                        Nomor WhatsApp / HP <span className="text-red-500">*</span>
                                     </label>
                                     <div className="relative">
                                         <input
-                                            type="text"
+                                            type="tel"
                                             value={data.phone}
                                             onChange={(e) => setData('phone', e.target.value)}
                                             placeholder="Contoh: 08123456789"
                                             required
-                                            className="w-full text-xs pl-8 rounded-lg border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700"
+                                            className="w-full text-xs pl-9 py-2.5 rounded-xl border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700 font-medium"
                                         />
-                                        <Phone className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-neutral-400" />
+                                        <Phone className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
                                     </div>
-                                    {errors.phone && <p className="text-xs text-red-600 mt-1">{errors.phone}</p>}
+                                    {errors.phone && <p className="text-xs text-red-600 font-bold mt-1">{errors.phone}</p>}
                                 </div>
-                            </div>
 
-                            {/* Email */}
-                            <div>
-                                <label className="block text-xs font-bold text-neutral-800 dark:text-neutral-200 mb-1">
-                                    Alamat Email (Untuk Login & Notifikasi Pesanan)
-                                </label>
-                                <div className="relative">
-                                    <input
-                                        type="email"
-                                        value={data.email}
-                                        onChange={(e) => setData('email', e.target.value)}
-                                        placeholder="nama@email.com"
-                                        required
-                                        className="w-full text-xs pl-8 rounded-lg border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700"
-                                    />
-                                    <Mail className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-neutral-400" />
-                                </div>
-                                {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email}</p>}
-                            </div>
-
-                            {/* Alamat Lengkap & Koordinat GPS (Biteship Syarat) */}
-                            <div className="p-4 bg-neutral-50 dark:bg-neutral-800/60 rounded-xl border border-neutral-300 dark:border-neutral-700 space-y-3">
                                 <div>
-                                    <div className="flex justify-between items-center mb-1">
-                                        <label className="text-xs font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
+                                    <label className="block text-xs font-bold text-neutral-800 dark:text-neutral-200 mb-1.5">
+                                        Alamat Email <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type="email"
+                                            value={data.email}
+                                            onChange={(e) => setData('email', e.target.value)}
+                                            placeholder="nama@email.com"
+                                            required
+                                            className="w-full text-xs pl-9 py-2.5 rounded-xl border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700 font-medium"
+                                        />
+                                        <Mail className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
+                                    </div>
+                                    {errors.email && <p className="text-xs text-red-600 font-bold mt-1">{errors.email}</p>}
+                                </div>
+                            </div>
+
+                            {/* Address & Coordinates */}
+                            <div className="p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-200 dark:border-neutral-800 space-y-3">
+                                <div>
+                                    <div className="flex justify-between items-center mb-1.5">
+                                        <label className="text-xs font-bold text-neutral-800 dark:text-neutral-200 flex items-center gap-1.5">
                                             <MapPin className="h-3.5 w-3.5 text-emerald-700" />
-                                            {accountType === 'seller' ? 'Alamat Pickup Toko' : 'Alamat Pengiriman Lengkap'}
+                                            <span>{accountType === 'seller' ? 'Alamat Pickup Toko (Syarat Kurir Biteship)' : 'Alamat Lengkap Pengiriman'}</span>
                                         </label>
-                                        <span className="text-[10px] text-neutral-500 font-semibold">Integrasi Ongkir Otomatis</span>
+                                        <span className="text-[10px] text-neutral-500">Jalan, RT/RW, Kelurahan, Kecamatan, Kota</span>
                                     </div>
                                     <textarea
                                         rows={2}
                                         value={data.address}
                                         onChange={(e) => setData('address', e.target.value)}
-                                        placeholder="Nama jalan, nomor rumah, RT/RW, kelurahan, kecamatan, kota/kabupaten"
+                                        placeholder="Contoh: Jl. Simo Gunung Kramat Barat No. 28, Sawahan, Surabaya, Jawa Timur"
                                         required
-                                        className="w-full text-xs rounded-lg border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700"
+                                        className="w-full text-xs rounded-xl border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700 font-medium"
                                     />
-                                    {errors.address && <p className="text-xs text-red-600 mt-1">{errors.address}</p>}
+                                    {errors.address && <p className="text-xs text-red-600 font-bold mt-1">{errors.address}</p>}
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
                                     <div>
-                                        <label className="block text-[11px] font-bold text-neutral-700 dark:text-neutral-300 mb-1">
+                                        <label className="block text-[11px] font-bold text-neutral-600 dark:text-neutral-400 mb-1">
                                             Latitude
                                         </label>
                                         <input
                                             type="text"
                                             value={data.lat}
                                             onChange={(e) => setData('lat', e.target.value)}
-                                            className="w-full text-xs font-mono rounded-lg border-neutral-300 focus:ring-emerald-700"
+                                            className="w-full text-xs font-mono rounded-xl border-neutral-300 focus:ring-emerald-700 py-1.5"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-[11px] font-bold text-neutral-700 dark:text-neutral-300 mb-1">
+                                        <label className="block text-[11px] font-bold text-neutral-600 dark:text-neutral-400 mb-1">
                                             Longitude
                                         </label>
                                         <input
                                             type="text"
                                             value={data.lng}
                                             onChange={(e) => setData('lng', e.target.value)}
-                                            className="w-full text-xs font-mono rounded-lg border-neutral-300 focus:ring-emerald-700"
+                                            className="w-full text-xs font-mono rounded-xl border-neutral-300 focus:ring-emerald-700 py-1.5"
                                         />
                                     </div>
                                     <div>
@@ -415,7 +392,7 @@ export default function Register() {
                                             variant="secondary"
                                             size="sm"
                                             onClick={handleDetectLocation}
-                                            className="w-full text-xs border border-neutral-300 rounded-lg"
+                                            className="w-full text-xs border border-neutral-300 rounded-xl py-2 font-bold"
                                         >
                                             GPS Otomatis
                                         </Button>
@@ -423,38 +400,56 @@ export default function Register() {
                                 </div>
                             </div>
 
-                            {/* Passwords */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Passwords with Eye Toggle Button */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs font-bold text-neutral-800 dark:text-neutral-200 mb-1">
-                                        Kata Sandi (Password)
+                                    <label className="block text-xs font-bold text-neutral-800 dark:text-neutral-200 mb-1.5">
+                                        Kata Sandi (Password) <span className="text-red-500">*</span>
                                     </label>
                                     <div className="relative">
                                         <input
-                                            type="password"
+                                            type={showPassword ? 'text' : 'password'}
                                             value={data.password}
                                             onChange={(e) => setData('password', e.target.value)}
+                                            placeholder="Minimal 8 karakter"
                                             required
-                                            className="w-full text-xs pl-8 rounded-lg border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700"
+                                            className="w-full text-xs pl-9 pr-10 py-2.5 rounded-xl border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700 font-medium"
                                         />
-                                        <Lock className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-neutral-400" />
+                                        <Lock className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3 top-2.5 text-neutral-400 hover:text-neutral-700 p-0.5 rounded"
+                                            title={showPassword ? 'Sembunyikan password' : 'Lihat password'}
+                                        >
+                                            {showPassword ? <EyeOff className="h-4 w-4 text-emerald-700" /> : <Eye className="h-4 w-4" />}
+                                        </button>
                                     </div>
-                                    {errors.password && <p className="text-xs text-red-600 mt-1">{errors.password}</p>}
+                                    {errors.password && <p className="text-xs text-red-600 font-bold mt-1">{errors.password}</p>}
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-neutral-800 dark:text-neutral-200 mb-1">
-                                        Konfirmasi Kata Sandi
+                                    <label className="block text-xs font-bold text-neutral-800 dark:text-neutral-200 mb-1.5">
+                                        Konfirmasi Kata Sandi <span className="text-red-500">*</span>
                                     </label>
                                     <div className="relative">
                                         <input
-                                            type="password"
+                                            type={showConfirmPassword ? 'text' : 'password'}
                                             value={data.password_confirmation}
                                             onChange={(e) => setData('password_confirmation', e.target.value)}
+                                            placeholder="Ulangi kata sandi Anda"
                                             required
-                                            className="w-full text-xs pl-8 rounded-lg border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700"
+                                            className="w-full text-xs pl-9 pr-10 py-2.5 rounded-xl border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700 font-medium"
                                         />
-                                        <Lock className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-neutral-400" />
+                                        <Lock className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                            className="absolute right-3 top-2.5 text-neutral-400 hover:text-neutral-700 p-0.5 rounded"
+                                            title={showConfirmPassword ? 'Sembunyikan password' : 'Lihat password'}
+                                        >
+                                            {showConfirmPassword ? <EyeOff className="h-4 w-4 text-emerald-700" /> : <Eye className="h-4 w-4" />}
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -462,36 +457,36 @@ export default function Register() {
                             {/* Optional KTP for Seller */}
                             {accountType === 'seller' && (
                                 <div>
-                                    <label className="block text-xs font-bold text-neutral-800 dark:text-neutral-200 mb-1">
-                                        Foto KTP (Opsional untuk Verifikasi Penjual)
+                                    <label className="block text-xs font-bold text-neutral-800 dark:text-neutral-200 mb-1.5">
+                                        Foto KTP (Opsional untuk Verifikasi Tambahan Penjual)
                                     </label>
                                     <input
                                         type="file"
                                         accept="image/*"
                                         onChange={(e) => setData('ktp', e.target.files ? e.target.files[0] : null)}
-                                        className="block w-full text-xs text-neutral-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-neutral-100 file:text-neutral-700 hover:file:bg-neutral-200"
+                                        className="block w-full text-xs text-neutral-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-neutral-100 file:text-neutral-700 hover:file:bg-neutral-200 cursor-pointer"
                                     />
-                                    {errors.ktp && <p className="text-xs text-red-600 mt-1">{errors.ktp}</p>}
+                                    {errors.ktp && <p className="text-xs text-red-600 font-bold mt-1">{errors.ktp}</p>}
                                 </div>
                             )}
 
-                            <div className="pt-2">
+                            <div className="pt-3">
                                 <Button
                                     type="submit"
                                     variant="default"
                                     disabled={processing}
-                                    className="w-full py-3 text-sm font-black bg-emerald-700 hover:bg-emerald-800 rounded-xl shadow-md"
+                                    className="w-full py-3.5 text-sm font-black bg-emerald-700 hover:bg-emerald-800 text-white rounded-2xl shadow-md transition-all active:scale-[0.99]"
                                 >
                                     {processing
                                         ? 'Mendaftarkan Akun...'
                                         : accountType === 'buyer'
                                         ? 'Daftar Sebagai Pembeli Sekarang'
-                                        : 'Daftarkan Toko / Penjual Sekarang'}
+                                        : 'Daftarkan Toko Anggota Juleha'}
                                 </Button>
                             </div>
                         </form>
 
-                        <div className="mt-6 text-center text-xs text-neutral-600 dark:text-neutral-400 border-t border-neutral-200 dark:border-neutral-800 pt-4">
+                        <div className="mt-6 text-center text-xs text-neutral-600 dark:text-neutral-400 border-t border-neutral-100 dark:border-neutral-800 pt-5">
                             Sudah memiliki akun terdaftar?{' '}
                             <Link href={route('login')} className="font-bold text-emerald-700 hover:underline">
                                 Masuk ke akun Anda di sini
