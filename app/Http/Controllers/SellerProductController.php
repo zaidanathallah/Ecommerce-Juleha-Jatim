@@ -35,6 +35,7 @@ class SellerProductController extends Controller
 
         return Inertia::render('Seller/Products/Index', [
             'products' => $products,
+            'categories' => Category::latest()->get(['id', 'name', 'slug', 'description', 'icon', 'is_active']),
         ]);
     }
 

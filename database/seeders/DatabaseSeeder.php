@@ -271,7 +271,7 @@ class DatabaseSeeder extends Seeder
                 'title' => 'Golok Jagal Sembelih Baja Per Willys Tempa RPH Panjang 28cm',
                 'slug' => 'golok-jagal-sembelih-baja-per-willys-tempa-rph-28cm',
                 'description' => 'Golok sembelih hand-forged dari baja per jip willys legendaris dengan sepuh oli tepat. Sangat tangguh untuk sembelih leher sapi kerbau tanpa gompal.',
-                'image_url' => 'https://images.unsplash.com/photo-1593618998160-e34014e67546?auto=format&fit=crop&w=800&q=80',
+                'image_url' => 'https://images.unsplash.com/photo-1589256469067-ea99122bbdc4?auto=format&fit=crop&w=800&q=80',
                 'weight_gram' => 550,
                 'base_price' => 450000.00,
                 'ekop_margin' => 30000.00,

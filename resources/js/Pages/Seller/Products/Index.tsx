@@ -7,19 +7,29 @@ import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/Components/ui/table';
 import { formatRupiah } from '@/lib/utils';
-import { PlusCircle, Edit, Store, ExternalLink } from 'lucide-react';
+import { PlusCircle, Edit, Store, ExternalLink, Tags } from 'lucide-react';
+import CategoryManageModal from '@/Components/CategoryManageModal';
 
 interface Props {
     products: {
         data: ManagementProduct[];
         links: any[];
     };
+    categories?: any[];
 }
 
-export default function Index({ products }: Props) {
+export default function Index({ products, categories = [] }: Props) {
+    const [showCategoryModal, setShowCategoryModal] = React.useState(false);
+
     return (
         <MarketplaceLayout>
             <Head title="Kelola Produk Jualan Saya - Juleha Jatim" />
+
+            <CategoryManageModal
+                isOpen={showCategoryModal}
+                onClose={() => setShowCategoryModal(false)}
+                categories={categories}
+            />
 
             <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b pb-4">
@@ -32,12 +42,24 @@ export default function Index({ products }: Props) {
                         </p>
                     </div>
 
-                    <Link href={route('seller.products.create')}>
-                        <Button size="sm" variant="default" className="text-xs gap-1.5 font-bold bg-emerald-700 hover:bg-emerald-800">
-                            <PlusCircle className="h-4 w-4" />
-                            Tambah Produk Baru
+                    <div className="flex items-center gap-2">
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setShowCategoryModal(true)}
+                            className="text-xs gap-1.5 font-bold border-[#ee4d2d] text-[#ee4d2d] hover:bg-orange-50 rounded-xl"
+                        >
+                            <Tags className="h-4 w-4" />
+                            Kelola Kategori & Ikon
                         </Button>
-                    </Link>
+
+                        <Link href={route('seller.products.create')}>
+                            <Button size="sm" variant="default" className="text-xs gap-1.5 font-bold bg-[#ee4d2d] hover:bg-[#d73211] text-white rounded-xl shadow-sm">
+                                <PlusCircle className="h-4 w-4" />
+                                Tambah Produk Baru
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
 
                 <Card>

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
-import MarketplaceLayout from '@/Layouts/MarketplaceLayout';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/Components/ui/card';
+import Footer from '@/Components/Footer';
 import { Button } from '@/Components/ui/button';
 import axios from 'axios';
 import {
@@ -126,74 +125,99 @@ export default function Register() {
     };
 
     return (
-        <MarketplaceLayout>
-            <Head title="Pendaftaran Akun - Juleha Jatim" />
+        <div className="min-h-screen flex flex-col bg-[#f5f5f5] font-sans antialiased">
+            <Head title="Daftar Akun Baru - Juleha Jatim Marketplace" />
 
-            <div className="max-w-2xl mx-auto py-8 px-4">
-                <Card className="border border-neutral-200 dark:border-neutral-800 shadow-lg rounded-3xl overflow-hidden bg-white dark:bg-neutral-900">
-                    <CardHeader className="bg-emerald-950 text-white p-6 sm:p-8">
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className="p-1.5 rounded-lg bg-emerald-800 text-emerald-300">
-                                <Sparkles className="h-4 w-4" />
-                            </span>
-                            <span className="text-xs font-bold uppercase tracking-wider text-emerald-300">
-                                Marketplace Resmi Juru Sembelih Halal Jawa Timur
-                            </span>
+            {/* Shopee-style Auth Header */}
+            <header className="bg-white border-b border-neutral-200">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <Link href={route('home')} className="flex items-center gap-3">
+                            <img src="/logo-juleha.jpg" alt="Logo Juleha Jatim" className="h-10 w-10 rounded-lg object-contain shadow-sm" />
+                            <div>
+                                <span className="font-black text-lg tracking-tight text-neutral-900 block leading-tight">
+                                    JUALBELI.JULEHAJATIM
+                                </span>
+                                <span className="text-[10px] text-neutral-500 font-semibold block">
+                                    MARKETPLACE HALAL JAWA TIMUR
+                                </span>
+                            </div>
+                        </Link>
+                        <div className="h-7 w-[1.5px] bg-neutral-300 hidden sm:block" />
+                        <span className="text-xl font-bold text-neutral-800 hidden sm:block">
+                            Daftar
+                        </span>
+                    </div>
+
+                    <a
+                        href="https://wa.me/6281262227663"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-[#ee4d2d] hover:underline font-semibold"
+                    >
+                        Butuh bantuan?
+                    </a>
+                </div>
+            </header>
+
+            {/* Shopee Signature Gradient Auth Body */}
+            <div className="flex-1 bg-gradient-to-r from-[#ee4d2d] to-[#ff5722] py-10 px-4">
+                <div className="max-w-2xl mx-auto">
+                    <div className="bg-white rounded-lg shadow-2xl p-6 sm:p-10 border border-neutral-100">
+                        <div className="mb-6">
+                            <h2 className="text-2xl font-bold text-neutral-800">
+                                Daftar Akun Marketplace
+                            </h2>
+                            <p className="text-xs text-neutral-500 mt-1">
+                                Pendaftaran pembeli terbuka untuk umum sedunia. Penjualan khusus anggota Juleha Jatim resmi.
+                            </p>
+
+                            {/* Dual Registration Tabs (Shopee Style) */}
+                            <div className="grid grid-cols-2 gap-2 mt-5 p-1 bg-neutral-100 rounded-lg">
+                                <button
+                                    type="button"
+                                    onClick={() => handleTabChange('buyer')}
+                                    className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-md text-xs sm:text-sm font-bold transition-all ${
+                                        accountType === 'buyer'
+                                            ? 'bg-white text-[#ee4d2d] shadow-sm'
+                                            : 'text-neutral-600 hover:text-neutral-900'
+                                    }`}
+                                >
+                                    <ShoppingBag className="h-4 w-4" />
+                                    <span>Pembeli (Umum)</span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => handleTabChange('seller')}
+                                    className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-md text-xs sm:text-sm font-bold transition-all ${
+                                        accountType === 'seller'
+                                            ? 'bg-white text-[#ee4d2d] shadow-sm'
+                                            : 'text-neutral-600 hover:text-neutral-900'
+                                    }`}
+                                >
+                                    <Store className="h-4 w-4" />
+                                    <span>Penjual (Khusus Anggota)</span>
+                                </button>
+                            </div>
                         </div>
-                        <CardTitle className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-                            Pendaftaran Akun
-                        </CardTitle>
-                        <CardDescription className="text-emerald-100/80 text-xs sm:text-sm mt-1">
-                            Pendaftaran pembeli terbuka untuk masyarakat umum seluruh dunia. Penjual khusus bagi anggota resmi Juleha Jatim terdaftar.
-                        </CardDescription>
 
-                        {/* Dual Registration Tabs */}
-                        <div className="grid grid-cols-2 gap-2 mt-6 p-1.5 bg-emerald-900/60 rounded-2xl border border-emerald-800">
-                            <button
-                                type="button"
-                                onClick={() => handleTabChange('buyer')}
-                                className={`flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-xs sm:text-sm font-extrabold transition-all ${
-                                    accountType === 'buyer'
-                                        ? 'bg-white text-emerald-950 shadow-md scale-[1.01]'
-                                        : 'text-emerald-100 hover:text-white hover:bg-emerald-800/40'
-                                }`}
-                            >
-                                <ShoppingBag className="h-4 w-4" />
-                                <span>Daftar Pembeli (Umum)</span>
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={() => handleTabChange('seller')}
-                                className={`flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-xs sm:text-sm font-extrabold transition-all ${
-                                    accountType === 'seller'
-                                        ? 'bg-white text-emerald-950 shadow-md scale-[1.01]'
-                                        : 'text-emerald-100 hover:text-white hover:bg-emerald-800/40'
-                                }`}
-                            >
-                                <Store className="h-4 w-4" />
-                                <span>Daftar Penjual (Khusus Anggota)</span>
-                            </button>
-                        </div>
-                    </CardHeader>
-
-                    <CardContent className="p-6 sm:p-8">
                         {/* Notice Box */}
-                        <div className="mb-6 p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 flex items-start gap-3 text-xs text-emerald-950 dark:text-emerald-200">
+                        <div className="mb-6 p-3.5 rounded-lg bg-orange-50 border border-orange-200 flex items-start gap-3 text-xs text-neutral-700">
                             {accountType === 'buyer' ? (
                                 <>
-                                    <ShoppingBag className="h-5 w-5 shrink-0 text-emerald-700 mt-0.5" />
+                                    <ShoppingBag className="h-5 w-5 shrink-0 text-[#ee4d2d] mt-0.5" />
                                     <div className="leading-relaxed">
-                                        <p className="font-bold text-emerald-900 dark:text-emerald-300">Pendaftaran Pembeli Terbuka Untuk Umum</p>
-                                        <p className="mt-0.5 text-neutral-600 dark:text-neutral-400">Siapapun dari seluruh Indonesia & dunia dapat mendaftar untuk membeli peralatan sembelih, ternak qurban, daging segar halal, dan aneka perlengkapan.</p>
+                                        <p className="font-bold text-neutral-900">Pendaftaran Pembeli Terbuka Untuk Siapa Saja</p>
+                                        <p className="mt-0.5 text-neutral-600">Siapapun dari seluruh Indonesia dapat mendaftar untuk membeli bilah sembelih syar'i, daging segar halal, dan aneka perlengkapan.</p>
                                     </div>
                                 </>
                             ) : (
                                 <>
-                                    <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-700 mt-0.5" />
+                                    <ShieldCheck className="h-5 w-5 shrink-0 text-[#ee4d2d] mt-0.5" />
                                     <div className="leading-relaxed">
-                                        <p className="font-bold text-emerald-900 dark:text-emerald-300">Penjualan Eksklusif Anggota Juleha Jawa Timur</p>
-                                        <p className="mt-0.5 text-neutral-600 dark:text-neutral-400">Untuk menjaga standar syariat sembelihan halal, hak membuka toko penjualan di platform ini HANYA diberikan kepada anggota resmi Juleha Jatim yang memiliki ID Anggota terverifikasi.</p>
+                                        <p className="font-bold text-neutral-900">Penjualan Eksklusif Anggota Juleha Jawa Timur</p>
+                                        <p className="mt-0.5 text-neutral-600">Hak membuka toko penjualan di platform ini HANYA diberikan kepada anggota resmi Juleha Jatim yang memiliki ID Anggota terverifikasi.</p>
                                     </div>
                                 </>
                             )}
@@ -201,12 +225,12 @@ export default function Register() {
 
                         {/* Mandatory Juleha ID Verification for Sellers ONLY */}
                         {accountType === 'seller' && (
-                            <div className="mb-6 p-5 bg-gradient-to-r from-emerald-50/80 to-neutral-50 dark:bg-neutral-800/60 border border-emerald-300 dark:border-emerald-800 rounded-2xl space-y-3 shadow-sm">
+                            <div className="mb-6 p-5 bg-orange-50/60 border border-orange-200 rounded-lg space-y-3">
                                 <div>
-                                    <label className="block text-xs font-black text-emerald-950 dark:text-emerald-300 uppercase tracking-wider mb-1">
+                                    <label className="block text-xs font-bold text-neutral-800 uppercase tracking-wider mb-1">
                                         Langkah 1: Masukkan Nomor ID Juleha Resmi Anda
                                     </label>
-                                    <p className="text-[11px] text-neutral-600 dark:text-neutral-400 mb-2">
+                                    <p className="text-[11px] text-neutral-500 mb-2">
                                         Contoh: SDA220001, SBY220001, atau ID resmi yang terdaftar di database pusat Juleha Jatim.
                                     </p>
                                     <div className="flex gap-2">
@@ -222,14 +246,13 @@ export default function Register() {
                                                 }
                                             }}
                                             required
-                                            className="flex-1 text-sm uppercase font-mono font-bold tracking-wider rounded-xl border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700 py-2.5"
+                                            className="flex-1 text-sm uppercase font-mono font-bold tracking-wider rounded border-neutral-300 focus:border-[#ee4d2d] focus:ring-1 focus:ring-[#ee4d2d] py-2.5 px-3 outline-none"
                                         />
                                         <Button
                                             type="button"
-                                            variant="default"
                                             onClick={handleVerifyJulehaId}
                                             disabled={verificationState === 'loading'}
-                                            className="text-xs font-bold gap-2 shrink-0 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl px-4 py-2.5 shadow-sm"
+                                            className="text-xs font-bold gap-2 shrink-0 bg-[#ee4d2d] hover:bg-[#d73211] text-white rounded px-4 py-2.5 shadow-sm"
                                         >
                                             <Search className="h-4 w-4" />
                                             {verificationState === 'loading' ? 'Memverifikasi...' : 'Verifikasi ID'}
@@ -238,19 +261,19 @@ export default function Register() {
                                 </div>
 
                                 {verificationState === 'success' && verifiedMember && (
-                                    <div className="p-3 bg-emerald-100/70 dark:bg-emerald-950/60 border border-emerald-400 rounded-xl text-xs space-y-1">
-                                        <div className="flex items-center gap-1.5 text-emerald-900 dark:text-emerald-200 font-black">
-                                            <CheckCircle2 className="h-4 w-4 text-emerald-700" />
+                                    <div className="p-3 bg-emerald-50 border border-emerald-300 rounded text-xs space-y-1">
+                                        <div className="flex items-center gap-1.5 text-emerald-800 font-bold">
+                                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                                             <span>ID Terverifikasi: Anggota Sah Juleha Jawa Timur</span>
                                         </div>
-                                        <p className="text-neutral-800 dark:text-neutral-300">
+                                        <p className="text-neutral-700">
                                             <strong>Nama:</strong> {verifiedMember.name} &bull; <strong>Wilayah:</strong> {verifiedMember.region_name} ({verifiedMember.region_code})
                                         </p>
                                     </div>
                                 )}
 
                                 {verificationState === 'error' && verificationError && (
-                                    <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-300 rounded-xl text-xs flex items-start gap-2 text-red-800">
+                                    <div className="p-3 bg-red-50 border border-red-300 rounded text-xs flex items-start gap-2 text-red-800">
                                         <AlertCircle className="h-4 w-4 shrink-0 text-red-600 mt-0.5" />
                                         <span>{verificationError}</span>
                                     </div>
@@ -266,7 +289,7 @@ export default function Register() {
                             {/* Seller Shop Name */}
                             {accountType === 'seller' && (
                                 <div>
-                                    <label className="block text-xs font-bold text-neutral-800 dark:text-neutral-200 mb-1.5">
+                                    <label className="block text-xs font-bold text-neutral-700 mb-1">
                                         Nama Toko / Usaha Penjual <span className="text-red-500">*</span>
                                     </label>
                                     <div className="relative">
@@ -276,7 +299,7 @@ export default function Register() {
                                             onChange={(e) => setData('shop_name', e.target.value)}
                                             placeholder="Contoh: Sentra Bilah & Perlengkapan Halal Sidoarjo"
                                             required
-                                            className="w-full text-xs pl-9 py-2.5 rounded-xl border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700 font-medium"
+                                            className="w-full text-xs pl-9 pr-3 py-2.5 rounded border border-neutral-300 focus:border-[#ee4d2d] focus:ring-1 focus:ring-[#ee4d2d] font-medium outline-none"
                                         />
                                         <Store className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
                                     </div>
@@ -286,7 +309,7 @@ export default function Register() {
 
                             {/* Full Name */}
                             <div>
-                                <label className="block text-xs font-bold text-neutral-800 dark:text-neutral-200 mb-1.5">
+                                <label className="block text-xs font-bold text-neutral-700 mb-1">
                                     Nama Lengkap <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative">
@@ -296,7 +319,7 @@ export default function Register() {
                                         onChange={(e) => setData('name', e.target.value)}
                                         placeholder="Nama lengkap Anda sesuai identitas"
                                         required
-                                        className="w-full text-xs pl-9 py-2.5 rounded-xl border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700 font-medium"
+                                        className="w-full text-xs pl-9 pr-3 py-2.5 rounded border border-neutral-300 focus:border-[#ee4d2d] focus:ring-1 focus:ring-[#ee4d2d] font-medium outline-none"
                                     />
                                     <UserIcon className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
                                 </div>
@@ -306,7 +329,7 @@ export default function Register() {
                             {/* Contact: Phone & Email */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs font-bold text-neutral-800 dark:text-neutral-200 mb-1.5">
+                                    <label className="block text-xs font-bold text-neutral-700 mb-1">
                                         Nomor WhatsApp / HP <span className="text-red-500">*</span>
                                     </label>
                                     <div className="relative">
@@ -316,7 +339,7 @@ export default function Register() {
                                             onChange={(e) => setData('phone', e.target.value)}
                                             placeholder="Contoh: 08123456789"
                                             required
-                                            className="w-full text-xs pl-9 py-2.5 rounded-xl border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700 font-medium"
+                                            className="w-full text-xs pl-9 pr-3 py-2.5 rounded border border-neutral-300 focus:border-[#ee4d2d] focus:ring-1 focus:ring-[#ee4d2d] font-medium outline-none"
                                         />
                                         <Phone className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
                                     </div>
@@ -324,7 +347,7 @@ export default function Register() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-neutral-800 dark:text-neutral-200 mb-1.5">
+                                    <label className="block text-xs font-bold text-neutral-700 mb-1">
                                         Alamat Email <span className="text-red-500">*</span>
                                     </label>
                                     <div className="relative">
@@ -334,7 +357,7 @@ export default function Register() {
                                             onChange={(e) => setData('email', e.target.value)}
                                             placeholder="nama@email.com"
                                             required
-                                            className="w-full text-xs pl-9 py-2.5 rounded-xl border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700 font-medium"
+                                            className="w-full text-xs pl-9 pr-3 py-2.5 rounded border border-neutral-300 focus:border-[#ee4d2d] focus:ring-1 focus:ring-[#ee4d2d] font-medium outline-none"
                                         />
                                         <Mail className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
                                     </div>
@@ -343,14 +366,14 @@ export default function Register() {
                             </div>
 
                             {/* Address & Coordinates */}
-                            <div className="p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-200 dark:border-neutral-800 space-y-3">
+                            <div className="p-4 bg-neutral-50 rounded-lg border border-neutral-200 space-y-3">
                                 <div>
-                                    <div className="flex justify-between items-center mb-1.5">
-                                        <label className="text-xs font-bold text-neutral-800 dark:text-neutral-200 flex items-center gap-1.5">
-                                            <MapPin className="h-3.5 w-3.5 text-emerald-700" />
+                                    <div className="flex justify-between items-center mb-1">
+                                        <label className="text-xs font-bold text-neutral-700 flex items-center gap-1.5">
+                                            <MapPin className="h-3.5 w-3.5 text-[#ee4d2d]" />
                                             <span>{accountType === 'seller' ? 'Alamat Pickup Toko (Syarat Kurir Biteship)' : 'Alamat Lengkap Pengiriman'}</span>
                                         </label>
-                                        <span className="text-[10px] text-neutral-500">Jalan, RT/RW, Kelurahan, Kecamatan, Kota</span>
+                                        <span className="text-[10px] text-neutral-500">Jalan, RT/RW, Kelurahan, Kota</span>
                                     </div>
                                     <textarea
                                         rows={2}
@@ -358,32 +381,32 @@ export default function Register() {
                                         onChange={(e) => setData('address', e.target.value)}
                                         placeholder="Contoh: Jl. Simo Gunung Kramat Barat No. 28, Sawahan, Surabaya, Jawa Timur"
                                         required
-                                        className="w-full text-xs rounded-xl border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700 font-medium"
+                                        className="w-full text-xs p-2.5 rounded border border-neutral-300 focus:border-[#ee4d2d] focus:ring-1 focus:ring-[#ee4d2d] font-medium outline-none"
                                     />
                                     {errors.address && <p className="text-xs text-red-600 font-bold mt-1">{errors.address}</p>}
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
                                     <div>
-                                        <label className="block text-[11px] font-bold text-neutral-600 dark:text-neutral-400 mb-1">
+                                        <label className="block text-[11px] font-bold text-neutral-500 mb-1">
                                             Latitude
                                         </label>
                                         <input
                                             type="text"
                                             value={data.lat}
                                             onChange={(e) => setData('lat', e.target.value)}
-                                            className="w-full text-xs font-mono rounded-xl border-neutral-300 focus:ring-emerald-700 py-1.5"
+                                            className="w-full text-xs font-mono rounded border border-neutral-300 py-1.5 px-2 outline-none"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-[11px] font-bold text-neutral-600 dark:text-neutral-400 mb-1">
+                                        <label className="block text-[11px] font-bold text-neutral-500 mb-1">
                                             Longitude
                                         </label>
                                         <input
                                             type="text"
                                             value={data.lng}
                                             onChange={(e) => setData('lng', e.target.value)}
-                                            className="w-full text-xs font-mono rounded-xl border-neutral-300 focus:ring-emerald-700 py-1.5"
+                                            className="w-full text-xs font-mono rounded border border-neutral-300 py-1.5 px-2 outline-none"
                                         />
                                     </div>
                                     <div>
@@ -392,7 +415,7 @@ export default function Register() {
                                             variant="secondary"
                                             size="sm"
                                             onClick={handleDetectLocation}
-                                            className="w-full text-xs border border-neutral-300 rounded-xl py-2 font-bold"
+                                            className="w-full text-xs border border-neutral-300 rounded py-2 font-bold hover:bg-neutral-100"
                                         >
                                             GPS Otomatis
                                         </Button>
@@ -403,8 +426,8 @@ export default function Register() {
                             {/* Passwords with Eye Toggle Button */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs font-bold text-neutral-800 dark:text-neutral-200 mb-1.5">
-                                        Kata Sandi (Password) <span className="text-red-500">*</span>
+                                    <label className="block text-xs font-bold text-neutral-700 mb-1">
+                                        Kata Sandi <span className="text-red-500">*</span>
                                     </label>
                                     <div className="relative">
                                         <input
@@ -413,7 +436,7 @@ export default function Register() {
                                             onChange={(e) => setData('password', e.target.value)}
                                             placeholder="Minimal 8 karakter"
                                             required
-                                            className="w-full text-xs pl-9 pr-10 py-2.5 rounded-xl border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700 font-medium"
+                                            className="w-full text-xs pl-9 pr-10 py-2.5 rounded border border-neutral-300 focus:border-[#ee4d2d] focus:ring-1 focus:ring-[#ee4d2d] font-medium outline-none"
                                         />
                                         <Lock className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
                                         <button
@@ -422,14 +445,14 @@ export default function Register() {
                                             className="absolute right-3 top-2.5 text-neutral-400 hover:text-neutral-700 p-0.5 rounded"
                                             title={showPassword ? 'Sembunyikan password' : 'Lihat password'}
                                         >
-                                            {showPassword ? <EyeOff className="h-4 w-4 text-emerald-700" /> : <Eye className="h-4 w-4" />}
+                                            {showPassword ? <EyeOff className="h-4 w-4 text-[#ee4d2d]" /> : <Eye className="h-4 w-4" />}
                                         </button>
                                     </div>
                                     {errors.password && <p className="text-xs text-red-600 font-bold mt-1">{errors.password}</p>}
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-neutral-800 dark:text-neutral-200 mb-1.5">
+                                    <label className="block text-xs font-bold text-neutral-700 mb-1">
                                         Konfirmasi Kata Sandi <span className="text-red-500">*</span>
                                     </label>
                                     <div className="relative">
@@ -439,7 +462,7 @@ export default function Register() {
                                             onChange={(e) => setData('password_confirmation', e.target.value)}
                                             placeholder="Ulangi kata sandi Anda"
                                             required
-                                            className="w-full text-xs pl-9 pr-10 py-2.5 rounded-xl border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700 font-medium"
+                                            className="w-full text-xs pl-9 pr-10 py-2.5 rounded border border-neutral-300 focus:border-[#ee4d2d] focus:ring-1 focus:ring-[#ee4d2d] font-medium outline-none"
                                         />
                                         <Lock className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
                                         <button
@@ -448,7 +471,7 @@ export default function Register() {
                                             className="absolute right-3 top-2.5 text-neutral-400 hover:text-neutral-700 p-0.5 rounded"
                                             title={showConfirmPassword ? 'Sembunyikan password' : 'Lihat password'}
                                         >
-                                            {showConfirmPassword ? <EyeOff className="h-4 w-4 text-emerald-700" /> : <Eye className="h-4 w-4" />}
+                                            {showConfirmPassword ? <EyeOff className="h-4 w-4 text-[#ee4d2d]" /> : <Eye className="h-4 w-4" />}
                                         </button>
                                     </div>
                                 </div>
@@ -457,44 +480,45 @@ export default function Register() {
                             {/* Optional KTP for Seller */}
                             {accountType === 'seller' && (
                                 <div>
-                                    <label className="block text-xs font-bold text-neutral-800 dark:text-neutral-200 mb-1.5">
+                                    <label className="block text-xs font-bold text-neutral-700 mb-1">
                                         Foto KTP (Opsional untuk Verifikasi Tambahan Penjual)
                                     </label>
                                     <input
                                         type="file"
                                         accept="image/*"
                                         onChange={(e) => setData('ktp', e.target.files ? e.target.files[0] : null)}
-                                        className="block w-full text-xs text-neutral-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-neutral-100 file:text-neutral-700 hover:file:bg-neutral-200 cursor-pointer"
+                                        className="block w-full text-xs text-neutral-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-neutral-100 file:text-neutral-700 hover:file:bg-neutral-200 cursor-pointer"
                                     />
                                     {errors.ktp && <p className="text-xs text-red-600 font-bold mt-1">{errors.ktp}</p>}
                                 </div>
                             )}
 
-                            <div className="pt-3">
+                            <div className="pt-4">
                                 <Button
                                     type="submit"
-                                    variant="default"
                                     disabled={processing}
-                                    className="w-full py-3.5 text-sm font-black bg-emerald-700 hover:bg-emerald-800 text-white rounded-2xl shadow-md transition-all active:scale-[0.99]"
+                                    className="w-full py-3.5 text-sm font-bold uppercase tracking-wider bg-[#ee4d2d] hover:bg-[#d73211] text-white rounded shadow-md transition-all active:scale-[0.99]"
                                 >
                                     {processing
                                         ? 'Mendaftarkan Akun...'
                                         : accountType === 'buyer'
-                                        ? 'Daftar Sebagai Pembeli Sekarang'
+                                        ? 'Daftar Sekarang'
                                         : 'Daftarkan Toko Anggota Juleha'}
                                 </Button>
                             </div>
                         </form>
 
-                        <div className="mt-6 text-center text-xs text-neutral-600 dark:text-neutral-400 border-t border-neutral-100 dark:border-neutral-800 pt-5">
+                        <div className="mt-8 pt-6 border-t border-neutral-100 text-center text-xs text-neutral-500">
                             Sudah memiliki akun terdaftar?{' '}
-                            <Link href={route('login')} className="font-bold text-emerald-700 hover:underline">
-                                Masuk ke akun Anda di sini
+                            <Link href={route('login')} className="font-bold text-[#ee4d2d] hover:underline">
+                                Masuk ke Akun
                             </Link>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
             </div>
-        </MarketplaceLayout>
+
+            <Footer />
+        </div>
     );
 }

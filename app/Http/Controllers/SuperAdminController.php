@@ -69,6 +69,7 @@ class SuperAdminController extends Controller
             'approvalQueue' => $approvalQueue,
             'allProducts' => $allProducts,
             'recentOrders' => $recentOrders,
+            'categories' => \App\Models\Category::latest()->get(['id', 'name', 'slug', 'description', 'icon', 'is_active']),
         ]);
     }
 

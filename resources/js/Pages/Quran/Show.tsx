@@ -68,6 +68,7 @@ export default function QuranShow({ surah }: Props) {
             namaLatin: surah.namaLatin,
             nama: surah.nama,
             arti: surah.arti,
+            jumlahAyat: surah.jumlahAyat,
             audioUrl: fullAudioUrl
         };
 

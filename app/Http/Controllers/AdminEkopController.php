@@ -84,6 +84,7 @@ class AdminEkopController extends Controller
             'reviewQueue' => $reviewQueue,
             'allProducts' => $allProducts,
             'unsettledDebts' => $unsettledDebts,
+            'categories' => \App\Models\Category::latest()->get(['id', 'name', 'slug', 'description', 'icon', 'is_active']),
         ]);
     }
 

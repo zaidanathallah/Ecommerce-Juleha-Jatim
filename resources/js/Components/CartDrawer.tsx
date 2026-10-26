@@ -2,7 +2,7 @@ import React from 'react';
 import { useCart } from '@/Contexts/CartContext';
 import { Link } from '@inertiajs/react';
 import { formatRupiah } from '@/lib/utils';
-import { X, ShoppingBag, Trash2, Plus, Minus, ArrowRight } from 'lucide-react';
+import { X, ShoppingBag, Trash2, Plus, Minus, ArrowRight, Flame } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 
 export default function CartDrawer() {
@@ -14,7 +14,7 @@ export default function CartDrawer() {
         <div className="fixed inset-0 z-50 overflow-hidden">
             {/* Backdrop */}
             <div
-                className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+                className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
                 onClick={closeCart}
             />
 
@@ -22,8 +22,8 @@ export default function CartDrawer() {
                 <div className="w-screen max-w-md bg-white dark:bg-neutral-900 shadow-2xl flex flex-col">
                     {/* Header */}
                     <div className="p-4 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between bg-neutral-50 dark:bg-neutral-950">
-                        <div className="flex items-center gap-2">
-                            <div className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
+                        <div className="flex items-center gap-2.5">
+                            <div className="p-2 rounded-xl bg-orange-100 dark:bg-orange-950/60 text-[#ee4d2d]">
                                 <ShoppingBag className="h-5 w-5" />
                             </div>
                             <div>
@@ -37,7 +37,7 @@ export default function CartDrawer() {
                         </div>
                         <button
                             onClick={closeCart}
-                            className="p-2 rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-800 text-neutral-500"
+                            className="p-2 rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-800 text-neutral-500 transition"
                         >
                             <X className="h-5 w-5" />
                         </button>
@@ -60,7 +60,7 @@ export default function CartDrawer() {
                                     variant="default"
                                     size="sm"
                                     onClick={closeCart}
-                                    className="bg-emerald-700 hover:bg-emerald-800 rounded-full px-5 text-xs font-bold mt-2"
+                                    className="bg-[#ee4d2d] hover:bg-[#d73211] text-white rounded-full px-5 text-xs font-bold mt-2 shadow-sm"
                                 >
                                     Mulai Belanja
                                 </Button>
@@ -69,7 +69,7 @@ export default function CartDrawer() {
                             items.map((item) => (
                                 <div
                                     key={item.id}
-                                    className="p-3 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-2xl flex gap-3 shadow-xs hover:border-emerald-600 transition-none"
+                                    className="p-3 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-2xl flex gap-3 shadow-xs hover:border-[#ee4d2d] transition"
                                 >
                                     <img
                                         src={item.image_url || '/logo-juleha.jpg'}
@@ -84,21 +84,35 @@ export default function CartDrawer() {
                                                 </h4>
                                                 <button
                                                     onClick={() => removeFromCart(item.id)}
-                                                    className="text-neutral-400 hover:text-red-600 p-0.5"
+                                                    className="text-neutral-400 hover:text-red-600 p-0.5 transition"
                                                     title="Hapus"
                                                 >
                                                     <Trash2 className="h-3.5 w-3.5" />
                                                 </button>
                                             </div>
-                                            <span className="text-[10px] text-neutral-500 font-medium">
-                                                {item.seller_name} ({item.region_name})
-                                            </span>
+                                            <div className="flex items-center gap-1.5 mt-0.5">
+                                                <span className="text-[10px] text-neutral-500 font-medium">
+                                                    {item.seller_name} ({item.region_name})
+                                                </span>
+                                                {item.is_flash_sale && (
+                                                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 bg-red-100 text-red-600 text-[9px] font-black rounded-md">
+                                                        <Flame className="h-2.5 w-2.5" /> FLASH SALE
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
 
                                         <div className="flex items-center justify-between pt-2">
-                                            <span className="font-extrabold text-xs text-emerald-700 dark:text-emerald-400">
-                                                {formatRupiah(item.price)}
-                                            </span>
+                                            <div className="space-y-0.5">
+                                                <div className="font-extrabold text-xs text-[#ee4d2d]">
+                                                    {formatRupiah(item.price)}
+                                                </div>
+                                                {item.original_price && item.original_price > item.price && (
+                                                    <div className="text-[10px] text-neutral-400 line-through">
+                                                        {formatRupiah(item.original_price)}
+                                                    </div>
+                                                )}
+                                            </div>
 
                                             <div className="flex items-center gap-1.5 bg-neutral-100 dark:bg-neutral-700 rounded-lg p-1">
                                                 <button
@@ -129,7 +143,7 @@ export default function CartDrawer() {
                         <div className="p-4 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950 space-y-3">
                             <div className="flex items-center justify-between text-xs">
                                 <span className="text-neutral-500 font-medium">Total Harga Produk</span>
-                                <span className="font-black text-base text-neutral-950 dark:text-white">
+                                <span className="font-black text-base text-[#ee4d2d]">
                                     {formatRupiah(totalPrice)}
                                 </span>
                             </div>
@@ -143,7 +157,7 @@ export default function CartDrawer() {
                                     <Button
                                         variant="default"
                                         size="lg"
-                                        className="w-full bg-emerald-700 hover:bg-emerald-800 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 py-3 shadow-md"
+                                        className="w-full bg-[#ee4d2d] hover:bg-[#d73211] rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 py-3 shadow-md text-white"
                                     >
                                         <span>Lanjut ke Pembayaran</span>
                                         <ArrowRight className="h-4 w-4" />

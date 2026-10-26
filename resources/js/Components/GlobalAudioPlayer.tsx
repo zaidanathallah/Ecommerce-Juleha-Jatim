@@ -24,6 +24,7 @@ export default function GlobalAudioPlayer() {
         isPlaying,
         isMuted,
         volume,
+        playingMode,
         currentSurah,
         currentJuz,
         togglePlay,
@@ -77,6 +78,8 @@ export default function GlobalAudioPlayer() {
         );
     }
 
+    const isSurahMode = playingMode === 'surah';
+
     return (
         <aside 
             aria-label="Global Murottal Player & Jadwal Sholat"
@@ -86,10 +89,16 @@ export default function GlobalAudioPlayer() {
                 {/* Header Bar */}
                 <div className="px-4 py-2.5 border-b border-neutral-800/80 flex items-center justify-between bg-neutral-900">
                     <div className="flex items-center gap-2">
-                        <Radio className={`h-3.5 w-3.5 ${isPlaying ? 'text-emerald-400 animate-pulse' : 'text-neutral-500'}`} />
-                        <span className="text-[11px] font-mono uppercase font-bold tracking-wider text-emerald-400 flex items-center gap-1.5">
-                            Murottal Per Juz • Acak Otomatis
-                            <Shuffle className="h-3 w-3 text-neutral-400" />
+                        <Radio className={`h-3.5 w-3.5 ${isPlaying ? 'text-[#ee4d2d] animate-pulse' : 'text-neutral-500'}`} />
+                        <span className="text-[11px] font-mono uppercase font-bold tracking-wider text-orange-400 flex items-center gap-1.5">
+                            {isSurahMode ? (
+                                <>Murottal Surat • QS. {currentSurah.namaLatin}</>
+                            ) : (
+                                <>
+                                    Murottal Per Juz • Acak Otomatis
+                                    <Shuffle className="h-3 w-3 text-neutral-400" />
+                                </>
+                            )}
                         </span>
                     </div>
 
@@ -116,16 +125,31 @@ export default function GlobalAudioPlayer() {
                 {/* Player Body */}
                 {!isCollapsed && (
                     <div className="p-4 space-y-3">
-                        {/* Juz & Surah Details */}
+                        {/* Juz & Surah Details - Dynamically synced */}
                         <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                                <div className="text-xs font-black text-white flex items-center gap-1.5 truncate">
-                                    <span className="text-emerald-400 font-extrabold">{currentJuz?.name || 'Juz'}</span>
-                                    <span className="text-neutral-300 font-normal">({currentJuz?.arabicName})</span>
-                                </div>
-                                <div className="text-[10px] text-neutral-400 truncate mt-0.5">
-                                    Mulai: {currentJuz?.startVerse || currentSurah.arti}
-                                </div>
+                            <div className="min-w-0 flex-1">
+                                {isSurahMode ? (
+                                    <>
+                                        <div className="text-xs font-black text-white flex items-center gap-1.5 truncate">
+                                            <span className="text-[#ee4d2d] font-extrabold">QS. {currentSurah.namaLatin}</span>
+                                            <span className="text-neutral-300 font-serif">({currentSurah.nama})</span>
+                                        </div>
+                                        <div className="text-[10px] text-neutral-400 truncate mt-0.5">
+                                            Surat ke-{currentSurah.nomor} • {currentSurah.arti || 'Bacaan Murottal'}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="text-xs font-black text-white flex items-center gap-1.5 truncate">
+                                            <span className="text-emerald-400 font-extrabold">{currentJuz?.name || 'Juz'}</span>
+                                            <span className="text-neutral-300 font-normal">({currentJuz?.arabicName})</span>
+                                        </div>
+                                        <div className="text-[10px] text-neutral-400 truncate mt-0.5">
+                                            Mulai: {currentJuz?.startVerse}
+                                        </div>
+                                    </>
+                                )}
+
                                 <div className="text-[9px] text-neutral-500 font-mono mt-0.5 flex items-center gap-1">
                                     <MapPin className="h-2.5 w-2.5 text-emerald-500 shrink-0" />
                                     <span className="truncate">Lokasi: {userLocation}</span>
@@ -161,7 +185,7 @@ export default function GlobalAudioPlayer() {
                                     className={`h-8 px-3.5 rounded-xl font-bold text-xs uppercase transition shadow-sm ${
                                         isPlaying 
                                             ? 'bg-amber-600 hover:bg-amber-700 text-white' 
-                                            : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                            : 'bg-[#ee4d2d] hover:bg-[#d73211] text-white'
                                     }`}
                                 >
                                     {isPlaying ? (
@@ -179,13 +203,15 @@ export default function GlobalAudioPlayer() {
 
                                 <button
                                     onClick={toggleMute}
-                                    className="p-1.5 text-neutral-400 hover:text-white transition rounded-lg hover:bg-neutral-800"
-                                    title={isMuted ? 'Suarakan' : 'Bisukan'}
+                                    className="p-1.5 text-neutral-400 hover:text-white rounded-lg hover:bg-neutral-800 transition"
+                                    title={isMuted ? 'Batal Bisukan' : 'Bisukan Suara'}
                                 >
-                                    {isMuted ? <VolumeX className="h-4 w-4 text-red-400" /> : <Volume2 className="h-4 w-4" />}
+                                    {isMuted ? <VolumeOff className="h-4 w-4 text-red-400" /> : <Volume2 className="h-4 w-4" />}
                                 </button>
+                            </div>
 
-                                {/* Volume slider */}
+                            {/* Volume Slider */}
+                            <div className="hidden sm:flex items-center gap-2 flex-1 max-w-[120px] px-2">
                                 <input
                                     type="range"
                                     min="0"
@@ -193,8 +219,8 @@ export default function GlobalAudioPlayer() {
                                     step="0.05"
                                     value={isMuted ? 0 : volume}
                                     onChange={(e) => setVolume(parseFloat(e.target.value))}
-                                    className="w-14 h-1 bg-neutral-700 accent-emerald-500 cursor-pointer rounded-lg"
-                                    title={`Volume: ${Math.round(volume * 100)}%`}
+                                    className="w-full h-1 bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-[#ee4d2d]"
+                                    title={`Volume: ${Math.round((isMuted ? 0 : volume) * 100)}%`}
                                 />
                             </div>
 
@@ -203,10 +229,10 @@ export default function GlobalAudioPlayer() {
                                 size="sm"
                                 variant="outline"
                                 onClick={stopAndRedirectToQuran}
-                                className="h-8 px-3 border-neutral-700 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-bold rounded-xl shrink-0"
-                                title="Buka Al-Qur'an Digital 30 Juz"
+                                className="h-8 text-xs font-bold rounded-xl border-neutral-700 bg-neutral-800/80 text-white hover:bg-neutral-700 gap-1.5"
+                                title="Buka Halaman Al-Qur'an 30 Juz Lengkap"
                             >
-                                <BookOpen className="h-3.5 w-3.5 mr-1 text-emerald-400" />
+                                <BookOpen className="h-3.5 w-3.5 text-emerald-400" />
                                 <span>Al-Qur'an 30 Juz</span>
                             </Button>
                         </div>

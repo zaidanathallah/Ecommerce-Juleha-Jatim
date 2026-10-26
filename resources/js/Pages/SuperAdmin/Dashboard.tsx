@@ -22,7 +22,9 @@ import {
     Volume2,
     BellRing,
     Music,
+    Tags,
 } from 'lucide-react';
+import CategoryManageModal from '@/Components/CategoryManageModal';
 
 interface Props {
     stats: {
@@ -40,6 +42,7 @@ interface Props {
         links: any[];
     };
     recentOrders?: any[];
+    categories?: any[];
 }
 
 export default function SuperAdminDashboard({
@@ -47,9 +50,11 @@ export default function SuperAdminDashboard({
     approvalQueue,
     allProducts,
     recentOrders = [],
+    categories = [],
 }: Props) {
     const [selectedProduct, setSelectedProduct] = useState<ManagementProduct | null>(null);
     const [actionType, setActionType] = useState<'publish' | 'reject' | null>(null);
+    const [showCategoryModal, setShowCategoryModal] = useState(false);
 
     const { site_settings } = usePage<PageProps>().props;
 
@@ -114,6 +119,12 @@ export default function SuperAdminDashboard({
         <MarketplaceLayout>
             <Head title="Panel Super Admin - Juleha Jawa Timur" />
 
+            <CategoryManageModal
+                isOpen={showCategoryModal}
+                onClose={() => setShowCategoryModal(false)}
+                categories={categories}
+            />
+
             <div className="space-y-6">
                 {/* Header Banner */}
                 <div className="border border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-lg p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
@@ -134,7 +145,16 @@ export default function SuperAdminDashboard({
                         </p>
                     </div>
 
-                    <div className="flex gap-3">
+                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3">
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setShowCategoryModal(true)}
+                            className="text-xs font-bold border-[#ee4d2d] text-[#ee4d2d] hover:bg-orange-50 rounded-xl gap-1.5"
+                        >
+                            <Tags className="h-4 w-4" />
+                            Kelola Kategori & Ikon
+                        </Button>
                         <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded border border-neutral-300 dark:border-neutral-700 text-right">
                             <span className="text-[10px] text-neutral-500 uppercase font-bold block">
                                 Kas Provinsi (super_margin)

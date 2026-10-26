@@ -319,15 +319,25 @@ export default function QuranIndex({ surahs = [], filters }: Props) {
                                                 {isCurrentJuzPlaying ? (
                                                     <>
                                                         <Pause className="h-3.5 w-3.5" />
-                                                        <span>Juz Sedang Diputar</span>
+                                                        <span>Diputar</span>
                                                     </>
                                                 ) : (
                                                     <>
                                                         <Play className="h-3.5 w-3.5" />
-                                                        <span>Putar Murottal Juz {juz.number}</span>
+                                                        <span>Putar Audio</span>
                                                     </>
                                                 )}
                                             </Button>
+
+                                            <Link href={route('quran.show', juz.startSurahNumber)} className="flex-1">
+                                                <Button
+                                                    size="sm"
+                                                    className="w-full text-xs font-bold bg-[#ee4d2d] hover:bg-[#d73211] text-white rounded-xl gap-1.5 shadow-sm"
+                                                >
+                                                    <BookOpen className="h-3.5 w-3.5" />
+                                                    <span>Baca Juz {juz.number}</span>
+                                                </Button>
+                                            </Link>
                                         </div>
                                     </div>
                                 );

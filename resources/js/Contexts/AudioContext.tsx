@@ -7,6 +7,7 @@ export interface SurahSummary {
     namaLatin: string;
     nama: string;
     arti?: string;
+    jumlahAyat?: number;
     audioUrl?: string;
 }
 
@@ -24,6 +25,7 @@ interface AudioContextType {
     isPlaying: boolean;
     isMuted: boolean;
     volume: number; // 0 to 1
+    playingMode: 'juz' | 'surah';
     currentSurah: SurahSummary;
     currentJuz: JuzInfo;
     togglePlay: () => void;
@@ -83,8 +85,9 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children, initialS
     const isAdzanEnabled = initialSettings?.is_adzan_active ?? true;
     const configuredVolume = (initialSettings?.murottal_volume ?? 50) / 100;
 
-    // Pick a random Juz on arrival
+    // Pick a random Juz on arrival every time user enters the ecommerce
     const [currentJuz, setCurrentJuz] = useState<JuzInfo>(() => getRandomJuz());
+    const [playingMode, setPlayingMode] = useState<'juz' | 'surah'>('juz');
 
     // Audio instances (Persistent across page re-renders)
     const murottalRef = useRef<HTMLAudioElement | null>(null);
@@ -95,7 +98,7 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children, initialS
     const [isMuted, setIsMuted] = useState<boolean>(false);
     const [volume, setVolumeState] = useState<number>(configuredVolume);
     const [currentSurah, setCurrentSurah] = useState<SurahSummary>({
-        nomor: currentJuz.number,
+        nomor: currentJuz.startSurahNumber,
         namaLatin: currentJuz.name,
         nama: currentJuz.arabicName,
         arti: currentJuz.startVerse,
@@ -132,8 +135,8 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children, initialS
         mAudio.loop = true;
         murottalRef.current = mAudio;
 
-        // Initialize Adzan Audio
-        const aAudio = new Audio();
+        // Initialize Adzan Audio with local fallbacks
+        const aAudio = new Audio('/audio/adzan_regular.mp3');
         aAudio.preload = 'auto';
         aAudio.volume = 1.0;
         adzanRef.current = aAudio;
@@ -153,9 +156,8 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children, initialS
             setAdzanPrayerName(null);
             setIsAdzanModalOpen(false);
 
-            // Resume Murottal if it was playing and not disabled by user
-            const userMuted = localStorage.getItem('juleha_user_murottal_disabled') === 'true';
-            if (isGlobalMurottalEnabled && !userMuted && murottalRef.current) {
+            // Resume Murottal if it was playing and global enabled
+            if (isGlobalMurottalEnabled && murottalRef.current) {
                 murottalRef.current.play().catch((e) => console.log('Resume error:', e));
             }
         };
@@ -172,16 +174,11 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children, initialS
         };
     }, []);
 
-    // 2. Autoplay Handler for Murottal Per Juz
+    // 2. Reliable Autoplay Handler for Murottal (Fixed for Reopening & First Gesture)
     useEffect(() => {
         if (!isGlobalMurottalEnabled || typeof window === 'undefined') return;
 
-        const userMutedPreference = localStorage.getItem('juleha_user_murottal_disabled');
-        if (userMutedPreference === 'true') {
-            return;
-        }
-
-        // Try direct autoplay immediately
+        // Direct attempt on arrival
         if (murottalRef.current && !isAdzanPlaying && !hasAutoPlayedRef.current) {
             murottalRef.current
                 .play()
@@ -190,10 +187,11 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children, initialS
                     hasAutoPlayedRef.current = true;
                 })
                 .catch(() => {
-                    // Autoplay blocked by browser policy without user gesture; attach first user interaction
+                    // Browser requires user interaction before audio starts
                 });
         }
 
+        // On first user interaction anywhere on the document (click, scroll, keydown, touch)
         const handleFirstInteraction = () => {
             if (hasAutoPlayedRef.current) return;
             hasAutoPlayedRef.current = true;
@@ -207,23 +205,24 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children, initialS
                     });
             }
 
+            cleanupListeners();
+        };
+
+        const cleanupListeners = () => {
+            window.removeEventListener('pointerdown', handleFirstInteraction);
             window.removeEventListener('click', handleFirstInteraction);
             window.removeEventListener('scroll', handleFirstInteraction);
             window.removeEventListener('keydown', handleFirstInteraction);
             window.removeEventListener('touchstart', handleFirstInteraction);
         };
 
+        window.addEventListener('pointerdown', handleFirstInteraction, { passive: true });
         window.addEventListener('click', handleFirstInteraction, { passive: true });
         window.addEventListener('scroll', handleFirstInteraction, { passive: true });
         window.addEventListener('keydown', handleFirstInteraction, { passive: true });
         window.addEventListener('touchstart', handleFirstInteraction, { passive: true });
 
-        return () => {
-            window.removeEventListener('click', handleFirstInteraction);
-            window.removeEventListener('scroll', handleFirstInteraction);
-            window.removeEventListener('keydown', handleFirstInteraction);
-            window.removeEventListener('touchstart', handleFirstInteraction);
-        };
+        return cleanupListeners;
     }, [isGlobalMurottalEnabled, isAdzanPlaying]);
 
     // 3. Geolocation & Reverse Geocoding for readable location (e.g. Karang Pilang, Surabaya)
@@ -240,73 +239,74 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children, initialS
                     { headers: { 'Accept-Language': 'id' } }
                 );
                 if (geoRes.ok) {
-                    const geo = await geoRes.json();
-                    const district = geo.address?.suburb || geo.address?.city_district || geo.address?.village || geo.address?.town || 'Karang Pilang';
-                    const city = geo.address?.city || geo.address?.county || 'Surabaya';
-                    setUserLocation(`${district}, ${city} (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
+                    const geoData = await geoRes.json();
+                    const addr = geoData.address || {};
+                    const district = addr.suburb || addr.village || addr.quarter || addr.city_district || addr.town || '';
+                    const city = addr.city || addr.regency || addr.county || 'Surabaya';
+                    const readableName = district ? `${district}, ${city}` : city;
+                    setUserLocation(`${readableName} (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
                 } else {
-                    setUserLocation(`Karang Pilang, Surabaya (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
+                    setUserLocation(`Jawa Timur (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
                 }
-            } catch {
-                setUserLocation(`Karang Pilang, Surabaya (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
+            } catch (e) {
+                setUserLocation(`Jawa Timur (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
             }
 
-            // 2. Fetch from Aladhan API v1
+            // 2. Fetch Islamic Prayer Times from Aladhan API
             try {
-                const res = await fetch(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lng}&method=11`);
+                const today = new Date();
+                const d = today.getDate();
+                const m = today.getMonth() + 1;
+                const y = today.getFullYear();
+
+                const res = await fetch(
+                    `https://api.aladhan.com/v1/timings/${d}-${m}-${y}?latitude=${lat}&longitude=${lng}&method=20`
+                );
                 const data = await res.json();
-                if (data?.data?.timings) {
-                    const t = data.data.timings;
+                if (data.code === 200 && data.data?.timings) {
                     setPrayerTimes({
-                        Fajr: t.Fajr.substring(0, 5),
-                        Dhuhr: t.Dhuhr.substring(0, 5),
-                        Asr: t.Asr.substring(0, 5),
-                        Maghrib: t.Maghrib.substring(0, 5),
-                        Isha: t.Isha.substring(0, 5)
+                        Fajr: data.data.timings.Fajr.substring(0, 5),
+                        Dhuhr: data.data.timings.Dhuhr.substring(0, 5),
+                        Asr: data.data.timings.Asr.substring(0, 5),
+                        Maghrib: data.data.timings.Maghrib.substring(0, 5),
+                        Isha: data.data.timings.Isha.substring(0, 5)
                     });
                 }
             } catch (err) {
-                console.warn('Aladhan API unavailable, using East Java default prayer times:', err);
+                console.log('Using default prayer times:', err);
             }
         };
 
-        if ('geolocation' in navigator) {
+        if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    const lat = pos.coords.latitude;
-                    const lng = pos.coords.longitude;
-                    fetchPrayerTimings(lat, lng);
-                },
-                (err) => {
-                    console.log('Geolocation permission denied/error, fallback to Karang Pilang Surabaya:', err.message);
-                    fetchPrayerTimings(-7.3245, 112.6982);
-                },
-                { timeout: 8000 }
+                (pos) => fetchPrayerTimings(pos.coords.latitude, pos.coords.longitude),
+                () => fetchPrayerTimings(-7.2575, 112.7521), // Default Surabaya
+                { timeout: 10000, enableHighAccuracy: false }
             );
         } else {
-            fetchPrayerTimings(-7.3245, 112.6982);
+            fetchPrayerTimings(-7.2575, 112.7521);
         }
     }, []);
 
-    // 4. Calculate Next Prayer & Interval Checker
+    // 4. Calculate Next Prayer & Trigger Adzan
     useEffect(() => {
         const checkPrayerTimes = () => {
             const now = new Date();
-            const currentHours = String(now.getHours()).padStart(2, '0');
-            const currentMinutes = String(now.getMinutes()).padStart(2, '0');
-            const currentHHMM = `${currentHours}:${currentMinutes}`;
-            const todayStr = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+            const currentHHMM = now.toTimeString().substring(0, 5);
+            const todayStr = now.toISOString().substring(0, 10);
 
             const prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
             let foundNext = false;
+
             for (const p of prayers) {
                 const t = prayerTimes[p];
-                if (t && t > currentHHMM) {
+                if (t > currentHHMM) {
                     setNextPrayer({ name: PRAYER_NAMES_ID[p] || p, time: t });
                     foundNext = true;
                     break;
                 }
             }
+
             if (!foundNext) {
                 setNextPrayer({ name: 'Subuh (Besok)', time: prayerTimes.Fajr });
             }
@@ -331,7 +331,7 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children, initialS
         return () => clearInterval(interval);
     }, [prayerTimes, isAdzanEnabled]);
 
-    // 5. Play Adzan Audio & Show Notification
+    // 5. Play Adzan Audio & Show Notification (Local reliable audio files)
     const triggerAdzan = (prayerKey: string) => {
         if (!adzanRef.current) return;
 
@@ -345,9 +345,8 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children, initialS
         setIsShubuhAdzan(isFajr);
         setAdzanPrayerName(prayerNameIndo);
 
-        const adzanSrc = isFajr
-            ? 'https://cdn.islamic.network/audio/adzan/fajr.mp3'
-            : 'https://cdn.islamic.network/audio/adzan/adzan_makkah.mp3';
+        // Always use local reliable audio files in public/audio/
+        const adzanSrc = isFajr ? '/audio/adzan_shubuh.mp3' : '/audio/adzan_regular.mp3';
 
         adzanRef.current.src = adzanSrc;
         adzanRef.current.currentTime = 0;
@@ -384,8 +383,8 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children, initialS
         setAdzanPrayerName(null);
         setIsAdzanModalOpen(false);
 
-        const userMuted = localStorage.getItem('juleha_user_murottal_disabled') === 'true';
-        if (isGlobalMurottalEnabled && !userMuted && murottalRef.current) {
+        // Resume Murottal if enabled
+        if (isGlobalMurottalEnabled && murottalRef.current) {
             murottalRef.current.play().catch(() => {});
         }
     };
@@ -394,15 +393,14 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children, initialS
         setIsAdzanModalOpen(false);
     };
 
+    // 6. Audio Controls
     const togglePlay = () => {
         if (!murottalRef.current) return;
-
         if (isPlaying) {
             murottalRef.current.pause();
-            localStorage.setItem('juleha_user_murottal_disabled', 'true');
+            setIsPlaying(false);
         } else {
-            localStorage.removeItem('juleha_user_murottal_disabled');
-            murottalRef.current.play().catch((err) => console.log('Play failed:', err));
+            murottalRef.current.play().then(() => setIsPlaying(true)).catch((err) => console.log('Play failed:', err));
         }
     };
 
@@ -424,23 +422,23 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children, initialS
 
     const playSurah = (surah: SurahSummary) => {
         if (!murottalRef.current) return;
+        setPlayingMode('surah');
         setCurrentSurah(surah);
-        murottalRef.current.src = surah.audioUrl || `https://cdn.equran.id/audio-full/Misyari-Rasyid-Al-Afasi/${String(surah.nomor).padStart(3, '0')}.mp3`;
+        const url = surah.audioUrl || `https://cdn.equran.id/audio-full/Misyari-Rasyid-Al-Afasi/${String(surah.nomor).padStart(3, '0')}.mp3`;
+        murottalRef.current.src = url;
         murottalRef.current.currentTime = 0;
         murottalRef.current
             .play()
-            .then(() => {
-                setIsPlaying(true);
-                localStorage.removeItem('juleha_user_murottal_disabled');
-            })
+            .then(() => setIsPlaying(true))
             .catch((err) => console.log('Surah play error:', err));
     };
 
     const playJuz = (juz: JuzInfo) => {
         if (!murottalRef.current) return;
+        setPlayingMode('juz');
         setCurrentJuz(juz);
         setCurrentSurah({
-            nomor: juz.number,
+            nomor: juz.startSurahNumber,
             namaLatin: juz.name,
             nama: juz.arabicName,
             arti: juz.startVerse,
@@ -450,10 +448,7 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children, initialS
         murottalRef.current.currentTime = 0;
         murottalRef.current
             .play()
-            .then(() => {
-                setIsPlaying(true);
-                localStorage.removeItem('juleha_user_murottal_disabled');
-            })
+            .then(() => setIsPlaying(true))
             .catch((err) => console.log('Juz play error:', err));
     };
 
@@ -481,6 +476,7 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children, initialS
                 isPlaying,
                 isMuted,
                 volume,
+                playingMode,
                 currentSurah,
                 currentJuz,
                 togglePlay,

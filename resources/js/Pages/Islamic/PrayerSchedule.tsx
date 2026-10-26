@@ -90,12 +90,13 @@ export default function PrayerSchedule() {
             return;
         }
 
-        const audio = new Audio('https://cdn.islamic.network/audio/adzan/adzan_makkah.mp3');
+        const audio = new Audio('/audio/adzan_regular.mp3');
         audio.volume = 1.0;
         audio.play().then(() => {
             setAudioTestPlaying(true);
             setAudioTestInstance(audio);
         }).catch((err) => {
+            console.error('Play adzan failed:', err);
             alert('Tidak dapat memutar audio: ' + err.message);
         });
 
@@ -166,7 +167,7 @@ export default function PrayerSchedule() {
                 <div>
                     <Link
                         href={route('home')}
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-400 hover:underline"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-[#ee4d2d] hover:underline"
                     >
                         <ArrowLeft className="h-4 w-4" />
                         <span>Kembali ke Beranda Marketplace</span>
@@ -174,11 +175,11 @@ export default function PrayerSchedule() {
                 </div>
 
                 {/* Main Hero Card: Live Digital Clock & User Geolocation */}
-                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-950 text-white shadow-2xl p-6 sm:p-10 border border-emerald-700/50">
+                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#ee4d2d] via-orange-600 to-amber-600 text-white shadow-2xl p-6 sm:p-10 border border-orange-500/50">
                     <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <div className="space-y-3">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-800/80 border border-emerald-600/60 rounded-full text-xs font-bold text-emerald-200 tracking-wider">
-                                <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 border border-white/30 rounded-full text-xs font-bold text-white tracking-wider backdrop-blur-sm">
+                                <Sparkles className="h-3.5 w-3.5 text-amber-200" />
                                 <span>WAKTU SHOLAT REALTIME & AKURAT</span>
                             </div>
 
@@ -186,44 +187,44 @@ export default function PrayerSchedule() {
                                 Jadwal Sholat Jawa Timur
                             </h1>
 
-                            <div className="flex flex-wrap items-center gap-3 text-xs text-emerald-100">
-                                <div className="flex items-center gap-1.5 bg-emerald-950/50 px-3 py-1.5 rounded-xl border border-emerald-700/60">
-                                    <MapPin className="h-4 w-4 text-emerald-400 shrink-0" />
+                            <div className="flex flex-wrap items-center gap-3 text-xs text-white/90">
+                                <div className="flex items-center gap-1.5 bg-black/20 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-white/20">
+                                    <MapPin className="h-4 w-4 text-amber-300 shrink-0" />
                                     <span className="font-bold">Lokasi Anda:</span>
                                     <span>{userLocation}</span>
                                 </div>
 
-                                <div className="flex items-center gap-1.5 bg-emerald-950/50 px-3 py-1.5 rounded-xl border border-emerald-700/60 font-mono text-[11px]">
-                                    <Compass className="h-4 w-4 text-emerald-400 shrink-0" />
+                                <div className="flex items-center gap-1.5 bg-black/20 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-white/20 font-mono text-[11px]">
+                                    <Compass className="h-4 w-4 text-amber-300 shrink-0" />
                                     <span>Lat: {userCoords.lat.toFixed(4)}, Lng: {userCoords.lng.toFixed(4)}</span>
                                 </div>
                             </div>
 
-                            <p className="text-xs text-emerald-200/90 pt-1">
+                            <p className="text-xs text-white/80 pt-1">
                                 Waktu dihitung presisi berdasarkan koordinat lintang & bujur GPS perangkat Anda menggunakan standar Kementerian Agama RI / Aladhan API.
                             </p>
                         </div>
 
                         {/* Digital Clock Box */}
-                        <div className="bg-emerald-950/80 border border-emerald-500/40 rounded-3xl p-6 sm:p-8 text-center shrink-0 shadow-inner">
-                            <div className="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-emerald-300 mb-1">
-                                <Clock className="h-4 w-4 text-emerald-400 animate-pulse" />
+                        <div className="bg-black/30 backdrop-blur-md border border-white/30 rounded-3xl p-6 sm:p-8 text-center shrink-0 shadow-lg">
+                            <div className="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-amber-200 mb-1">
+                                <Clock className="h-4 w-4 text-amber-300 animate-pulse" />
                                 <span>Jam Digital Real-Time</span>
                             </div>
                             <div className="text-3xl sm:text-4xl font-mono font-black tracking-wider text-white">
                                 {formattedDigitalClock}
                             </div>
-                            <div className="text-xs text-emerald-200 font-medium mt-2 flex items-center justify-center gap-1.5">
-                                <Calendar className="h-3.5 w-3.5 text-emerald-400" />
+                            <div className="text-xs text-white/90 font-medium mt-2 flex items-center justify-center gap-1.5">
+                                <Calendar className="h-3.5 w-3.5 text-amber-300" />
                                 <span>{formattedDate}</span>
                             </div>
 
                             {nextPrayer && (
-                                <div className="mt-4 pt-3 border-t border-emerald-800/80 text-xs">
-                                    <div className="text-emerald-300 font-bold">
+                                <div className="mt-4 pt-3 border-t border-white/20 text-xs">
+                                    <div className="text-white font-bold">
                                         Menuju Waktu {nextPrayer.name} ({nextPrayer.time})
                                     </div>
-                                    <div className="font-mono text-amber-300 font-black text-sm mt-0.5">
+                                    <div className="font-mono text-amber-200 font-black text-sm mt-0.5">
                                         {countdown}
                                     </div>
                                 </div>

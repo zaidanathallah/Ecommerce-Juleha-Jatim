@@ -12,6 +12,8 @@ export interface CartItem {
     quantity: number;
     seller_name: string;
     region_name: string;
+    is_flash_sale?: boolean;
+    original_price?: number;
 }
 
 interface CartContextType {
@@ -31,14 +33,10 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-function getStorageKey(userId: number | null): string {
-    return userId ? `juleha_cart_user_${userId}` : 'juleha_cart_guest';
-}
-
-function loadItemsFromStorage(userId: number | null): CartItem[] {
-    if (typeof window === 'undefined') return [];
+function loadUserItemsFromStorage(userId: number | null): CartItem[] {
+    if (typeof window === 'undefined' || !userId) return [];
     try {
-        const key = getStorageKey(userId);
+        const key = `juleha_cart_user_${userId}`;
         const saved = localStorage.getItem(key);
         return saved ? JSON.parse(saved) : [];
     } catch (e) {
@@ -57,40 +55,37 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
 
     const [userId, setUserId] = useState<number | null>(currentUserId);
-    const [items, setItems] = useState<CartItem[]>(() => loadItemsFromStorage(currentUserId));
+    // Strict Shopee-style: Guests cannot have cart items in memory
+    const [items, setItems] = useState<CartItem[]>(() => {
+        if (!currentUserId) return [];
+        return loadUserItemsFromStorage(currentUserId);
+    });
     const [isCartOpen, setIsCartOpen] = useState(false);
     const activeUserIdRef = useRef<number | null>(currentUserId);
 
-    // Sync cart when user logs in, switches accounts, or logs out
-    useEffect(() => {
-        const unregister = router.on('finish', () => {
-            try {
-                // Read fresh props after inertia navigation
-                const page = (window as any)?.__inertia_page_props__ || null;
-                // or safely through DOM/Inertia state
-            } catch {
-                // ignore
-            }
-        });
-        return () => unregister();
-    }, []);
-
-    // Watch for auth user changes
+    // Watch for auth user changes (Login, Account Switch, Logout)
     useEffect(() => {
         if (currentUserId !== activeUserIdRef.current) {
             activeUserIdRef.current = currentUserId;
             setUserId(currentUserId);
-            // Load the newly authenticated user's cart (or clean guest cart on logout)
-            const freshItems = loadItemsFromStorage(currentUserId);
-            setItems(freshItems);
+
+            if (currentUserId) {
+                // User logged in: load their personal isolated cart
+                const userCart = loadUserItemsFromStorage(currentUserId);
+                setItems(userCart);
+            } else {
+                // User logged out: clear memory immediately so no stale items leak to next user
+                setItems([]);
+            }
         }
     }, [currentUserId]);
 
-    // Save cart strictly to current user's isolated storage
+    // Save cart strictly to current user's isolated storage ONLY when authenticated
     useEffect(() => {
         if (typeof window === 'undefined') return;
+        if (!userId) return; // Do not save guest items
         try {
-            const key = getStorageKey(userId);
+            const key = `juleha_cart_user_${userId}`;
             localStorage.setItem(key, JSON.stringify(items));
         } catch (e) {
             console.error('Failed to save cart to storage', e);
@@ -98,11 +93,25 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }, [items, userId]);
 
     const addToCart = (product: BuyerProduct, quantity: number = 1) => {
+        // Strict Gate: Must be logged in to shop or add to cart
+        if (!currentUserId && !userId) {
+            alert('Silakan Masuk ke akun Anda terlebih dahulu untuk memasukkan barang ke keranjang dan mulai berbelanja.');
+            router.visit(route('login'));
+            return;
+        }
+
+        // Accurate Flash Sale vs Regular Price
+        const isFlashSale = Boolean(product.is_flash_sale && product.flash_sale_price);
+        const effectivePrice = isFlashSale
+            ? Number(product.flash_sale_price)
+            : Number(product.price);
+
         setItems((prevItems) => {
             const existingIndex = prevItems.findIndex((item) => item.id === product.id);
             if (existingIndex > -1) {
                 const updated = [...prevItems];
                 updated[existingIndex].quantity += quantity;
+                updated[existingIndex].price = effectivePrice;
                 return updated;
             } else {
                 return [
@@ -111,12 +120,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                         id: product.id,
                         slug: product.slug,
                         title: product.title,
-                        price: product.price,
+                        price: effectivePrice,
                         image_url: product.image_url,
                         weight_gram: product.weight_gram,
                         quantity,
                         seller_name: product.seller?.name || 'Mitra Penjual Juleha',
                         region_name: product.region_name || 'Jawa Timur',
+                        is_flash_sale: isFlashSale,
+                        original_price: Number(product.price),
                     },
                 ];
             }
@@ -140,19 +151,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     const clearCart = () => {
         setItems([]);
-        if (typeof window !== 'undefined') {
+        if (userId && typeof window !== 'undefined') {
             try {
-                localStorage.removeItem(getStorageKey(userId));
-            } catch {
-                // ignore
+                localStorage.removeItem(`juleha_cart_user_${userId}`);
+            } catch (e) {
+                console.error(e);
             }
         }
     };
 
-    const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-    const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
+    const totalPrice = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
-    const openCart = () => setIsCartOpen(true);
+    const openCart = () => {
+        if (!currentUserId && !userId) {
+            alert('Silakan Masuk ke akun Anda terlebih dahulu untuk melihat keranjang belanja.');
+            router.visit(route('login'));
+            return;
+        }
+        setIsCartOpen(true);
+    };
+
     const closeCart = () => setIsCartOpen(false);
 
     return (

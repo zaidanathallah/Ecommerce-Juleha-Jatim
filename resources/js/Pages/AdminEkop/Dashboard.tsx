@@ -15,7 +15,9 @@ import {
     Users,
     MapPin,
     AlertCircle,
+    Tags,
 } from 'lucide-react';
+import CategoryManageModal from '@/Components/CategoryManageModal';
 
 interface Props {
     regionName: string;
@@ -35,6 +37,7 @@ interface Props {
         links: any[];
     };
     unsettledDebts?: any[];
+    categories?: any[];
 }
 
 export default function AdminEkopDashboard({
@@ -44,9 +47,11 @@ export default function AdminEkopDashboard({
     reviewQueue,
     allProducts,
     unsettledDebts = [],
+    categories = [],
 }: Props) {
     const [selectedProduct, setSelectedProduct] = useState<ManagementProduct | null>(null);
     const [actionType, setActionType] = useState<'approve' | 'reject' | null>(null);
+    const [showCategoryModal, setShowCategoryModal] = useState(false);
 
     const approveForm = useForm({
         ekop_margin: 25000,
@@ -97,6 +102,12 @@ export default function AdminEkopDashboard({
         <MarketplaceLayout>
             <Head title={`Panel Admin Ekop - ${regionName}`} />
 
+            <CategoryManageModal
+                isOpen={showCategoryModal}
+                onClose={() => setShowCategoryModal(false)}
+                categories={categories}
+            />
+
             <div className="space-y-6">
                 {/* Region Jurisdiction Header */}
                 <div className="border border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-lg p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
@@ -118,6 +129,15 @@ export default function AdminEkopDashboard({
                     </div>
 
                     <div className="flex items-center gap-2">
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setShowCategoryModal(true)}
+                            className="text-xs font-bold border-[#ee4d2d] text-[#ee4d2d] hover:bg-orange-50 rounded-xl gap-1.5"
+                        >
+                            <Tags className="h-4 w-4" />
+                            Kelola Kategori & Ikon
+                        </Button>
                         <a 
                             href="/biteship/simulation" 
                             className="text-xs font-bold px-3 py-2 bg-neutral-100 dark:bg-neutral-800 rounded border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-200 inline-flex items-center gap-1.5 text-neutral-800 dark:text-neutral-200"

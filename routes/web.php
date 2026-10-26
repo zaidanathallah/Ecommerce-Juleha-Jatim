@@ -73,7 +73,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/products', [SellerProductController::class, 'store'])->name('products.store');
         Route::get('/products/{product}/edit', [SellerProductController::class, 'edit'])->name('products.edit');
         Route::put('/products/{product}', [SellerProductController::class, 'update'])->name('products.update');
-        Route::post('/categories', [SellerProductController::class, 'storeCategory'])->name('categories.store');
+        // Category Management (CRUD for Seller, Admin Ekop, Super Admin)
+        Route::get('/categories/list', [\App\Http\Controllers\CategoryController::class, 'index'])->name('categories.index');
+        Route::post('/categories', [\App\Http\Controllers\CategoryController::class, 'store'])->name('categories.store');
+        Route::put('/categories/{category}', [\App\Http\Controllers\CategoryController::class, 'update'])->name('categories.update');
+        Route::delete('/categories/{category}', [\App\Http\Controllers\CategoryController::class, 'destroy'])->name('categories.destroy');
 
         // Seller Shop Settings (Toggles: DOKU PG & Biteship API)
         Route::get('/shop/settings', [\App\Http\Controllers\SellerShopController::class, 'edit'])->name('shop.edit');

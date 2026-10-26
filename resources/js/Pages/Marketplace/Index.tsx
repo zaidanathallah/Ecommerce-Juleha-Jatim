@@ -373,14 +373,22 @@ export default function Index({ products, flashSaleProducts = [], vouchers = [],
                                             </div>
                                         </div>
 
-                                        <div className="p-3.5 pt-0">
+                                        <div className="p-3.5 pt-0 flex items-center gap-2">
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => addToCart(product, 1)}
+                                                className="flex-1 text-xs font-bold rounded-xl border-[#ee4d2d] text-[#ee4d2d] hover:bg-orange-50 gap-1"
+                                            >
+                                                <Plus className="h-3.5 w-3.5" />
+                                                <span>Keranjang</span>
+                                            </Button>
                                             <Button
                                                 size="sm"
                                                 onClick={() => addToCart(product, 1)}
-                                                className="w-full text-xs font-bold bg-[#ee4d2d] hover:bg-orange-700 text-white rounded-xl shadow-sm gap-1.5"
+                                                className="flex-1 text-xs font-bold bg-[#ee4d2d] hover:bg-[#d73211] text-white rounded-xl shadow-sm"
                                             >
-                                                <Plus className="h-3.5 w-3.5" />
-                                                <span>+ Keranjang</span>
+                                                Beli
                                             </Button>
                                         </div>
                                     </div>

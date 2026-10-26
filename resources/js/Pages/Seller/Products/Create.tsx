@@ -5,16 +5,15 @@ import { Category } from '@/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
-import { ArrowLeft, Upload, ShieldCheck, Scale, Package } from 'lucide-react';
+import { ArrowLeft, Upload, ShieldCheck, Scale, Package, Tags } from 'lucide-react';
+import CategoryManageModal from '@/Components/CategoryManageModal';
 
 interface Props {
     categories: Category[];
 }
 
 export default function Create({ categories }: Props) {
-    const [showAddCategory, setShowAddCategory] = React.useState(false);
-    const [newCategoryName, setNewCategoryName] = React.useState('');
-    const [isCreatingCategory, setIsCreatingCategory] = React.useState(false);
+    const [showCategoryModal, setShowCategoryModal] = React.useState(false);
 
     const { data, setData, post, processing, errors } = useForm({
         category_id: categories[0]?.id || '',
@@ -29,23 +28,6 @@ export default function Create({ categories }: Props) {
         image: null as File | null,
     });
 
-    const handleAddCategory = () => {
-        if (!newCategoryName.trim()) return;
-        setIsCreatingCategory(true);
-        router.post(
-            route('seller.categories.store'),
-            { name: newCategoryName.trim() },
-            {
-                onSuccess: () => {
-                    setNewCategoryName('');
-                    setShowAddCategory(false);
-                    setIsCreatingCategory(false);
-                },
-                onError: () => setIsCreatingCategory(false),
-            }
-        );
-    };
-
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
         post(route('seller.products.store'));
@@ -54,6 +36,12 @@ export default function Create({ categories }: Props) {
     return (
         <MarketplaceLayout>
             <Head title="Upload Produk Baru - Juleha Jatim" />
+
+            <CategoryManageModal
+                isOpen={showCategoryModal}
+                onClose={() => setShowCategoryModal(false)}
+                categories={categories}
+            />
 
             <div className="max-w-2xl mx-auto space-y-4">
                 <nav className="flex items-center gap-2 text-xs text-neutral-500">
@@ -86,38 +74,13 @@ export default function Create({ categories }: Props) {
                                     </label>
                                     <button
                                         type="button"
-                                        onClick={() => setShowAddCategory(!showAddCategory)}
-                                        className="text-[11px] font-bold text-emerald-700 hover:underline"
+                                        onClick={() => setShowCategoryModal(true)}
+                                        className="text-[11px] font-bold text-[#ee4d2d] hover:underline flex items-center gap-1"
                                     >
-                                        {showAddCategory ? 'Batal' : '+ Tambah Kategori Baru'}
+                                        <Tags className="h-3.5 w-3.5" />
+                                        <span>+ Kelola / Tambah Kategori & Ikon</span>
                                     </button>
                                 </div>
-
-                                {showAddCategory && (
-                                    <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800 rounded-lg space-y-2 mb-2">
-                                        <span className="text-[11px] font-bold text-emerald-900 dark:text-emerald-200">
-                                            Buat Kategori Produk Baru:
-                                        </span>
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                value={newCategoryName}
-                                                onChange={(e) => setNewCategoryName(e.target.value)}
-                                                placeholder="Contoh: Daging Segar, Bumbu Halal, Ternak Qurban..."
-                                                className="flex-1 text-xs rounded border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700"
-                                            />
-                                            <Button
-                                                type="button"
-                                                size="sm"
-                                                onClick={handleAddCategory}
-                                                disabled={isCreatingCategory || !newCategoryName.trim()}
-                                                className="bg-emerald-700 hover:bg-emerald-800 text-xs font-bold"
-                                            >
-                                                {isCreatingCategory ? 'Menyimpan...' : 'Simpan Kategori'}
-                                            </Button>
-                                        </div>
-                                    </div>
-                                )}
 
                                 <select
                                     value={data.category_id}

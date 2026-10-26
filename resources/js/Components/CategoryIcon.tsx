@@ -1,12 +1,60 @@
 import React from 'react';
+import { 
+    Sword, 
+    Axe, 
+    Sparkles, 
+    ShieldCheck, 
+    Link2, 
+    Heart, 
+    Utensils, 
+    Box, 
+    Flame, 
+    Tag, 
+    Star, 
+    Truck 
+} from 'lucide-react';
 
 interface Props {
-    slug: string;
+    slug?: string;
+    iconName?: string;
     className?: string;
 }
 
-export default function CategoryIcon({ slug, className = 'w-10 h-10' }: Props) {
-    switch (slug) {
+export default function CategoryIcon({ slug, iconName, className = 'w-10 h-10' }: Props) {
+    if (iconName) {
+        switch (iconName) {
+            case 'sword':
+                return <Sword className={`${className} text-amber-600`} />;
+            case 'axe':
+                return <Axe className={`${className} text-orange-600`} />;
+            case 'sparkles':
+                return <Sparkles className={`${className} text-yellow-500`} />;
+            case 'shield':
+                return <ShieldCheck className={`${className} text-emerald-600`} />;
+            case 'link':
+                return <Link2 className={`${className} text-stone-600`} />;
+            case 'heart':
+                return <Heart className={`${className} text-rose-600`} />;
+            case 'utensils':
+                return <Utensils className={`${className} text-purple-600`} />;
+            case 'box':
+                return <Box className={`${className} text-blue-600`} />;
+            case 'flame':
+                return <Flame className={`${className} text-[#ee4d2d]`} />;
+            case 'tag':
+                return <Tag className={`${className} text-teal-600`} />;
+            case 'star':
+                return <Star className={`${className} text-amber-500`} />;
+            case 'truck':
+                return <Truck className={`${className} text-indigo-600`} />;
+            default:
+                break;
+        }
+    }
+
+    const key = slug || iconName || '';
+
+    switch (key) {
         case 'pisau-sembelih':
             return (
                 <div className={`${className} rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 flex items-center justify-center p-2 text-amber-600 shadow-sm`}>
