@@ -375,7 +375,7 @@ export default function CheckoutIndex({ product, seller, buyer }: Props) {
                                             {seller.seller_bank_details || 'Informasi rekening akan diberikan setelah pesanan dibuat.'}
                                         </div>
                                         <span className="text-[10px] text-neutral-500 block italic">
-                                            *Catatan: Pembagian kas organisasi (Ekop & DPW) tercatat otomatis di sistem untuk disetorkan oleh penjual.
+                                            *Catatan: Pembagian kas organisasi (Ekop & Juleha Jatim) tercatat otomatis di sistem untuk disetorkan oleh penjual.
                                         </span>
                                     </div>
                                 )}

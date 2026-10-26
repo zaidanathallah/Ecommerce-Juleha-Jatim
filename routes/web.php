@@ -13,6 +13,7 @@ use Inertia\Inertia;
 // 1. Public Marketplace & Product Detail
 Route::get('/', [MarketplaceController::class, 'index'])->name('home');
 Route::get('/products/{slug}', [MarketplaceController::class, 'show'])->name('products.show');
+Route::post('/products/{slug}/reviews', [MarketplaceController::class, 'storeReview'])->middleware('auth')->name('products.reviews.store');
 
 Route::get('/sitemap.xml', function () {
     $products = Product::live()->latest()->get(['slug', 'updated_at']);
@@ -66,6 +67,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/products', [SellerProductController::class, 'store'])->name('products.store');
         Route::get('/products/{product}/edit', [SellerProductController::class, 'edit'])->name('products.edit');
         Route::put('/products/{product}', [SellerProductController::class, 'update'])->name('products.update');
+        Route::post('/categories', [SellerProductController::class, 'storeCategory'])->name('categories.store');
 
         // Seller Shop Settings (Toggles: DOKU PG & Biteship API)
         Route::get('/shop/settings', [\App\Http\Controllers\SellerShopController::class, 'edit'])->name('shop.edit');

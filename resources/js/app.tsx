@@ -6,6 +6,8 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 
 import { AudioProvider } from '@/Contexts/AudioContext';
+import { CartProvider } from '@/Contexts/CartContext';
+import CartDrawer from '@/Components/CartDrawer';
 import GlobalAudioPlayer from '@/Components/GlobalAudioPlayer';
 import AdzanAlertModal from '@/Components/AdzanAlertModal';
 
@@ -24,9 +26,12 @@ createInertiaApp({
 
         root.render(
             <AudioProvider initialSettings={siteSettings}>
-                <App {...props} />
-                <GlobalAudioPlayer />
-                <AdzanAlertModal />
+                <CartProvider>
+                    <App {...props} />
+                    <CartDrawer />
+                    <GlobalAudioPlayer />
+                    <AdzanAlertModal />
+                </CartProvider>
             </AudioProvider>
         );
     },

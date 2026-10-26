@@ -101,7 +101,7 @@ export default function ShopSettings({ settings }: Props) {
                                         <div className="p-3 bg-amber-50 border border-amber-300 rounded text-xs text-amber-800 flex items-start gap-2">
                                             <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
                                             <div className="leading-relaxed">
-                                                <strong>Ketentuan Rekening Pribadi:</strong> Pembeli akan mentransfer uang langsung ke rekening Anda. Karena uang tidak melalui DOKU Master, margin kas daerah (Ekop) dan kas provinsi (SuperAdmin) akan dicatat sebagai <strong>Hutang Penjual ke Kas Organisasi</strong> dan wajib disetorkan ke kas DPD/DPW secara berkala.
+                                                <strong>Ketentuan Rekening Pribadi:</strong> Pembeli akan mentransfer uang langsung ke rekening Anda. Karena uang tidak melalui DOKU Master, margin kas daerah (Ekop) dan kas provinsi (SuperAdmin) akan dicatat sebagai <strong>Hutang Penjual ke Kas Organisasi</strong> dan wajib disetorkan ke kas organisasi secara berkala.
                                             </div>
                                         </div>
 

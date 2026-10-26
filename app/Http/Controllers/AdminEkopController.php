@@ -70,7 +70,7 @@ class AdminEkopController extends Controller
         $totalUnsettledSuper = $unsettledDebts->sum('total_super_margin');
 
         return Inertia::render('AdminEkop/Dashboard', [
-            'regionName' => $user->region_name ?? 'Wilayah DPD Juleha',
+            'regionName' => $user->region_name ?? 'Wilayah Daerah Juleha',
             'regionCode' => $regionCode ?? 'ALL',
             'stats' => [
                 'pendingReview' => $pendingCount,
@@ -153,6 +153,6 @@ class AdminEkopController extends Controller
         $order->margin_settlement_status = \App\Models\Order::MARGIN_PAID_TREASURY;
         $order->save();
 
-        return back()->with('success', "Setoran Margin Toko untuk Pesanan {$order->order_number} sebesar Rp " . number_format($order->total_ekop_margin + $order->total_super_margin, 0, ',', '.') . " berhasil ditandai LUNAS disetor ke Kas DPD/DPW.");
+        return back()->with('success', "Setoran Margin Toko untuk Pesanan {$order->order_number} sebesar Rp " . number_format($order->total_ekop_margin + $order->total_super_margin, 0, ',', '.') . " berhasil ditandai LUNAS disetor ke Kas Organisasi Juleha Jatim.");
     }
 }

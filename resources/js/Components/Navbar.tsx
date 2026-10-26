@@ -4,6 +4,7 @@ import { PageProps } from '@/types';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import TrackingWidget from '@/Components/TrackingWidget';
+import { useCart } from '@/Contexts/CartContext';
 import {
     Search,
     ShoppingBag,
@@ -24,6 +25,7 @@ export default function Navbar() {
     const user = auth.user;
     const [searchQuery, setSearchQuery] = useState('');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const { totalItems, openCart } = useCart();
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -46,9 +48,16 @@ export default function Navbar() {
                 </Badge>
             );
         }
+        if (user.is_member) {
+            return (
+                <Badge variant="success" className="font-mono text-[10px]">
+                    ANGGOTA JULEHA {user.juleha_id ?? ''}
+                </Badge>
+            );
+        }
         return (
-            <Badge variant="success" className="font-mono text-[10px]">
-                ANGGOTA RESMI {user.juleha_id ?? ''}
+            <Badge variant="secondary" className="font-mono text-[10px] bg-neutral-200 text-neutral-800">
+                PEMBELI UMUM
             </Badge>
         );
     };
@@ -59,7 +68,7 @@ export default function Navbar() {
             <div className="bg-emerald-900 text-white text-[11px] font-semibold py-1.5 px-4 flex flex-wrap justify-between items-center gap-2 tracking-tight">
                 <div className="flex items-center gap-2">
                     <span className="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
-                    <span>Marketplace Resmi DPW Juru Sembelih Halal (Juleha) Jawa Timur</span>
+                    <span>Marketplace Resmi Juru Sembelih Halal (Juleha) Jawa Timur</span>
                 </div>
                 <div className="flex items-center gap-3">
                     <TrackingWidget compact className="w-56 sm:w-64" />
@@ -80,7 +89,7 @@ export default function Navbar() {
                                 JUALBELI.JULEHAJATIM
                             </span>
                             <span className="text-[10px] font-bold text-emerald-700 tracking-wider uppercase">
-                                E-Commerce Khusus Anggota
+                                Marketplace Halal Jawa Timur
                             </span>
                         </div>
                     </Link>
@@ -90,7 +99,7 @@ export default function Navbar() {
                         <div className="relative w-full">
                             <input
                                 type="text"
-                                placeholder="Cari bilah herder, asahan, APD, wearpack..."
+                                placeholder="Cari pisau sembelih, asahan, APD, daging, ternak..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full h-9 pl-9 pr-4 text-xs bg-neutral-50 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded-md focus:ring-2 focus:ring-emerald-700 focus:border-transparent font-medium"
@@ -116,13 +125,29 @@ export default function Navbar() {
                             <span>Al-Qur'an</span>
                         </Link>
 
+                        {/* Shopee-style Cart Trigger */}
+                        <button
+                            type="button"
+                            onClick={openCart}
+                            className="relative p-2 rounded-lg text-neutral-700 dark:text-neutral-300 hover:text-emerald-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-none flex items-center gap-1.5"
+                            title="Keranjang Belanja"
+                        >
+                            <ShoppingBag className="h-4 w-4" />
+                            <span className="text-xs font-bold">Keranjang</span>
+                            {totalItems > 0 && (
+                                <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 text-[10px] font-black rounded-full bg-emerald-600 text-white">
+                                    {totalItems}
+                                </span>
+                            )}
+                        </button>
+
                         {user ? (
                             <>
                                 {user.role === 'super_admin' && (
                                     <Link href={route('superadmin.dashboard')}>
                                         <Button size="sm" variant="destructive" className="text-xs gap-1.5">
                                             <ShieldAlert className="h-3.5 w-3.5" />
-                                            Approval Provinsi
+                                            Approval Jatim
                                         </Button>
                                     </Link>
                                 )}
@@ -138,7 +163,7 @@ export default function Navbar() {
 
                                 {user.role === 'user' && (
                                     <Link href={route('seller.products.create')}>
-                                        <Button size="sm" variant="default" className="text-xs gap-1.5">
+                                        <Button size="sm" variant="default" className="text-xs gap-1.5 bg-emerald-700 hover:bg-emerald-800">
                                             <PlusCircle className="h-3.5 w-3.5" />
                                             Jual Produk
                                         </Button>
@@ -177,17 +202,29 @@ export default function Navbar() {
                                     </Button>
                                 </Link>
                                 <Link href={route('register')}>
-                                    <Button size="sm" variant="default" className="text-xs gap-1.5">
+                                    <Button size="sm" variant="default" className="text-xs gap-1.5 bg-emerald-700 hover:bg-emerald-800">
                                         <UserPlus className="h-3.5 w-3.5" />
-                                        Daftar via ID Juleha
+                                        Daftar Akun
                                     </Button>
                                 </Link>
                             </div>
                         )}
                     </nav>
 
-                    {/* Mobile Menu Button */}
-                    <div className="lg:hidden flex items-center">
+                    {/* Mobile Menu & Cart Trigger */}
+                    <div className="lg:hidden flex items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={openCart}
+                            className="relative p-2 rounded-md text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100"
+                        >
+                            <ShoppingBag className="h-5 w-5" />
+                            {totalItems > 0 && (
+                                <span className="absolute top-1 right-1 h-4 w-4 rounded-full bg-emerald-600 text-white text-[9px] font-bold flex items-center justify-center">
+                                    {totalItems}
+                                </span>
+                            )}
+                        </button>
                         <button
                             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                             className="p-2 rounded-md text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100"
@@ -274,8 +311,8 @@ export default function Navbar() {
                                     </Button>
                                 </Link>
                                 <Link href={route('register')}>
-                                    <Button size="sm" variant="default" className="w-full text-xs">
-                                        Daftar ID Juleha
+                                    <Button size="sm" variant="default" className="w-full text-xs bg-emerald-700 hover:bg-emerald-800">
+                                        Daftar Akun
                                     </Button>
                                 </Link>
                             </div>

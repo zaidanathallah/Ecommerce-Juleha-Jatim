@@ -1,5 +1,5 @@
-import React from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
+import React, { useState } from 'react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import MarketplaceLayout from '@/Layouts/MarketplaceLayout';
 import { Category, ManagementProduct } from '@/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/Components/ui/card';
@@ -13,6 +13,10 @@ interface Props {
 }
 
 export default function Edit({ product, categories }: Props) {
+    const [showAddCategory, setShowAddCategory] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState('');
+    const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+
     const { data, setData, post, processing, errors } = useForm({
         _method: 'PUT',
         category_id: product.category_id,
@@ -23,6 +27,23 @@ export default function Edit({ product, categories }: Props) {
         weight_gram: product.weight_gram,
         image: null as File | null,
     });
+
+    const handleAddCategory = () => {
+        if (!newCategoryName.trim()) return;
+        setIsCreatingCategory(true);
+        router.post(
+            route('seller.categories.store'),
+            { name: newCategoryName.trim() },
+            {
+                onSuccess: () => {
+                    setNewCategoryName('');
+                    setShowAddCategory(false);
+                    setIsCreatingCategory(false);
+                },
+                onError: () => setIsCreatingCategory(false),
+            }
+        );
+    };
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -62,9 +83,45 @@ export default function Edit({ product, categories }: Props) {
 
                         <form onSubmit={submit} className="space-y-4">
                             <div>
-                                <label className="block text-xs font-bold text-neutral-800 dark:text-neutral-200 mb-1">
-                                    Kategori Produk
-                                </label>
+                                <div className="flex items-center justify-between mb-1">
+                                    <label className="text-xs font-bold text-neutral-800 dark:text-neutral-200">
+                                        Kategori Produk
+                                    </label>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowAddCategory(!showAddCategory)}
+                                        className="text-[11px] font-bold text-emerald-700 hover:underline"
+                                    >
+                                        {showAddCategory ? 'Batal' : '+ Tambah Kategori Baru'}
+                                    </button>
+                                </div>
+
+                                {showAddCategory && (
+                                    <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800 rounded-lg space-y-2 mb-2">
+                                        <span className="text-[11px] font-bold text-emerald-900 dark:text-emerald-200">
+                                            Buat Kategori Produk Baru:
+                                        </span>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={newCategoryName}
+                                                onChange={(e) => setNewCategoryName(e.target.value)}
+                                                placeholder="Contoh: Daging Segar, Bumbu Halal, Ternak Qurban..."
+                                                className="flex-1 text-xs rounded border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700"
+                                            />
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                onClick={handleAddCategory}
+                                                disabled={isCreatingCategory || !newCategoryName.trim()}
+                                                className="bg-emerald-700 hover:bg-emerald-800 text-xs font-bold"
+                                            >
+                                                {isCreatingCategory ? 'Menyimpan...' : 'Simpan Kategori'}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <select
                                     value={data.category_id}
                                     onChange={(e) => setData('category_id', Number(e.target.value))}

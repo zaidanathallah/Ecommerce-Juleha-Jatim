@@ -20,14 +20,6 @@ export default function Login({ status, canResetPassword }: { status?: string; c
         });
     };
 
-    const fillCredentials = (login: string, pass: string) => {
-        setData((prev) => ({
-            ...prev,
-            login,
-            password: pass,
-        }));
-    };
-
     return (
         <MarketplaceLayout>
             <Head title="Masuk ke Sistem - Juleha Jatim" />
@@ -130,49 +122,10 @@ export default function Login({ status, canResetPassword }: { status?: string; c
                             </Button>
                         </form>
 
-                        {/* Quick Demo Access Pills for 3 Roles */}
-                        <div className="mt-6 pt-4 border-t border-neutral-200 dark:border-neutral-800">
-                            <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider block mb-2">
-                                Akses Cepat Demo (Klik untuk Isi):
-                            </span>
-                            <div className="flex flex-col gap-1.5">
-                                <button
-                                    type="button"
-                                    onClick={() => fillCredentials('superadmin@julehajatim.com', 'superadmin123')}
-                                    className="text-left p-2 rounded bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-[11px] flex justify-between items-center"
-                                >
-                                    <span>
-                                        <strong className="text-red-700 font-bold">[Super Admin]</strong> DPW Jatim
-                                    </span>
-                                    <span className="text-neutral-500 font-mono">superadmin@julehajatim.com</span>
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => fillCredentials('ekop.sidoarjo@julehajatim.com', 'ekop123')}
-                                    className="text-left p-2 rounded bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-[11px] flex justify-between items-center"
-                                >
-                                    <span>
-                                        <strong className="text-amber-700 font-bold">[Admin Ekop]</strong> Sidoarjo
-                                    </span>
-                                    <span className="text-neutral-500 font-mono">ekop.sidoarjo@julehajatim.com</span>
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => fillCredentials('SDA220001', 'anggota123')}
-                                    className="text-left p-2 rounded bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-[11px] flex justify-between items-center"
-                                >
-                                    <span>
-                                        <strong className="text-emerald-700 font-bold">[Anggota]</strong> M. Slamet (ID: SDA220001)
-                                    </span>
-                                    <span className="text-neutral-500 font-mono">ID Juleha</span>
-                                </button>
-                            </div>
-                        </div>
-
                         <div className="mt-6 text-center text-xs text-neutral-600 dark:text-neutral-400">
-                            Belum terdaftar sebagai akun marketplace?{' '}
+                            Belum memiliki akun marketplace?{' '}
                             <Link href={route('register')} className="font-bold text-emerald-700 hover:underline">
-                                Daftarkan ID Juleha Anda
+                                Daftar Akun Baru Sekarang
                             </Link>
                         </div>
                     </CardContent>

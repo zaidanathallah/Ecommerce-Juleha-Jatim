@@ -60,9 +60,9 @@ class MarketplaceController extends Controller
             ],
             'publisher' => [
                 '@type' => 'Organization',
-                'name' => 'DPW Juru Sembelih Halal (Juleha) Jawa Timur',
+                'name' => 'Juru Sembelih Halal (Juleha) Jawa Timur',
                 'url' => 'https://julehajatim.com',
-                'logo' => url('/logo juleha jatim.jpg'),
+                'logo' => url('/logo-juleha.jpg'),
             ],
         ];
 
@@ -82,7 +82,7 @@ class MarketplaceController extends Controller
      */
     public function show(string $slug): Response
     {
-        $product = Product::with(['user', 'category'])
+        $product = Product::with(['user', 'category', 'reviews.user'])
             ->where('slug', $slug)
             ->live()
             ->firstOrFail();
@@ -97,6 +97,11 @@ class MarketplaceController extends Controller
             'image' => [$product->image_url],
             'description' => strip_tags($product->description),
             'sku' => "JLH-PRD-{$product->id}",
+            'aggregateRating' => $product->reviews_count > 0 ? [
+                '@type' => 'AggregateRating',
+                'ratingValue' => (string) round((float) $product->rating_avg, 1),
+                'reviewCount' => (string) $product->reviews_count,
+            ] : null,
             'offers' => [
                 '@type' => 'Offer',
                 'url' => url("/products/{$product->slug}"),
@@ -107,7 +112,7 @@ class MarketplaceController extends Controller
                 'availability' => $product->stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
                 'seller' => [
                     '@type' => 'Organization',
-                    'name' => $product->user->name ?? 'Anggota Juleha Jatim',
+                    'name' => $product->user->name ?? 'Juleha Jatim Partner',
                 ],
             ],
             'brand' => [
@@ -120,5 +125,35 @@ class MarketplaceController extends Controller
             'product' => $buyerProduct,
             'schemaJson' => $productSchema,
         ]);
+    }
+
+    /**
+     * Simpan Ulasan dan Rating Bintang Produk
+     */
+    public function storeReview(Request $request, string $slug)
+    {
+        $user = Auth::user();
+        $product = Product::where('slug', $slug)->live()->firstOrFail();
+
+        $validated = $request->validate([
+            'rating' => ['required', 'integer', 'between:1,5'],
+            'comment' => ['required', 'string', 'min:3', 'max:1000'],
+        ]);
+
+        \App\Models\Review::updateOrCreate(
+            [
+                'user_id' => $user->id,
+                'product_id' => $product->id,
+            ],
+            [
+                'rating' => $validated['rating'],
+                'comment' => strip_tags($validated['comment']),
+                'is_verified_buyer' => true,
+            ]
+        );
+
+        $product->updateRatingStats();
+
+        return back()->with('success', 'Terima kasih! Ulasan dan rating bintang Anda berhasil disimpan.');
     }
 }

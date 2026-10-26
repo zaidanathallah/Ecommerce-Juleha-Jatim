@@ -34,6 +34,19 @@ class PricingService
             'weight_gram' => $product->weight_gram,
             'region_name' => $product->region_name,
             'region_code' => $product->region_code,
+            'rating_avg' => round((float) ($product->rating_avg ?? 5.0), 1),
+            'reviews_count' => (int) ($product->reviews_count ?? 0),
+            'sold_count' => (int) ($product->sold_count ?? 0),
+            'reviews' => $product->relationLoaded('reviews') ? $product->reviews->map(function ($rev) {
+                return [
+                    'id' => $rev->id,
+                    'user_name' => $rev->user->name ?? 'Pembeli Terverifikasi',
+                    'rating' => (int) $rev->rating,
+                    'comment' => $rev->comment,
+                    'is_verified_buyer' => (bool) $rev->is_verified_buyer,
+                    'created_at' => $rev->created_at?->diffForHumans() ?? 'Baru saja',
+                ];
+            })->values()->all() : [],
             'seller' => [
                 'id' => $product->user_id,
                 'name' => $product->user->name ?? 'Penjual Terverifikasi Juleha',

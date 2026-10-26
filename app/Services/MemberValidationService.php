@@ -51,7 +51,7 @@ class MemberValidationService
         // 3. Validasi status keaktifan (mstatus: 1 = Aktif, 0 = Non-Aktif)
         if (!$centralMember->is_active) {
             throw ValidationException::withMessages([
-                'juleha_id' => "ID Juleha '{$cleanId}' berstatus TIDAK AKTIF di database pusat Juleha Jatim. Harap hubungi pengurus DPD/DPW untuk aktivasi keanggotaan.",
+                'juleha_id' => "ID Juleha '{$cleanId}' berstatus TIDAK AKTIF di database pusat Juleha Jatim. Harap hubungi pengurus Juleha Jawa Timur untuk aktivasi keanggotaan.",
             ]);
         }
 

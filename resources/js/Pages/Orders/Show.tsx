@@ -328,7 +328,7 @@ export default function OrderShow({ order }: Props) {
                                     <div className="p-3 bg-neutral-50 dark:bg-neutral-800/40 border rounded text-[11px] text-neutral-600 dark:text-neutral-400 space-y-1">
                                         <strong>Pemberitahuan Kas Organisasi:</strong>
                                         <p>
-                                            Bagian kas daerah (Ekop) dan kas provinsi (DPW) tercatat berstatus{' '}
+                                            Bagian kas daerah (Ekop) dan kas Juleha Jatim tercatat berstatus{' '}
                                             <span className="font-bold text-amber-700 uppercase">Hutang Penjual ke Kas</span>{' '}
                                             dan akan ditagih oleh pengurus wilayah setelah barang sampai.
                                         </p>

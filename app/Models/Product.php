@@ -33,6 +33,9 @@ class Product extends Model
         'super_margin',
         'final_price',
         'stock',
+        'rating_avg',
+        'reviews_count',
+        'sold_count',
         'region_code',
         'region_name',
         'status',
@@ -49,6 +52,9 @@ class Product extends Model
             'ekop_margin' => 'decimal:2',
             'super_margin' => 'decimal:2',
             'final_price' => 'decimal:2',
+            'rating_avg' => 'float',
+            'reviews_count' => 'integer',
+            'sold_count' => 'integer',
             'weight_gram' => 'integer',
             'stock' => 'integer',
         ];
@@ -88,6 +94,21 @@ class Product extends Model
     public function orderItems(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class)->latest();
+    }
+
+    public function updateRatingStats(): void
+    {
+        $avg = $this->reviews()->avg('rating') ?: 5.0;
+        $count = $this->reviews()->count();
+        $this->update([
+            'rating_avg' => round($avg, 2),
+            'reviews_count' => $count,
+        ]);
     }
 
     public function scopeLive($query)

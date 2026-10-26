@@ -189,7 +189,7 @@ export default function AdminEkopDashboard({
                                     {stats.unsettledDebtOrdersCount ?? 0} Pesanan
                                 </span>
                                 <span className="text-[10px] text-neutral-500 font-mono block mt-0.5">
-                                    Kas DPD: {formatRupiah(stats.totalUnsettledEkopDebt ?? 0)}
+                                    Kas Daerah: {formatRupiah(stats.totalUnsettledEkopDebt ?? 0)}
                                 </span>
                             </div>
                             <AlertCircle className="h-7 w-7 text-rose-500" />
@@ -332,7 +332,7 @@ export default function AdminEkopDashboard({
                                         className="w-full text-sm font-mono font-bold rounded border-neutral-300 focus:ring-emerald-700"
                                     />
                                     <span className="text-[11px] text-neutral-500 mt-1 block">
-                                        Nominal ini akan dialokasikan ke kas DPD {regionName} saat produk terjual.
+                                        Nominal ini akan dialokasikan ke kas daerah {regionName} saat produk terjual.
                                     </span>
                                 </div>
 
@@ -430,7 +430,7 @@ export default function AdminEkopDashboard({
                                     </CardTitle>
                                     <CardDescription className="text-xs text-rose-700 dark:text-rose-400">
                                         Pesanan berikut dibayar oleh pembeli via transfer langsung ke rekening pribadi penjual (Toko Non-PG). 
-                                        Penjual wajib menyetorkan margin DPD ({regionName}) dan DPW Jatim ke kas organisasi.
+                                        Penjual wajib menyetorkan margin daerah ({regionName}) dan Juleha Jatim ke kas organisasi.
                                     </CardDescription>
                                 </div>
                             </div>
@@ -449,8 +449,8 @@ export default function AdminEkopDashboard({
                                         <TableHead>Penjual / Toko</TableHead>
                                         <TableHead>Bukti Transfer</TableHead>
                                         <TableHead>Bukti Terima & Qty</TableHead>
-                                        <TableHead>Margin DPD ({regionCode})</TableHead>
-                                        <TableHead>Margin DPW Jatim</TableHead>
+                                        <TableHead>Margin Daerah ({regionCode})</TableHead>
+                                        <TableHead>Margin Juleha Jatim</TableHead>
                                         <TableHead>Total Kas</TableHead>
                                         <TableHead className="text-right">Tindakan</TableHead>
                                     </TableRow>

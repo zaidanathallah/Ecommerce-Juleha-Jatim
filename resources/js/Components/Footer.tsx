@@ -55,7 +55,7 @@ export default function Footer() {
                         <span className="font-black text-white text-sm tracking-tight">JULEHA JAWA TIMUR</span>
                     </div>
                     <p className="text-neutral-400 leading-relaxed text-[11px]">
-                        Marketplace dan wadah ekonomi terpusat Dewan Pengurus Wilayah (DPW) Juru Sembelih Halal Jawa Timur. Menghubungkan sesama juru sembelih untuk peralatan dan sarana sembelih berstandar tinggi.
+                        Marketplace dan wadah ekonomi terpusat Juru Sembelih Halal (Juleha) Jawa Timur. Menghubungkan sesama juru sembelih dan masyarakat luas untuk pengadaan produk dan peralatan sembelih halal berkualitas terstandarisasi syariat.
                     </p>
                 </div>
 
@@ -63,8 +63,8 @@ export default function Footer() {
                     <h5 className="font-bold text-white uppercase text-[11px] tracking-wider mb-3">Hierarki & Kas Organisasi</h5>
                     <ul className="space-y-2 text-[11px] text-neutral-400">
                         <li>Transparansi Margin Kas Daerah (Ekop)</li>
-                        <li>Transparansi Margin Kas Provinsi (DPW)</li>
-                        <li>Verifikasi Mutu Bilah Penjual</li>
+                        <li>Transparansi Margin Kas Juleha Jatim</li>
+                        <li>Verifikasi Mutu Bilah & Produk Penjual</li>
                         <li>Panduan Regulasi Sembelih Halal</li>
                     </ul>
                 </div>
@@ -91,12 +91,13 @@ export default function Footer() {
                 </div>
 
                 <div>
-                    <h5 className="font-bold text-white uppercase text-[11px] tracking-wider mb-3">Sekretariat DPW Jatim</h5>
-                    <address className="not-italic text-[11px] text-neutral-400 space-y-1">
-                        <p>Gedung Islamic Centre Jawa Timur</p>
-                        <p>Jl. Dukuh Kupang No. 122-124, Surabaya</p>
-                        <p>Email: admin@julehajatim.com</p>
-                        <p>Website: https://julehajatim.com</p>
+                    <h5 className="font-bold text-white uppercase text-[11px] tracking-wider mb-3">Sekretariat Juleha Jatim</h5>
+                    <address className="not-italic text-[11px] text-neutral-400 space-y-1.5">
+                        <p className="font-semibold text-neutral-200">Kantor Sekretariat:</p>
+                        <p>Jl. Simo Gunung Kramat Barat 1/28 Surabaya, Jawa Timur</p>
+                        <p>WhatsApp: <a href="https://wa.me/6281262227663" target="_blank" rel="noreferrer" className="text-emerald-400 hover:underline">+62 812-6222-7663</a></p>
+                        <p>Email: <a href="mailto:admin@julehajatim.com" className="hover:underline">admin@julehajatim.com</a></p>
+                        <p>Website: <a href="https://julehajatim.com" target="_blank" rel="noreferrer" className="text-emerald-400 hover:underline">https://julehajatim.com</a></p>
                     </address>
                 </div>
             </div>

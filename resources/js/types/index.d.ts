@@ -5,6 +5,9 @@ export interface User {
     name: string;
     email: string;
     role: UserRole;
+    user_type?: 'buyer' | 'seller';
+    is_member?: boolean;
+    shop_name?: string | null;
     juleha_id?: string | null;
     region_code?: string | null;
     region_name?: string | null;
@@ -25,6 +28,15 @@ export interface Category {
     description?: string;
 }
 
+export interface ReviewItem {
+    id: number;
+    user_name: string;
+    rating: number;
+    comment: string;
+    is_verified_buyer: boolean;
+    created_at: string;
+}
+
 export interface BuyerProduct {
     id: number;
     title: string;
@@ -37,6 +49,10 @@ export interface BuyerProduct {
     weight_gram: number;
     region_name: string;
     region_code: string;
+    rating_avg?: number;
+    reviews_count?: number;
+    sold_count?: number;
+    reviews?: ReviewItem[];
     seller: {
         id: number;
         name: string;
@@ -44,6 +60,9 @@ export interface BuyerProduct {
         is_verified: boolean;
         lat?: number | null;
         lng?: number | null;
+        is_pg_active?: boolean;
+        is_shipping_api_active?: boolean;
+        seller_bank_details?: string | null;
     };
     category?: {
         id: number;

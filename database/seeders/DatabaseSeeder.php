@@ -21,15 +21,17 @@ class DatabaseSeeder extends Seeder
             ['email' => 'superadmin@julehajatim.com'],
             [
                 'juleha_id' => 'JTM-SUPER-01',
-                'name' => 'Super Admin DPW Juleha Jatim',
+                'name' => 'Super Admin Juleha Jatim',
                 'phone' => '081133334444',
                 'password' => Hash::make('superadmin123'),
                 'role' => User::ROLE_SUPER_ADMIN,
+                'user_type' => 'seller',
+                'is_member' => true,
                 'region_code' => 'JTM',
-                'region_name' => 'JAWA TIMUR (DPW PUSAT)',
-                'address' => 'Gedung Islamic Centre Jawa Timur, Jl. Dukuh Kupang, Surabaya',
-                'lat' => -7.2882,
-                'lng' => 112.7214,
+                'region_name' => 'JAWA TIMUR (PUSAT)',
+                'address' => 'Jl. Simo Gunung Kramat Barat 1/28 Surabaya',
+                'lat' => -7.2655,
+                'lng' => 112.7230,
                 'is_verified' => true,
             ]
         );
@@ -39,13 +41,15 @@ class DatabaseSeeder extends Seeder
             ['email' => 'ekop.sidoarjo@julehajatim.com'],
             [
                 'juleha_id' => 'SDA-EKOP-01',
-                'name' => 'Admin Ekop DPD Sidoarjo',
+                'name' => 'Admin Ekop Sidoarjo',
                 'phone' => '081234567800',
                 'password' => Hash::make('ekop123'),
                 'role' => User::ROLE_ADMIN_EKOP,
+                'user_type' => 'seller',
+                'is_member' => true,
                 'region_code' => 'SDA',
                 'region_name' => 'KABUPATEN SIDOARJO',
-                'address' => 'Sekretariat DPD Juleha Sidoarjo, Jl. Pahlawan, Sidoarjo',
+                'address' => 'Sekretariat Juleha Sidoarjo, Jl. Pahlawan, Sidoarjo',
                 'lat' => -7.4478,
                 'lng' => 112.7183,
                 'is_verified' => true,
@@ -58,9 +62,12 @@ class DatabaseSeeder extends Seeder
             [
                 'juleha_id' => 'SDA220001',
                 'name' => 'Muhammad Slamet',
+                'shop_name' => 'Sentra Bilah & Perlengkapan Sidoarjo',
                 'phone' => '081234567891',
                 'password' => Hash::make('anggota123'),
                 'role' => User::ROLE_USER,
+                'user_type' => 'seller',
+                'is_member' => true,
                 'region_code' => 'SDA',
                 'region_name' => 'KABUPATEN SIDOARJO',
                 'address' => 'Sentra Pandai Besi & Bilah Sidoarjo, Jl. Raya Candi No. 45',
@@ -79,6 +86,8 @@ class DatabaseSeeder extends Seeder
                 'phone' => '081298765432',
                 'password' => Hash::make('anggota123'),
                 'role' => User::ROLE_USER,
+                'user_type' => 'buyer',
+                'is_member' => true,
                 'region_code' => 'SDA',
                 'region_name' => 'KABUPATEN SIDOARJO',
                 'address' => 'RPH Krian, Sidoarjo',
@@ -88,30 +97,49 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // 5. Kategori Produk
+        // 5. User Pembeli Umum (Masyarakat Luas / Non-Anggota)
+        $generalBuyer = User::firstOrCreate(
+            ['email' => 'buyer.umum@gmail.com'],
+            [
+                'name' => 'Ahmad Rabbani',
+                'phone' => '085711223344',
+                'password' => Hash::make('pembeli123'),
+                'role' => User::ROLE_USER,
+                'user_type' => 'buyer',
+                'is_member' => false,
+                'region_code' => 'UMUM',
+                'region_name' => 'Pembeli Umum',
+                'address' => 'Jl. Manyar Kertoarjo No. 15, Surabaya',
+                'lat' => -7.2825,
+                'lng' => 112.7638,
+                'is_verified' => true,
+            ]
+        );
+
+        // 6. Kategori Produk Luas (Bisa Jual Apa Saja)
         $categoriesData = [
             [
                 'name' => 'Pisau Sembelih Standar Halal',
                 'slug' => 'pisau-sembelih',
-                'description' => 'Bilah sembelih bersertifikasi tajam cukur bulu, memenuhi standar syariat sembelih sekali tarik tanpa henti.',
+                'description' => 'Bilah sembelih bersertifikasi tajam cukur bulu, memenuhi standar syariat sembelih sekali tarik.',
                 'icon' => 'Sword',
             ],
             [
                 'name' => 'Golok & Bendo RPH',
                 'slug' => 'golok-dan-bendo',
-                'description' => 'Golok sembelih sapi jumbo, kerbau, dan bendo cacah tulang berkualitas baja per/baja tempa unggulan.',
+                'description' => 'Golok sembelih sapi jumbo, kerbau, dan bendo cacah tulang berkualitas baja per/tempa.',
                 'icon' => 'Axe',
             ],
             [
                 'name' => 'Batu & Alat Asah (Sharpening)',
                 'slug' => 'batu-dan-alat-asah',
-                'description' => 'Whetstone grit 1000 hingga 8000, leather strop, dan honing rod pembantu ketajaman maksimal bilah sembelih.',
+                'description' => 'Whetstone grit 1000 hingga 8000, leather strop, dan honing rod pembantu ketajaman maksimal.',
                 'icon' => 'Sparkles',
             ],
             [
                 'name' => 'Wearpack & APD Juleha',
                 'slug' => 'wearpack-dan-apd',
-                'description' => 'Celemek kulit tahan tusuk (leather apron), sarung tangan rantai pelindung sayat, dan sepatu boot safety.',
+                'description' => 'Celemek kulit tahan tusuk, sarung tangan pelindung sayat, dan sepatu boot safety.',
                 'icon' => 'ShieldCheck',
             ],
             [
@@ -120,6 +148,42 @@ class DatabaseSeeder extends Seeder
                 'description' => 'Tali simpul burley, tambang katun empuk, dan alat perebah sapi aman tanpa menyakiti hewan.',
                 'icon' => 'Link',
             ],
+            [
+                'name' => 'Hewan Qurban & Ternak Halal',
+                'slug' => 'hewan-qurban-ternak',
+                'description' => 'Sapi, kambing, dan domba qurban sehat, bertanduk, cukup umur, dan lolos uji veteriner.',
+                'icon' => 'Heart',
+            ],
+            [
+                'name' => 'Daging Segar & Frozen Halal',
+                'slug' => 'daging-halal',
+                'description' => 'Daging sapi, kambing, dan ayam sembelihan halal segar higienis dan terstandarisasi.',
+                'icon' => 'Utensils',
+            ],
+            [
+                'name' => 'Bumbu, Rempah & Pangan',
+                'slug' => 'bumbu-dan-pangan',
+                'description' => 'Bumbu racik olahan daging, rempah dapur alami, dan bahan pangan bersertifikat halal.',
+                'icon' => 'Coffee',
+            ],
+            [
+                'name' => 'Peralatan Dapur & Resto',
+                'slug' => 'peralatan-dapur-resto',
+                'description' => 'Talenan kayu jati/kayu asem higienis, pengait karkas daging, timbangan, dan wadah stainless steel.',
+                'icon' => 'Box',
+            ],
+            [
+                'name' => 'Buku & Edukasi Juleha',
+                'slug' => 'buku-dan-edukasi',
+                'description' => 'Buku fiqih sembelih halal, panduan sertifikasi juru sembelih BNSP, dan modul pelatihan.',
+                'icon' => 'BookOpen',
+            ],
+            [
+                'name' => 'Aneka Produk Lainnya',
+                'slug' => 'aneka-produk-lainnya',
+                'description' => 'Berbagai produk penunjang usaha juru sembelih dan kebutuhan masyarakat umum.',
+                'icon' => 'Tag',
+            ],
         ];
 
         $categories = [];
@@ -127,9 +191,9 @@ class DatabaseSeeder extends Seeder
             $categories[$cat['slug']] = Category::firstOrCreate(['slug' => $cat['slug']], $cat);
         }
 
-        // 6. Produk Sampel dengan Hierarki Harga & Multi Status
-        // Produk 1: LIVE (Sudah di-ACC Ekop dan Super Admin)
-        Product::firstOrCreate(
+        // 7. Produk Sampel dengan Hierarki Harga & Rating/Review
+        // Produk 1: LIVE
+        $product1 = Product::updateOrCreate(
             ['slug' => 'pisau-sembelih-herder-solingen-original-30cm'],
             [
                 'user_id' => $memberSeller->id,
@@ -146,20 +210,51 @@ class DatabaseSeeder extends Seeder
                 'width_cm' => 8,
                 'height_cm' => 4,
                 'base_price' => 750000.00,
-                'ekop_margin' => 25000.00, // Kas Daerah Kab/Kota
-                'super_margin' => 15000.00, // Kas Provinsi Jatim
-                'final_price' => 790000.00, // 750k + 25k + 15k
+                'ekop_margin' => 25000.00,
+                'super_margin' => 15000.00,
+                'final_price' => 790000.00,
                 'stock' => 12,
                 'region_code' => 'SDA',
                 'region_name' => 'KABUPATEN SIDOARJO',
                 'status' => Product::STATUS_LIVE,
                 'reviewed_by_ekop_id' => $adminEkop->id,
                 'reviewed_by_super_id' => $superAdmin->id,
+                'rating_avg' => 4.9,
+                'reviews_count' => 3,
+                'sold_count' => 38,
             ]
         );
 
-        // Produk 2: APPROVED_EKOP (Menunggu Super Admin ACC)
-        Product::firstOrCreate(
+        // Tambah Ulasan Sampel untuk Produk 1
+        \App\Models\Review::firstOrCreate(
+            ['user_id' => $memberBuyer->id, 'product_id' => $product1->id],
+            [
+                'rating' => 5,
+                'comment' => "Alhamdulillah pisaunya luar biasa tajam! Sudah dicoba sembelih 5 ekor sapi limousin sekali tarik leher langsung putus sempurna. Standar syariat mantap!",
+                'is_verified_buyer' => true,
+            ]
+        );
+
+        \App\Models\Review::firstOrCreate(
+            ['user_id' => $generalBuyer->id, 'product_id' => $product1->id],
+            [
+                'rating' => 5,
+                'comment' => "Packing sangat aman dengan paralon tebal. Pengiriman Biteship cepat sampai ke Surabaya. Pisau original cap garpu Solingen asli!",
+                'is_verified_buyer' => true,
+            ]
+        );
+
+        \App\Models\Review::firstOrCreate(
+            ['user_id' => $adminEkop->id, 'product_id' => $product1->id],
+            [
+                'rating' => 5,
+                'comment' => "Produk terverifikasi tim pengurus daerah. Bilah lolos uji ketajaman kertas dan cukur bulu tanpa hambatan.",
+                'is_verified_buyer' => true,
+            ]
+        );
+
+        // Produk 2: APPROVED_EKOP
+        Product::updateOrCreate(
             ['slug' => 'batu-asah-naniwa-professional-grit-3000-original'],
             [
                 'user_id' => $memberSeller->id,
@@ -181,11 +276,14 @@ class DatabaseSeeder extends Seeder
                 'region_name' => 'KABUPATEN SIDOARJO',
                 'status' => Product::STATUS_APPROVED_EKOP,
                 'reviewed_by_ekop_id' => $adminEkop->id,
+                'rating_avg' => 5.0,
+                'reviews_count' => 1,
+                'sold_count' => 14,
             ]
         );
 
-        // Produk 3: PENDING (Baru diupload Penjual, butuh ACC Admin Ekop)
-        Product::firstOrCreate(
+        // Produk 3: PENDING
+        Product::updateOrCreate(
             ['slug' => 'apron-celemek-kulit-sapi-asli-juleha-anti-sayat'],
             [
                 'user_id' => $memberSeller->id,
@@ -206,6 +304,9 @@ class DatabaseSeeder extends Seeder
                 'region_code' => 'SDA',
                 'region_name' => 'KABUPATEN SIDOARJO',
                 'status' => Product::STATUS_PENDING,
+                'rating_avg' => 4.8,
+                'reviews_count' => 0,
+                'sold_count' => 6,
             ]
         );
     }

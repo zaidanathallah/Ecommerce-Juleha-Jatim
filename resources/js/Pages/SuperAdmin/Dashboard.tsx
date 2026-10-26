@@ -112,7 +112,7 @@ export default function SuperAdminDashboard({
 
     return (
         <MarketplaceLayout>
-            <Head title="Panel Super Admin - DPW Juleha Jawa Timur" />
+            <Head title="Panel Super Admin - Juleha Jawa Timur" />
 
             <div className="space-y-6">
                 {/* Header Banner */}
@@ -120,7 +120,7 @@ export default function SuperAdminDashboard({
                     <div>
                         <div className="flex items-center gap-2 mb-1">
                             <Badge variant="destructive" className="font-mono text-[10px]">
-                                KONTROL PUSAT DPW JAWA TIMUR
+                                KONTROL PUSAT JULEHA JAWA TIMUR
                             </Badge>
                             <span className="text-xs font-mono font-bold text-neutral-500">
                                 SELURUH KABUPATEN & KOTA
@@ -229,7 +229,7 @@ export default function SuperAdminDashboard({
                                 </div>
                             </div>
                             <Badge variant="outline" className="text-white border-white font-mono text-[10px]">
-                                FITUR PUSAT DPW
+                                FITUR PUSAT JULEHA JATIM
                             </Badge>
                         </div>
                     </CardHeader>
@@ -336,7 +336,7 @@ export default function SuperAdminDashboard({
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Produk</TableHead>
-                                        <TableHead>Wilayah DPD</TableHead>
+                                        <TableHead>Wilayah Daerah</TableHead>
                                         <TableHead>Harga Dasar Penjual</TableHead>
                                         <TableHead>Margin Daerah (Ekop)</TableHead>
                                         <TableHead>Status</TableHead>
@@ -454,7 +454,7 @@ export default function SuperAdminDashboard({
                                         className="w-full text-sm font-mono font-bold rounded border-neutral-300 focus:ring-emerald-700"
                                     />
                                     <span className="text-[11px] text-neutral-500 mt-1 block">
-                                        Nominal ini akan dialokasikan ke Kas DPW Jatim untuk operasional dakwah dan pembinaan sembelih halal.
+                                        Nominal ini akan dialokasikan ke Kas Juleha Jatim untuk operasional dakwah dan pembinaan sembelih halal.
                                     </span>
                                 </div>
 
@@ -563,7 +563,7 @@ export default function SuperAdminDashboard({
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Produk</TableHead>
-                                    <TableHead>Wilayah DPD</TableHead>
+                                    <TableHead>Wilayah Daerah</TableHead>
                                     <TableHead>Penjual</TableHead>
                                     <TableHead>Harga Dasar</TableHead>
                                     <TableHead>Margin Daerah</TableHead>

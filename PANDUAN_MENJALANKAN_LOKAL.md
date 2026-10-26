@@ -1,6 +1,6 @@
 # PANDUAN MENJALANKAN E-COMMERCE JULEHA JATIM DI LOCALHOST
 
-Panduan lengkap instalasi, konfigurasi, dan pengoperasian lokal untuk platform e-commerce resmi **DPW Juru Sembelih Halal (Juleha) Jawa Timur** (`jualbeli.julehajatim.com`).
+Panduan lengkap instalasi, konfigurasi, dan pengoperasian lokal untuk platform e-commerce resmi **Juru Sembelih Halal (Juleha) Jawa Timur** (`jualbeli.julehajatim.com`).
 
 ---
 
@@ -177,10 +177,11 @@ Gunakan akun-akun bawaan berikut yang telah terdaftar dari hasil seeder untuk me
 
 | Role | Email Login | Password | Nomor ID Juleha | Wilayah | Hak Akses Utama |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Super Admin** | `superadmin@julehajatim.com` | `superadmin123` | `JTM-SUPER-01` | DPW Jawa Timur | Approval Akhir Produk Nasional, Atur Toggle Global Islami & Murottal, Simulator Biteship |
-| **Admin Ekop** | `ekop.sidoarjo@julehajatim.com` | `ekop123` | `SDA-EKOP-01` | DPD Kab. Sidoarjo | Verifikasi Produk Daerah, Monitor Margin Kas Ekop Daerah, Pelunasan Kasbon |
-| **Anggota Penjual** | `slamet@julehajatim.com` | `anggota123` | `SDA220001` | DPD Kab. Sidoarjo | Jual Produk Baru, Atur Toko (Toggle DOKU / Rekening Pribadi & Kurir Mandiri), Konfirmasi Terima Pembayaran Transfer |
-| **Anggota Pembeli** | `puji@julehajatim.com` | `puji123` | `SDA220002` | DPD Kab. Sidoarjo | Beli Produk, Checkout Ongkir Otomatis/Manual, Upload Bukti Transfer, Konfirmasi Penerimaan Paket |
+| **Super Admin** | `superadmin@julehajatim.com` | `superadmin123` | `JTM-SUPER-01` | Jawa Timur (Pusat) | Approval Akhir Produk Nasional, Atur Toggle Global Islami & Murottal, Simulator Biteship |
+| **Admin Ekop** | `ekop.sidoarjo@julehajatim.com` | `ekop123` | `SDA-EKOP-01` | Sidoarjo | Verifikasi Produk Daerah, Monitor Margin Kas Ekop Daerah, Pelunasan Kasbon |
+| **Mitra Penjual** | `slamet@julehajatim.com` | `anggota123` | `SDA220001` | Sidoarjo | Jual Produk Baru, Tambah Kategori Produk, Atur Toko (Toggle DOKU/Rekening Pribadi & Kurir Mandiri), Konfirmasi Terima Pembayaran |
+| **Anggota Pembeli** | `puji@julehajatim.com` | `anggota123` | `SDA220004` | Sidoarjo | Beli Produk, Checkout Ongkir Otomatis/Manual, Rating & Ulasan Bintang |
+| **Pembeli Umum** | `buyer.umum@gmail.com` | `pembeli123` | *(Non-Anggota)* | Umum / Bebas | Belanja Bebas, Keranjang, Checkout DOKU/Biteship, Rating & Ulasan Produk |
 
 ---
 

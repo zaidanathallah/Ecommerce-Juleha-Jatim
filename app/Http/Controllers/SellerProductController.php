@@ -174,4 +174,30 @@ class SellerProductController extends Controller
 
         return redirect()->route('seller.products.index')->with('success', $message);
     }
+
+    /**
+     * Tambah Kategori Baru oleh Penjual (Jual Produk Apa Saja)
+     */
+    public function storeCategory(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:100', 'unique:categories,name'],
+            'description' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $slug = Str::slug($validated['name']);
+        if (Category::where('slug', $slug)->exists()) {
+            $slug .= '-' . Str::lower(Str::random(4));
+        }
+
+        Category::create([
+            'name' => $validated['name'],
+            'slug' => $slug,
+            'description' => $validated['description'] ?? "Kategori produk {$validated['name']} di Juleha Jatim",
+            'icon' => 'Tag',
+            'is_active' => true,
+        ]);
+
+        return back()->with('success', "Kategori '{$validated['name']}' berhasil ditambahkan dan siap digunakan!");
+    }
 }
