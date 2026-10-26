@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Allow: /products/*
+Disallow: /admin
+Disallow: /superadmin
+Disallow: /ekop
+Disallow: /seller
+Disallow: /checkout
+Disallow: /login
+Disallow: /register
+
+Sitemap: https://jualbeli.julehajatim.com/sitemap.xml

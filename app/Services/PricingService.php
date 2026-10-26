@@ -1,0 +1,88 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Product;
+use App\Models\User;
+
+class PricingService
+{
+    /**
+     * Menghitung Final Price:
+     * Final Price = base_price + ekop_margin + super_margin
+     */
+    public function calculateFinalPrice(float $basePrice, float $ekopMargin = 0, float $superMargin = 0): float
+    {
+        return round($basePrice + $ekopMargin + $superMargin, 2);
+    }
+
+    /**
+     * Memformat data produk untuk pembeli publik:
+     * Margin internal (base_price, ekop_margin, super_margin) DISEMBUNYIKAN secara ketat dari frontend pembeli.
+     */
+    public function formatForBuyer(Product $product): array
+    {
+        return [
+            'id' => $product->id,
+            'title' => $product->title,
+            'slug' => $product->slug,
+            'description' => $product->description,
+            'image_url' => $product->image_url,
+            'gallery' => $product->gallery ?? [],
+            'price' => (float) $product->final_price,
+            'stock' => $product->stock,
+            'weight_gram' => $product->weight_gram,
+            'region_name' => $product->region_name,
+            'region_code' => $product->region_code,
+            'seller' => [
+                'id' => $product->user_id,
+                'name' => $product->user->name ?? 'Penjual Terverifikasi Juleha',
+                'region_name' => $product->user->region_name ?? $product->region_name,
+                'is_verified' => (bool) ($product->user->is_verified ?? true),
+                'lat' => $product->user->lat ?? null,
+                'lng' => $product->user->lng ?? null,
+            ],
+            'category' => $product->category ? [
+                'id' => $product->category->id,
+                'name' => $product->category->name,
+                'slug' => $product->category->slug,
+            ] : null,
+            'created_at' => $product->created_at?->toIso8601String(),
+        ];
+    }
+
+    /**
+     * Memformat data produk untuk admin/penjual:
+     * Menyertakan rincian hierarki harga lengkap untuk audit.
+     */
+    public function formatForManagement(Product $product, ?User $viewer = null): array
+    {
+        $canSeeEkop = $viewer && ($viewer->isAdminEkop() || $viewer->isSuperAdmin() || $viewer->id === $product->user_id);
+        $canSeeSuper = $viewer && $viewer->isSuperAdmin();
+
+        return [
+            'id' => $product->id,
+            'user_id' => $product->user_id,
+            'seller_name' => $product->user->name ?? '-',
+            'title' => $product->title,
+            'slug' => $product->slug,
+            'description' => $product->description,
+            'image_url' => $product->image_url,
+            'stock' => $product->stock,
+            'weight_gram' => $product->weight_gram,
+            'region_code' => $product->region_code,
+            'region_name' => $product->region_name,
+            'status' => $product->status,
+            'rejection_reason' => $product->rejection_reason,
+            'base_price' => (float) $product->base_price,
+            'ekop_margin' => $canSeeEkop ? (float) $product->ekop_margin : null,
+            'super_margin' => $canSeeSuper ? (float) $product->super_margin : null,
+            'final_price' => (float) $product->final_price,
+            'category' => $product->category ? [
+                'id' => $product->category->id,
+                'name' => $product->category->name,
+            ] : null,
+            'created_at' => $product->created_at?->format('d M Y H:i'),
+        ];
+    }
+}
