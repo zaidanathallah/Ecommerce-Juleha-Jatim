@@ -115,4 +115,22 @@ class SuperAdminController extends Controller
 
         return back()->with('success', "Produk '{$product->title}' ditolak oleh Super Admin dengan alasan: {$validated['rejection_reason']}");
     }
+
+    /**
+     * Update Pengaturan Global & Fitur Islami (Murottal & Adzan)
+     */
+    public function updateSettings(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'is_global_murottal_active' => ['required', 'boolean'],
+            'is_adzan_active' => ['required', 'boolean'],
+            'murottal_volume' => ['required', 'integer', 'between:1,100'],
+        ]);
+
+        \App\Models\SiteSetting::set('is_global_murottal_active', $validated['is_global_murottal_active']);
+        \App\Models\SiteSetting::set('is_adzan_active', $validated['is_adzan_active']);
+        \App\Models\SiteSetting::set('murottal_volume', $validated['murottal_volume']);
+
+        return back()->with('success', 'Pengaturan global fitur Islami (Murottal & Adzan) berhasil disimpan.');
+    }
 }

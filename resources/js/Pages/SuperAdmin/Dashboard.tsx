@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Head, useForm, Link } from '@inertiajs/react';
+import { Head, useForm, Link, usePage } from '@inertiajs/react';
 import MarketplaceLayout from '@/Layouts/MarketplaceLayout';
-import { ManagementProduct } from '@/types';
+import { ManagementProduct, PageProps } from '@/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
+import { Switch } from '@/Components/ui/switch';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/Components/ui/table';
 import { formatRupiah } from '@/lib/utils';
 import {
@@ -17,6 +18,10 @@ import {
     ArrowUpRight,
     PackageCheck,
     CreditCard,
+    Moon,
+    Volume2,
+    BellRing,
+    Music,
 } from 'lucide-react';
 
 interface Props {
@@ -45,6 +50,21 @@ export default function SuperAdminDashboard({
 }: Props) {
     const [selectedProduct, setSelectedProduct] = useState<ManagementProduct | null>(null);
     const [actionType, setActionType] = useState<'publish' | 'reject' | null>(null);
+
+    const { site_settings } = usePage<PageProps>().props;
+
+    const settingsForm = useForm({
+        is_global_murottal_active: site_settings?.is_global_murottal_active ?? true,
+        is_adzan_active: site_settings?.is_adzan_active ?? true,
+        murottal_volume: site_settings?.murottal_volume ?? 50,
+    });
+
+    const submitSettings = (e: React.FormEvent) => {
+        e.preventDefault();
+        settingsForm.put(route('superadmin.settings.update'), {
+            preserveScroll: true,
+        });
+    };
 
     const publishForm = useForm({
         super_margin: 15000,
@@ -192,6 +212,106 @@ export default function SuperAdminDashboard({
                         </CardContent>
                     </Card>
                 </div>
+
+                {/* Pengaturan Fitur Islami (Murottal Global & Adzan) */}
+                <Card className="border-2 border-emerald-800 dark:border-emerald-700">
+                    <CardHeader className="bg-emerald-900 text-white py-3 rounded-t-lg">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Moon className="h-5 w-5 text-emerald-300" />
+                                <div>
+                                    <CardTitle className="text-sm text-white">
+                                        Konfigurasi Global Fitur Islami (Murottal & Pengingat Adzan)
+                                    </CardTitle>
+                                    <CardDescription className="text-emerald-100 text-[11px]">
+                                        Pengaturan otomatis suasana Islami untuk seluruh pengunjung platform jualbeli.julehajatim.com
+                                    </CardDescription>
+                                </div>
+                            </div>
+                            <Badge variant="outline" className="text-white border-white font-mono text-[10px]">
+                                FITUR PUSAT DPW
+                            </Badge>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-5">
+                        <form onSubmit={submitSettings} className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Toggle 1: Global Murottal */}
+                                <div className="p-4 rounded-lg border border-neutral-300 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <Music className="h-4 w-4 text-emerald-700" />
+                                            <span className="text-xs font-bold text-neutral-900 dark:text-neutral-100">
+                                                Murottal Al-Qur'an Otomatis (Global)
+                                            </span>
+                                        </div>
+                                        <Switch
+                                            checked={settingsForm.data.is_global_murottal_active}
+                                            onCheckedChange={(checked) => settingsForm.setData('is_global_murottal_active', checked)}
+                                        />
+                                    </div>
+                                    <p className="text-[11px] text-neutral-500">
+                                        Memutar lantunan Al-Qur'an (Misyari Rasyid) via EQuran API secara otomatis saat pengunjung berinteraksi dengan website.
+                                    </p>
+                                </div>
+
+                                {/* Toggle 2: Real-time Adzan */}
+                                <div className="p-4 rounded-lg border border-neutral-300 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <BellRing className="h-4 w-4 text-emerald-700" />
+                                            <span className="text-xs font-bold text-neutral-900 dark:text-neutral-100">
+                                                Pengingat & Audio Adzan Waktu Sholat
+                                            </span>
+                                        </div>
+                                        <Switch
+                                            checked={settingsForm.data.is_adzan_active}
+                                            onCheckedChange={(checked) => settingsForm.setData('is_adzan_active', checked)}
+                                        />
+                                    </div>
+                                    <p className="text-[11px] text-neutral-500">
+                                        Otomatis memotong/menghentikan murottal dan membunyikan audio adzan 5 waktu (khusus adzan Shubuh memuat tatsywid) sesuai geolocation daerah.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Volume Slider */}
+                            <div className="p-4 rounded-lg border border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div className="space-y-0.5">
+                                    <div className="flex items-center gap-2">
+                                        <Volume2 className="h-4 w-4 text-neutral-600" />
+                                        <span className="text-xs font-bold text-neutral-900 dark:text-neutral-100">
+                                            Volume Suara Default: {settingsForm.data.murottal_volume}%
+                                        </span>
+                                    </div>
+                                    <p className="text-[11px] text-neutral-500">
+                                        Tingkat kenyamanan volume audio awal saat diputar pertama kali di browser user.
+                                    </p>
+                                </div>
+
+                                <div className="flex items-center gap-3 w-full sm:w-64">
+                                    <input
+                                        type="range"
+                                        min={5}
+                                        max={100}
+                                        step={5}
+                                        value={settingsForm.data.murottal_volume}
+                                        onChange={(e) => settingsForm.setData('murottal_volume', parseInt(e.target.value))}
+                                        className="w-full accent-emerald-700 cursor-pointer"
+                                    />
+                                    <Button
+                                        type="submit"
+                                        disabled={settingsForm.processing}
+                                        size="sm"
+                                        className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shrink-0"
+                                    >
+                                        {settingsForm.processing ? 'Menyimpan...' : 'Simpan Pengaturan'}
+                                    </Button>
+                                </div>
+                            </div>
+                        </form>
+                    </CardContent>
+                </Card>
 
                 {/* Priority Queue: Antrean Publish Live (Sudah di-ACC Ekop) */}
                 <Card className="border-2 border-red-300 dark:border-red-900">

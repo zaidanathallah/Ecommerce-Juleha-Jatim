@@ -90,4 +90,9 @@ export type PageProps<
         info?: string | null;
     };
     appName?: string;
+    site_settings?: {
+        is_global_murottal_active: boolean;
+        is_adzan_active: boolean;
+        murottal_volume: number;
+    };
 };

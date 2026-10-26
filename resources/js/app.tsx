@@ -5,6 +5,10 @@ import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 
+import { AudioProvider } from '@/Contexts/AudioContext';
+import GlobalAudioPlayer from '@/Components/GlobalAudioPlayer';
+import AdzanAlertModal from '@/Components/AdzanAlertModal';
+
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 createInertiaApp({
@@ -16,10 +20,17 @@ createInertiaApp({
         ),
     setup({ el, App, props }) {
         const root = createRoot(el);
+        const siteSettings = (props.initialPage.props as any)?.site_settings;
 
-        root.render(<App {...props} />);
+        root.render(
+            <AudioProvider initialSettings={siteSettings}>
+                <App {...props} />
+                <GlobalAudioPlayer />
+                <AdzanAlertModal />
+            </AudioProvider>
+        );
     },
     progress: {
-        color: '#4B5563',
+        color: '#059669',
     },
 });

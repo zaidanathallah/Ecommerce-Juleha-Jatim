@@ -16,6 +16,7 @@ import {
     LayoutDashboard,
     Menu,
     X,
+    BookOpen,
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -105,6 +106,14 @@ export default function Navbar() {
                             className="text-xs font-bold text-neutral-700 dark:text-neutral-300 hover:text-emerald-700 px-2 py-1"
                         >
                             Etalase Produk
+                        </Link>
+
+                        <Link
+                            href={route('quran.index')}
+                            className="text-xs font-bold text-emerald-800 dark:text-emerald-400 hover:text-emerald-600 px-2 py-1 inline-flex items-center gap-1.5"
+                        >
+                            <BookOpen className="h-3.5 w-3.5" />
+                            <span>Al-Qur'an</span>
                         </Link>
 
                         {user ? (
@@ -206,6 +215,14 @@ export default function Navbar() {
                             className="block py-1.5 text-xs font-semibold text-neutral-800"
                         >
                             Etalase Produk
+                        </Link>
+
+                        <Link
+                            href={route('quran.index')}
+                            className="block py-1.5 text-xs font-bold text-emerald-700 flex items-center gap-1.5"
+                        >
+                            <BookOpen className="h-3.5 w-3.5" />
+                            <span>Al-Qur'an Digital 30 Juz</span>
                         </Link>
 
                         {user ? (

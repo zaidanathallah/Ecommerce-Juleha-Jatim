@@ -54,6 +54,7 @@ class HandleInertiaRequests extends Middleware
                 'info' => fn () => $request->session()->get('info'),
             ],
             'appName' => config('app.name', 'Juleha Marketplace Jatim'),
+            'site_settings' => fn () => \App\Models\SiteSetting::getIslamicSettings(),
         ];
     }
 }

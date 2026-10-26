@@ -100,6 +100,7 @@ Route::prefix('superadmin')->name('superadmin.')->middleware(['auth', 'role:supe
     Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('dashboard');
     Route::post('/products/{product}/publish', [SuperAdminController::class, 'publish'])->name('products.publish');
     Route::post('/products/{product}/reject', [SuperAdminController::class, 'reject'])->name('products.reject');
+    Route::put('/settings', [SuperAdminController::class, 'updateSettings'])->name('settings.update');
 });
 
 // 5. Biteship Sandbox Activation Simulator (UI & API)
@@ -108,10 +109,16 @@ Route::get('/biteship/simulation', [\App\Http\Controllers\BiteshipSimulationCont
     ->name('biteship.simulation');
 Route::match(['get', 'post'], '/api/biteship-simulate', [\App\Http\Controllers\BiteshipSimulationController::class, 'apiSimulate'])
     ->name('biteship.api-simulate');
+Route::match(['get', 'post'], '/api/biteship-simulate-rates', [\App\Http\Controllers\BiteshipSimulationController::class, 'apiSimulateRates'])
+    ->name('biteship.api-simulate-rates');
 
 // 6. DOKU Webhook Notification Endpoint (CSRF-exempted)
 Route::post('/webhook/doku', [\App\Http\Controllers\DokuWebhookController::class, 'handle'])
     ->name('webhook.doku');
+
+// 7. Al-Qur'an Digital (EQuran API v2)
+Route::get('/quran', [\App\Http\Controllers\QuranController::class, 'index'])->name('quran.index');
+Route::get('/quran/{nomor}', [\App\Http\Controllers\QuranController::class, 'show'])->name('quran.show');
 
 require __DIR__.'/auth.php';
 
