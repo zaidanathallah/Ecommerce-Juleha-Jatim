@@ -234,6 +234,20 @@ class JulehaAuthAndMarketplaceTest extends TestCase
         $this->assertEquals('cancelled', $response->json('data.cancelled_status'));
     }
 
+    public function test_checkout_screen_renders_successfully(): void
+    {
+        $buyer = User::where('role', User::ROLE_USER)->first();
+        $product = Product::where('status', Product::STATUS_LIVE)->first();
+
+        // 1. Regular checkout
+        $response = $this->actingAs($buyer)->get(route('checkout.index', ['slug' => $product->slug]));
+        $response->assertStatus(200);
+
+        // 2. Flash sale checkout
+        $fsResponse = $this->actingAs($buyer)->get(route('checkout.index', ['slug' => $product->slug, 'flash_sale' => 1]));
+        $fsResponse->assertStatus(200);
+    }
+
     public function test_temanqris_webhook_updates_order_to_paid(): void
     {
         $order = \App\Models\Order::first();

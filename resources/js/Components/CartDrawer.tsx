@@ -150,7 +150,7 @@ export default function CartDrawer() {
 
                             <div className="space-y-2">
                                 <Link
-                                    href={route('checkout.index', items[0].slug)}
+                                    href={route('checkout.index', { slug: items[0].slug, flash_sale: items[0].is_flash_sale ? 1 : 0 })}
                                     onClick={closeCart}
                                     className="block w-full"
                                 >

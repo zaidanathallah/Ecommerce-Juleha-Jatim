@@ -33,7 +33,7 @@ class CheckoutController extends Controller
     /**
      * Tampilkan Halaman Checkout Dinamis
      */
-    public function index(string $slug): Response|\Illuminate\Http\RedirectResponse
+    public function index(Request $request, string $slug): Response|\Illuminate\Http\RedirectResponse
     {
         /** @var User $buyer */
         $buyer = Auth::user();
