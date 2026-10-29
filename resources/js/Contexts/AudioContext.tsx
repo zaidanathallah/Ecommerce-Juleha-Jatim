@@ -178,51 +178,68 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children, initialS
     useEffect(() => {
         if (!isGlobalMurottalEnabled || typeof window === 'undefined') return;
 
-        // Direct attempt on arrival
-        if (murottalRef.current && !isAdzanPlaying && !hasAutoPlayedRef.current) {
-            murottalRef.current
-                .play()
-                .then(() => {
-                    setIsPlaying(true);
-                    hasAutoPlayedRef.current = true;
-                })
-                .catch(() => {
-                    // Browser requires user interaction before audio starts
-                });
-        }
+        const attemptAutoplay = () => {
+            if (!murottalRef.current || isAdzanPlaying) return;
 
-        // On first user interaction anywhere on the document (click, scroll, keydown, touch)
-        const handleFirstInteraction = () => {
-            if (hasAutoPlayedRef.current) return;
-            hasAutoPlayedRef.current = true;
-
-            if (murottalRef.current && isGlobalMurottalEnabled && !isAdzanPlaying) {
-                murottalRef.current
-                    .play()
-                    .then(() => setIsPlaying(true))
+            // Direct unmuted playback attempt
+            const playPromise = murottalRef.current.play();
+            if (playPromise !== undefined) {
+                playPromise
+                    .then(() => {
+                        setIsPlaying(true);
+                        hasAutoPlayedRef.current = true;
+                    })
                     .catch((err) => {
-                        console.log('Autoplay interaction attempt:', err);
+                        console.log('Unmuted autoplay standby, waiting user gesture:', err);
+                        // Browser autoplay policy standby: start muted to buffer immediately
+                        if (murottalRef.current && !hasAutoPlayedRef.current) {
+                            murottalRef.current.muted = true;
+                            murottalRef.current.play().then(() => {
+                                setIsPlaying(true);
+                            }).catch(() => {});
+                        }
                     });
             }
-
-            cleanupListeners();
         };
 
-        const cleanupListeners = () => {
-            window.removeEventListener('pointerdown', handleFirstInteraction);
-            window.removeEventListener('click', handleFirstInteraction);
-            window.removeEventListener('scroll', handleFirstInteraction);
-            window.removeEventListener('keydown', handleFirstInteraction);
-            window.removeEventListener('touchstart', handleFirstInteraction);
+        attemptAutoplay();
+
+        // On first user interaction anywhere (click, touch, pointer, scroll, keydown):
+        // Unmute and ensure audio plays with full configured volume!
+        const handleUnlockAudio = () => {
+            if (murottalRef.current && isGlobalMurottalEnabled && !isAdzanPlaying) {
+                murottalRef.current.muted = false;
+                murottalRef.current.volume = volume;
+                if (murottalRef.current.paused) {
+                    murottalRef.current.play().then(() => {
+                        setIsPlaying(true);
+                        hasAutoPlayedRef.current = true;
+                    }).catch(() => {});
+                } else {
+                    setIsPlaying(true);
+                    hasAutoPlayedRef.current = true;
+                }
+            }
+            cleanupUnlockListeners();
         };
 
-        window.addEventListener('pointerdown', handleFirstInteraction, { passive: true });
-        window.addEventListener('click', handleFirstInteraction, { passive: true });
-        window.addEventListener('scroll', handleFirstInteraction, { passive: true });
-        window.addEventListener('keydown', handleFirstInteraction, { passive: true });
-        window.addEventListener('touchstart', handleFirstInteraction, { passive: true });
+        const cleanupUnlockListeners = () => {
+            window.removeEventListener('pointerdown', handleUnlockAudio);
+            window.removeEventListener('click', handleUnlockAudio);
+            window.removeEventListener('keydown', handleUnlockAudio);
+            window.removeEventListener('touchstart', handleUnlockAudio);
+            window.removeEventListener('scroll', handleUnlockAudio);
+        };
 
-        return cleanupListeners;
+        window.addEventListener('pointerdown', handleUnlockAudio, { passive: true });
+        window.addEventListener('click', handleUnlockAudio, { passive: true });
+        window.addEventListener('keydown', handleUnlockAudio, { passive: true });
+        window.addEventListener('touchstart', handleUnlockAudio, { passive: true });
+        window.addEventListener('scroll', handleUnlockAudio, { passive: true });
+
+        return () => {
+            cleanupUnlockListeners();
+        };
     }, [isGlobalMurottalEnabled, isAdzanPlaying]);
 
     // 3. Geolocation & Reverse Geocoding for readable location (e.g. Karang Pilang, Surabaya)

@@ -20,7 +20,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 1,
         startSurahName: 'Al-Fatihah',
         surahsDescription: 'Al-Fatihah (1:1-7) & Al-Baqarah (2:1-141)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2001.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/1.mp3',
     },
     {
         number: 2,
@@ -31,7 +31,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 2,
         startSurahName: 'Al-Baqarah',
         surahsDescription: 'Al-Baqarah (2:142-252)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2002.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/2.mp3',
     },
     {
         number: 3,
@@ -42,7 +42,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 2,
         startSurahName: 'Al-Baqarah',
         surahsDescription: 'Al-Baqarah (2:253-286) & Ali \'Imran (3:1-92)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2003.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/2.mp3',
     },
     {
         number: 4,
@@ -53,7 +53,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 3,
         startSurahName: 'Ali \'Imran',
         surahsDescription: 'Ali \'Imran (3:93-200) & An-Nisa\' (4:1-23)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2004.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/3.mp3',
     },
     {
         number: 5,
@@ -64,7 +64,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 4,
         startSurahName: 'An-Nisa\'',
         surahsDescription: 'An-Nisa\' (4:24-147)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2005.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/4.mp3',
     },
     {
         number: 6,
@@ -75,7 +75,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 4,
         startSurahName: 'An-Nisa\'',
         surahsDescription: 'An-Nisa\' (4:148-176) & Al-Ma\'idah (5:1-81)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2006.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/4.mp3',
     },
     {
         number: 7,
@@ -86,7 +86,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 5,
         startSurahName: 'Al-Ma\'idah',
         surahsDescription: 'Al-Ma\'idah (5:82-120) & Al-An\'am (6:1-110)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2007.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/5.mp3',
     },
     {
         number: 8,
@@ -97,7 +97,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 6,
         startSurahName: 'Al-An\'am',
         surahsDescription: 'Al-An\'am (6:111-165) & Al-A\'raf (7:1-87)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2008.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/6.mp3',
     },
     {
         number: 9,
@@ -108,7 +108,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 7,
         startSurahName: 'Al-A\'raf',
         surahsDescription: 'Al-A\'raf (7:88-206) & Al-Anfal (8:1-40)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2009.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/7.mp3',
     },
     {
         number: 10,
@@ -119,7 +119,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 8,
         startSurahName: 'Al-Anfal',
         surahsDescription: 'Al-Anfal (8:41-75) & At-Taubah (9:1-92)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2010.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/8.mp3',
     },
     {
         number: 11,
@@ -130,7 +130,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 9,
         startSurahName: 'At-Taubah',
         surahsDescription: 'At-Taubah (9:93-129), Yunus (10:1-109), & Hud (11:1-5)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2011.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/9.mp3',
     },
     {
         number: 12,
@@ -141,7 +141,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 11,
         startSurahName: 'Hud',
         surahsDescription: 'Hud (11:6-123) & Yusuf (12:1-52)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2012.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/11.mp3',
     },
     {
         number: 13,
@@ -152,7 +152,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 12,
         startSurahName: 'Yusuf',
         surahsDescription: 'Yusuf (12:53-111), Ar-Ra\'d (13:1-43), & Ibrahim (14:1-52)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2013.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/12.mp3',
     },
     {
         number: 14,
@@ -163,7 +163,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 15,
         startSurahName: 'Al-Hijr',
         surahsDescription: 'Al-Hijr (15:1-99) & An-Nahl (16:1-128)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2014.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/15.mp3',
     },
     {
         number: 15,
@@ -174,7 +174,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 17,
         startSurahName: 'Al-Isra\'',
         surahsDescription: 'Al-Isra\' (17:1-111) & Al-Kahf (18:1-74)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2015.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/17.mp3',
     },
     {
         number: 16,
@@ -185,7 +185,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 18,
         startSurahName: 'Al-Kahf',
         surahsDescription: 'Al-Kahf (18:75-110), Maryam (19:1-98), & Ta-Ha (20:1-135)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2016.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/18.mp3',
     },
     {
         number: 17,
@@ -196,7 +196,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 21,
         startSurahName: 'Al-Anbiya',
         surahsDescription: 'Al-Anbiya (21:1-112) & Al-Hajj (22:1-78)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2017.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/21.mp3',
     },
     {
         number: 18,
@@ -207,7 +207,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 23,
         startSurahName: 'Al-Mu\'minun',
         surahsDescription: 'Al-Mu\'minun (23:1-118), An-Nur (24:1-64), & Al-Furqan (25:1-20)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2018.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/23.mp3',
     },
     {
         number: 19,
@@ -218,7 +218,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 25,
         startSurahName: 'Al-Furqan',
         surahsDescription: 'Al-Furqan (25:21-77), Asy-Syu\'ara (26:1-227), & An-Naml (27:1-55)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2019.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/25.mp3',
     },
     {
         number: 20,
@@ -229,7 +229,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 27,
         startSurahName: 'An-Naml',
         surahsDescription: 'An-Naml (27:56-93), Al-Qasas (28:1-88), & Al-\'Ankabut (29:1-45)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2020.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/27.mp3',
     },
     {
         number: 21,
@@ -240,7 +240,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 29,
         startSurahName: 'Al-\'Ankabut',
         surahsDescription: 'Al-\'Ankabut (29:46-69), Ar-Rum (30:1-60), Luqman (31:1-34), As-Sajdah (32:1-30), & Al-Ahzab (33:1-30)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2021.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/29.mp3',
     },
     {
         number: 22,
@@ -251,7 +251,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 33,
         startSurahName: 'Al-Ahzab',
         surahsDescription: 'Al-Ahzab (33:31-73), Saba\' (34:1-54), Fatir (35:1-45), & Yasin (36:1-27)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2022.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/33.mp3',
     },
     {
         number: 23,
@@ -262,7 +262,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 36,
         startSurahName: 'Yasin',
         surahsDescription: 'Yasin (36:28-83), As-Saffat (37:1-182), Sad (38:1-88), & Az-Zumar (39:1-31)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2023.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/36.mp3',
     },
     {
         number: 24,
@@ -273,7 +273,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 39,
         startSurahName: 'Az-Zumar',
         surahsDescription: 'Az-Zumar (39:32-75), Ghafir (40:1-85), & Fussilat (41:1-46)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2024.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/39.mp3',
     },
     {
         number: 25,
@@ -284,7 +284,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 41,
         startSurahName: 'Fussilat',
         surahsDescription: 'Fussilat (41:47-54), Asy-Syura (42:1-53), Az-Zukhruf (43:1-89), Ad-Dukhan (44:1-59), & Al-Jasiyah (45:1-37)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2025.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/41.mp3',
     },
     {
         number: 26,
@@ -295,7 +295,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 46,
         startSurahName: 'Al-Ahqaf',
         surahsDescription: 'Al-Ahqaf (46:1-35), Muhammad (47:1-38), Al-Fath (48:1-29), Al-Hujurat (49:1-18), Qaf (50:1-45), & Az-Zariyat (51:1-30)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2026.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/46.mp3',
     },
     {
         number: 27,
@@ -306,7 +306,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 51,
         startSurahName: 'Az-Zariyat',
         surahsDescription: 'Az-Zariyat (51:31-60), At-Tur (52:1-49), An-Najm (53:1-62), Al-Qamar (54:1-55), Ar-Rahman (55:1-78), Al-Waqi\'ah (56:1-96), & Al-Hadid (57:1-29)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2027.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/51.mp3',
     },
     {
         number: 28,
@@ -317,7 +317,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 58,
         startSurahName: 'Al-Mujadilah',
         surahsDescription: 'Al-Mujadilah (58), Al-Hasyr (59), Al-Mumtahanah (60), As-Saff (61), Al-Jumu\'ah (62), Al-Munafiqun (63), At-Taghabun (64), At-Talaq (65), & At-Tahrim (66)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2028.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/58.mp3',
     },
     {
         number: 29,
@@ -328,7 +328,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 67,
         startSurahName: 'Al-Mulk',
         surahsDescription: 'Al-Mulk (67) hingga Al-Mursalat (77)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2029.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/67.mp3',
     },
     {
         number: 30,
@@ -339,7 +339,7 @@ export const JUZ_LIST: JuzInfo[] = [
         startSurahNumber: 78,
         startSurahName: 'An-Naba\'',
         surahsDescription: 'Juz \'Amma: An-Naba\' (78) hingga An-Nas (114)',
-        audioUrl: 'https://archive.org/download/misyarirasyidperjuz/Al-Quran%20Juz%2030.mp3',
+        audioUrl: 'https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/78.mp3',
     },
 ];
 

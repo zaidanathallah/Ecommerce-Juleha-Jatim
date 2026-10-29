@@ -13,8 +13,8 @@ class BiteshipService
 
     public function __construct()
     {
-        $this->baseUrl = rtrim((string) env('BITESHIP_BASE_URL', 'https://api.biteship.com'), '/');
-        $this->apiKey = (string) env('BITESHIP_API_KEY', '');
+        $this->baseUrl = rtrim((string) (config('services.biteship.base_url') ?? env('BITESHIP_BASE_URL', 'https://api.biteship.com')), '/');
+        $this->apiKey = (string) (config('services.biteship.api_key') ?? env('BITESHIP_API_KEY', ''));
     }
 
     /**
@@ -197,6 +197,41 @@ class BiteshipService
                 'data' => $response->json(),
             ];
         } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Lacak Resi Pengiriman Real-time via Biteship Tracking API
+     * GET /v1/trackings/{waybill_id}/couriers/{courier_code}
+     */
+    public function getTracking(string $waybillId, string $courierCode): array
+    {
+        try {
+            $courier = strtolower(trim($courierCode));
+            $response = Http::timeout(15)
+                ->withHeaders([
+                    'Authorization' => "Bearer {$this->apiKey}",
+                ])
+                ->get("{$this->baseUrl}/v1/trackings/{$waybillId}/couriers/{$courier}");
+
+            if ($response->successful()) {
+                return [
+                    'success' => true,
+                    'data' => $response->json(),
+                ];
+            }
+
+            return [
+                'success' => false,
+                'message' => $response->json('error') ?? $response->json('message') ?? 'Status resi belum terdaftar di kurir.',
+                'raw' => $response->json(),
+            ];
+        } catch (Exception $e) {
+            Log::error('Biteship Tracking Exception', ['error' => $e->getMessage()]);
             return [
                 'success' => false,
                 'message' => $e->getMessage(),

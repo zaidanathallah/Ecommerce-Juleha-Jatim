@@ -20,8 +20,12 @@ class PricingService
      * Memformat data produk untuk pembeli publik:
      * Margin internal (base_price, ekop_margin, super_margin) DISEMBUNYIKAN secara ketat dari frontend pembeli.
      */
-    public function formatForBuyer(Product $product): array
+    public function formatForBuyer(Product $product, ?bool $isFlashSale = null): array
     {
+        $hasActiveFlashSale = (bool) ($product->is_flash_sale && $product->flash_sale_price > 0 && (!$product->flash_sale_end || $product->flash_sale_end >= now()));
+        $applyFlashSale = $isFlashSale !== null ? $isFlashSale : $hasActiveFlashSale;
+        $sellingPrice = ($applyFlashSale && $product->flash_sale_price > 0) ? (float) $product->flash_sale_price : (float) $product->final_price;
+
         return [
             'id' => $product->id,
             'title' => $product->title,
@@ -29,8 +33,10 @@ class PricingService
             'description' => $product->description,
             'image_url' => $product->image_url,
             'gallery' => $product->gallery ?? [],
-            'price' => (float) $product->final_price,
-            'is_flash_sale' => (bool) $product->is_flash_sale,
+            'price' => $sellingPrice,
+            'original_price' => (float) $product->final_price,
+            'is_flash_sale' => $applyFlashSale,
+            'flash_sale_active' => $hasActiveFlashSale,
             'flash_sale_price' => $product->flash_sale_price ? (float) $product->flash_sale_price : null,
             'flash_sale_discount_percent' => (int) ($product->flash_sale_discount_percent ?? 0),
             'flash_sale_stock' => (int) ($product->flash_sale_stock ?? 0),

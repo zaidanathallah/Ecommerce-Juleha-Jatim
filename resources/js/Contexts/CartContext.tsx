@@ -18,8 +18,8 @@ export interface CartItem {
 
 interface CartContextType {
     items: CartItem[];
-    addToCart: (product: BuyerProduct, quantity?: number, userParam?: any) => void;
-    buyNow: (product: BuyerProduct, quantity?: number, userParam?: any) => void;
+    addToCart: (product: BuyerProduct, quantity?: number, userParam?: any, openDrawer?: boolean) => void;
+    buyNow: (product: BuyerProduct, quantity?: number, userParam?: any, isFlashSale?: boolean) => void;
     removeFromCart: (id: number) => void;
     updateQuantity: (id: number, quantity: number) => void;
     clearCart: () => void;
@@ -142,7 +142,7 @@ export function CartProvider({ children, initialUser }: CartProviderProps) {
         return null;
     };
 
-    const addToCart = (product: BuyerProduct, quantity: number = 1, userParam?: any) => {
+    const addToCart = (product: BuyerProduct, quantity: number = 1, userParam?: any, openDrawer: boolean = true) => {
         const activeUser = getActiveUser(userParam);
 
         // Strict Gate: Must be logged in to shop or add to cart
@@ -183,15 +183,18 @@ export function CartProvider({ children, initialUser }: CartProviderProps) {
                         seller_name: product.seller?.name || 'Mitra Penjual Juleha',
                         region_name: product.region_name || 'Jawa Timur',
                         is_flash_sale: isFlashSale,
-                        original_price: Number(product.price),
+                        original_price: Number(product.original_price || product.price),
                     },
                 ];
             }
         });
-        setIsCartOpen(true);
+
+        if (openDrawer) {
+            setIsCartOpen(true);
+        }
     };
 
-    const buyNow = (product: BuyerProduct, quantity: number = 1, userParam?: any) => {
+    const buyNow = (product: BuyerProduct, quantity: number = 1, userParam?: any, isFlashSale?: boolean) => {
         const activeUser = getActiveUser(userParam);
 
         if (!activeUser || !activeUser.id) {
@@ -204,11 +207,15 @@ export function CartProvider({ children, initialUser }: CartProviderProps) {
             syncUser(activeUser);
         }
 
-        // Add to cart first
-        addToCart(product, quantity, activeUser);
+        // Add to cart in background without opening drawer
+        addToCart(product, quantity, activeUser, false);
 
-        // Immediate direct checkout
-        router.visit(route('checkout.index', product.slug));
+        // Direct navigate to checkout
+        const flashSaleActive = isFlashSale !== undefined ? isFlashSale : Boolean(product.is_flash_sale && product.flash_sale_price);
+        router.visit(route('checkout.index', {
+            slug: product.slug,
+            flash_sale: flashSaleActive ? 1 : 0,
+        }));
     };
 
     const removeFromCart = (id: number) => {

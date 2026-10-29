@@ -127,14 +127,14 @@ class TemanQrisAndVoucherTest extends TestCase
             $seller = $this->getOrCreateSuperAdmin();
             $product = Product::create([
                 'user_id' => $seller->id,
-                'name' => 'Pisau Sembelih Test',
+                'category_id' => Category::first()?->id ?? 1,
+                'title' => 'Pisau Sembelih Test',
                 'slug' => 'pisau-sembelih-test-' . time(),
                 'base_price' => 200000,
                 'ekop_margin' => 10000,
                 'super_margin' => 5000,
                 'stock' => 10,
-                'weight' => 500,
-                'category' => 'pisau_sembelih',
+                'weight_gram' => 500,
                 'description' => 'Pisau tes',
                 'status' => Product::STATUS_LIVE,
             ]);

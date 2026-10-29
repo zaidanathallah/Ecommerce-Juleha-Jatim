@@ -90,6 +90,10 @@ export default function Navbar() {
                     <Link href={route('seller.products.create')} className="hover:text-orange-200 transition">
                         Buka Toko / Jual Produk
                     </Link>
+                    <span className="text-white/40">|</span>
+                    <Link href={route('orders.my-orders')} className="hover:text-orange-200 transition font-bold text-amber-200">
+                        Pesanan Saya
+                    </Link>
                     <span className="text-white/40 hidden md:inline">|</span>
                     <span className="hidden md:inline text-white/90">
                         Marketplace Halal Terstandarisasi Syariat

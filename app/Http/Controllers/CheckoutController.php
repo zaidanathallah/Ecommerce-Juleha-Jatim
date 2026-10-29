@@ -56,7 +56,8 @@ class CheckoutController extends Controller
             } catch (\Exception $e) {}
         }
 
-        $formattedProduct = $this->pricingService->formatForBuyer($product);
+        $isFlashSaleRequested = $request->query('flash_sale') === '1' || ($request->query('flash_sale') !== '0' && $product->is_flash_sale && $product->flash_sale_price > 0 && (!$product->flash_sale_end || $product->flash_sale_end >= now()));
+        $formattedProduct = $this->pricingService->formatForBuyer($product, $isFlashSaleRequested);
 
         $availableVouchers = Voucher::active()->latest()->get()->map(function ($v) {
             return [
@@ -145,53 +146,78 @@ class CheckoutController extends Controller
 
         $ratesResponse = $this->biteshipService->getRates($origin, $destination, $items);
 
-        if (!$ratesResponse['success'] || empty($ratesResponse['pricing'])) {
-            // Robust realistic courier pricing for Jatim / Indonesia
-            $ratesResponse = [
+        if ($ratesResponse['success'] && !empty($ratesResponse['pricing'])) {
+            $formattedPricing = array_map(function ($p) {
+                return [
+                    'courier_name' => $p['courier_name'] ?? strtoupper($p['courier_code'] ?? 'Kurir'),
+                    'courier_code' => strtolower($p['courier_code'] ?? 'courier'),
+                    'courier_service_name' => $p['courier_service_name'] ?? 'Reguler',
+                    'courier_service_code' => strtolower($p['courier_service_code'] ?? 'reg'),
+                    'duration' => str_replace('days', 'Hari', $p['duration'] ?? '1 - 2 Hari'),
+                    'price' => (float) ($p['price'] ?? 0),
+                    'type' => ucfirst($p['service_type'] ?? 'standard') . ' (' . ucfirst($p['shipping_type'] ?? 'paket') . ')',
+                    'description' => $p['description'] ?? '',
+                ];
+            }, $ratesResponse['pricing']);
+
+            // Urutkan tarif termurah terlebih dahulu
+            usort($formattedPricing, fn ($a, $b) => $a['price'] <=> $b['price']);
+
+            return response()->json([
                 'success' => true,
-                'pricing' => [
-                    [
-                        'courier_name' => 'J&T Express',
-                        'courier_code' => 'jnt',
-                        'courier_service_name' => 'EZ',
-                        'courier_service_code' => 'ez',
-                        'duration' => '1 - 2 Hari',
-                        'price' => 18000,
-                        'type' => 'Standard Delivery',
-                    ],
-                    [
-                        'courier_name' => 'JNE',
-                        'courier_code' => 'jne',
-                        'courier_service_name' => 'REG',
-                        'courier_service_code' => 'reg',
-                        'duration' => '1 - 2 Hari',
-                        'price' => 19000,
-                        'type' => 'Standard Delivery',
-                    ],
-                    [
-                        'courier_name' => 'SiCepat',
-                        'courier_code' => 'sicepat',
-                        'courier_service_name' => 'REG',
-                        'courier_service_code' => 'reg',
-                        'duration' => '1 - 3 Hari',
-                        'price' => 18500,
-                        'type' => 'Standard Delivery',
-                    ],
-                    [
-                        'courier_name' => 'Anteraja',
-                        'courier_code' => 'anteraja',
-                        'courier_service_name' => 'Regular',
-                        'courier_service_code' => 'reg',
-                        'duration' => '2 - 3 Hari',
-                        'price' => 17500,
-                        'type' => 'Standard Delivery',
-                    ],
-                ],
-                'note' => 'Biteship Courier Rate Engine',
-            ];
+                'pricing' => $formattedPricing,
+                'is_live_biteship' => true,
+                'origin' => $origin,
+                'destination' => $destination,
+            ]);
         }
 
-        return response()->json($ratesResponse);
+        // Fallback jika API Biteship offline
+        $fallbackPricing = [
+            [
+                'courier_name' => 'J&T Express',
+                'courier_code' => 'jnt',
+                'courier_service_name' => 'EZ',
+                'courier_service_code' => 'ez',
+                'duration' => '1 - 2 Hari',
+                'price' => 18000,
+                'type' => 'Standard Delivery',
+            ],
+            [
+                'courier_name' => 'JNE',
+                'courier_code' => 'jne',
+                'courier_service_name' => 'REG',
+                'courier_service_code' => 'reg',
+                'duration' => '1 - 2 Hari',
+                'price' => 19000,
+                'type' => 'Standard Delivery',
+            ],
+            [
+                'courier_name' => 'SiCepat',
+                'courier_code' => 'sicepat',
+                'courier_service_name' => 'REG',
+                'courier_service_code' => 'reg',
+                'duration' => '1 - 3 Hari',
+                'price' => 18500,
+                'type' => 'Standard Delivery',
+            ],
+            [
+                'courier_name' => 'Anteraja',
+                'courier_code' => 'anteraja',
+                'courier_service_name' => 'Regular',
+                'courier_service_code' => 'reg',
+                'duration' => '2 - 3 Hari',
+                'price' => 17500,
+                'type' => 'Standard Delivery',
+            ],
+        ];
+
+        return response()->json([
+            'success' => true,
+            'pricing' => $fallbackPricing,
+            'is_live_biteship' => false,
+            'note' => 'Biteship Fallback',
+        ]);
     }
 
     /**
@@ -205,6 +231,7 @@ class CheckoutController extends Controller
 
         $validated = $request->validate([
             'product_id' => ['required', 'exists:products,id'],
+            'is_flash_sale' => ['nullable'],
             'recipient_name' => ['required', 'string', 'max:150'],
             'recipient_phone' => ['required', 'string', 'max:30'],
             'shipping_address' => ['required', 'string', 'max:500'],
@@ -240,13 +267,16 @@ class CheckoutController extends Controller
         $ekopMargin = (float) $product->ekop_margin;
         $superMargin = (float) $product->super_margin;
         
-        // Cek apakah produk sedang Flash Sale aktif
-        $isFlashSaleActive = $product->is_flash_sale && $product->flash_sale_price > 0 && (!$product->flash_sale_end || $product->flash_sale_end >= now());
+        // Cek apakah pembelian adalah Flash Sale aktif
+        $isFlashSaleInput = $request->boolean('is_flash_sale') || $request->input('is_flash_sale') === '1' || $request->input('is_flash_sale') === 1;
+        $isFlashSaleActive = $isFlashSaleInput && $product->is_flash_sale && $product->flash_sale_price > 0 && (!$product->flash_sale_end || $product->flash_sale_end >= now());
+
         if ($isFlashSaleActive) {
             $finalProductPrice = (float) $product->flash_sale_price;
             $basePrice = max(1000, $finalProductPrice - ($ekopMargin + $superMargin));
         } else {
-            $finalProductPrice = $basePrice + $ekopMargin + $superMargin;
+            $finalProductPrice = (float) $product->final_price;
+            $basePrice = (float) $product->base_price;
         }
 
         $shippingCost = 0.00;
@@ -473,5 +503,139 @@ class CheckoutController extends Controller
 
         return redirect()->route('orders.show', $order->order_number)
             ->with('success', 'Status pesanan berhasil diubah menjadi Lunas.');
+    }
+
+    /**
+     * Simulasi Pembayaran QRIS Dinamis LUNAS (Memicu Webhook & Pickup Biteship Otomatis)
+     */
+    public function simulateQrisPaid(string $orderNumber): RedirectResponse
+    {
+        $order = Order::where('order_number', $orderNumber)->firstOrFail();
+
+        if ($order->payment_status !== Order::PAYMENT_PAID) {
+            $order->update([
+                'payment_status' => Order::PAYMENT_PAID,
+                'paid_at' => now(),
+                'margin_settlement_status' => Order::MARGIN_SETTLED_PG,
+            ]);
+
+            // Pemicu otomatis kurir Biteship jika metode Biteship aktif
+            if ($order->shipping_method_type === Order::SHIPPING_METHOD_BITESHIP) {
+                try {
+                    $seller = $order->seller;
+                    $origin = [
+                        'name' => $seller->shop_name ?? $seller->name,
+                        'phone' => $seller->phone ?? '081234567890',
+                        'address' => $seller->address ?? 'DPW Juleha Jawa Timur',
+                        'lat' => (float) ($seller->lat ?? -7.4726),
+                        'lng' => (float) ($seller->lng ?? 112.7058),
+                    ];
+
+                    $shipping = is_array($order->shipping_address) ? $order->shipping_address : json_decode($order->shipping_address, true);
+                    $destination = [
+                        'name' => $shipping['recipient_name'] ?? 'Pembeli Juleha',
+                        'phone' => $shipping['recipient_phone'] ?? $shipping['phone'] ?? '081234567890',
+                        'address' => $shipping['address'] ?? $shipping['address_line'] ?? 'Surabaya, Jawa Timur',
+                        'lat' => (float) ($shipping['lat'] ?? $shipping['latitude'] ?? -7.2825),
+                        'lng' => (float) ($shipping['lng'] ?? $shipping['longitude'] ?? 112.7638),
+                    ];
+
+                    $items = $order->items->map(function ($item) {
+                        return [
+                            'name' => $item->product_title ?? 'Produk Juleha',
+                            'description' => 'Peralatan Juleha Halal',
+                            'value' => (int) $item->final_price,
+                            'quantity' => (int) $item->quantity,
+                            'weight' => 500,
+                        ];
+                    })->toArray();
+
+                    $courierCompany = strtolower($order->shipping_courier ?? 'jne');
+                    $courierType = strtolower($order->shipping_service ?? 'reg');
+
+                    $biteshipResult = $this->biteshipService->createOrder($origin, $destination, $items, $courierCompany, $courierType);
+
+                    if (!empty($biteshipResult['data']['id'])) {
+                        $order->update([
+                            'biteship_order_id' => $biteshipResult['data']['id'],
+                            'biteship_waybill_id' => $biteshipResult['data']['courier']['waybill_id'] ?? ('JLH-' . rand(10000000, 99999999)),
+                            'shipping_status' => Order::SHIPPING_PICKUP_REQUESTED,
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    Log::error("Simulate Biteship Pickup Error for {$order->order_number}: " . $e->getMessage());
+                }
+            }
+        }
+
+        return redirect()->route('orders.show', $order->order_number)
+            ->with('success', 'Pembayaran QRIS berhasil diverifikasi LUNAS! Permintaan pickup kurir Biteship telah dikirimkan.');
+    }
+
+    /**
+     * API Real-time Tracking Biteship untuk Modal/Widget Lacak Resi
+     */
+    public function trackOrder(string $orderNumber): JsonResponse
+    {
+        $order = Order::where('order_number', $orderNumber)->firstOrFail();
+
+        if (empty($order->biteship_waybill_id)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Resi pengiriman belum terbit. Menunggu konfirmasi pickup kurir.',
+            ]);
+        }
+
+        $courierCode = strtolower(explode(' ', (string) $order->shipping_courier)[0] ?? 'jne');
+        $trackingResult = $this->biteshipService->getTracking($order->biteship_waybill_id, $courierCode);
+
+        return response()->json($trackingResult);
+    }
+
+    /**
+     * Halaman "Pesanan Saya" Berstandar Alur Shopee
+     * Tab: Semua | Belum Bayar | Dikemas | Dikirim | Selesai | Dibatalkan | Pengembalian Dana
+     */
+    public function myOrders(Request $request): \Inertia\Response
+    {
+        /** @var User $buyer */
+        $buyer = Auth::user();
+        $tab = $request->query('tab', 'semua');
+
+        $query = Order::with(['items.product', 'seller', 'voucher'])
+            ->where('buyer_id', $buyer->id)
+            ->latest();
+
+        match ($tab) {
+            'belum_bayar' => $query->where('payment_status', Order::PAYMENT_PENDING),
+            'dikemas' => $query->where('payment_status', Order::PAYMENT_PAID)
+                ->whereIn('shipping_status', [Order::SHIPPING_PENDING, Order::SHIPPING_PICKUP_REQUESTED]),
+            'dikirim' => $query->where('shipping_status', Order::SHIPPING_IN_TRANSIT),
+            'selesai' => $query->where('shipping_status', Order::SHIPPING_DELIVERED),
+            'dibatalkan' => $query->where(function ($q) {
+                $q->where('payment_status', Order::PAYMENT_EXPIRED)
+                  ->orWhere('shipping_status', 'cancelled');
+            }),
+            'pengembalian' => $query->where('payment_status', 'refunded'),
+            default => null, // Semua
+        };
+
+        $orders = $query->paginate(10)->withQueryString();
+
+        return Inertia::render('Orders/Index', [
+            'orders' => $orders,
+            'activeTab' => $tab,
+            'counts' => [
+                'semua' => Order::where('buyer_id', $buyer->id)->count(),
+                'belum_bayar' => Order::where('buyer_id', $buyer->id)->where('payment_status', Order::PAYMENT_PENDING)->count(),
+                'dikemas' => Order::where('buyer_id', $buyer->id)->where('payment_status', Order::PAYMENT_PAID)->whereIn('shipping_status', [Order::SHIPPING_PENDING, Order::SHIPPING_PICKUP_REQUESTED])->count(),
+                'dikirim' => Order::where('buyer_id', $buyer->id)->where('shipping_status', Order::SHIPPING_IN_TRANSIT)->count(),
+                'selesai' => Order::where('buyer_id', $buyer->id)->where('shipping_status', Order::SHIPPING_DELIVERED)->count(),
+                'dibatalkan' => Order::where('buyer_id', $buyer->id)->where(function ($q) {
+                    $q->where('payment_status', Order::PAYMENT_EXPIRED)->orWhere('shipping_status', 'cancelled');
+                })->count(),
+                'pengembalian' => Order::where('buyer_id', $buyer->id)->where('payment_status', 'refunded')->count(),
+            ],
+        ]);
     }
 }

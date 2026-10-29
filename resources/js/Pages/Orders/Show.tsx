@@ -136,6 +136,15 @@ export default function OrderShow({ order }: Props) {
         }
     };
 
+    const submitSimulateQris = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (confirm('Simulasikan pembayaran QRIS berhasil lunas? Status pesanan akan otomatis terverifikasi LUNAS dan penjemputan kurir Biteship akan diproses.')) {
+            paymentConfirmForm.post(route('orders.simulate-qris-paid', order.order_number), {
+                preserveScroll: true,
+            });
+        }
+    };
+
     const copyToClipboard = (text: string, label: string = 'teks') => {
         navigator.clipboard.writeText(text);
         setCopiedText(label);
@@ -150,11 +159,45 @@ export default function OrderShow({ order }: Props) {
 
             <div className="max-w-4xl mx-auto space-y-6">
                 <nav className="flex items-center gap-2 text-xs text-neutral-500">
-                    <Link href={route('dashboard')} className="hover:text-[#ee4d2d] flex items-center gap-1 font-semibold">
+                    <Link href={route('orders.my-orders')} className="hover:text-[#ee4d2d] flex items-center gap-1 font-semibold">
                         <ArrowLeft className="h-3.5 w-3.5" />
-                        Kembali ke Dashboard
+                        Kembali ke Pesanan Saya
                     </Link>
                 </nav>
+
+                {/* Shopee Payment Success Banner */}
+                {isPaid && (
+                    <div className="bg-gradient-to-r from-[#ee4d2d] to-orange-500 text-white rounded-3xl p-6 sm:p-8 text-center shadow-xl space-y-4">
+                        <div className="h-16 w-16 bg-white/20 backdrop-blur-xs rounded-full flex items-center justify-center mx-auto border-2 border-white/40">
+                            <CheckCircle2 className="h-9 w-9 text-white" />
+                        </div>
+                        <div className="space-y-1">
+                            <h2 className="text-xl sm:text-2xl font-black tracking-tight">
+                                Hore, Pesananmu berhasil!
+                            </h2>
+                            <p className="text-xs sm:text-sm text-orange-100 max-w-md mx-auto font-medium">
+                                Silakan cek notifikasi untuk mengetahui status pesananmu.
+                            </p>
+                        </div>
+                        <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+                            <Link href={route('home')}>
+                                <Button
+                                    variant="outline"
+                                    className="border-white/60 text-white hover:bg-white/20 rounded-xl px-6 text-xs font-bold"
+                                >
+                                    Beranda
+                                </Button>
+                            </Link>
+                            <Link href={route('orders.my-orders')}>
+                                <Button
+                                    className="bg-white text-[#ee4d2d] hover:bg-orange-50 rounded-xl px-6 text-xs font-extrabold shadow-md"
+                                >
+                                    Pesanan Saya
+                                </Button>
+                            </Link>
+                        </div>
+                    </div>
+                )}
 
                 {/* Header Card */}
                 <div className="border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
@@ -454,7 +497,7 @@ export default function OrderShow({ order }: Props) {
                                         </p>
 
                                         {!isPaid && (
-                                            <form onSubmit={submitConfirmPayment} className="pt-1">
+                                            <form onSubmit={submitSimulateQris} className="pt-1">
                                                 <Button
                                                     type="submit"
                                                     variant="outline"
@@ -462,7 +505,7 @@ export default function OrderShow({ order }: Props) {
                                                     className="w-full text-xs font-bold border-orange-200 text-[#ee4d2d] hover:bg-orange-50 h-8 gap-1"
                                                 >
                                                     <Sparkles className="h-3.5 w-3.5" />
-                                                    <span>Simulasi Bayar Selesai (Verifikasi Instan LUNAS)</span>
+                                                    <span>Simulasi Bayar Selesai (Verifikasi Instan LUNAS & Pickup Kurir)</span>
                                                 </Button>
                                             </form>
                                         )}

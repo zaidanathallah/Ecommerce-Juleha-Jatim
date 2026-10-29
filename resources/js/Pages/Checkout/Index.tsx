@@ -114,6 +114,7 @@ export default function CheckoutIndex({ product, availableVouchers = [], seller,
 
     const { data, setData, post, processing, errors } = useForm({
         product_id: product.id,
+        is_flash_sale: product.is_flash_sale ? 1 : 0,
         recipient_name: buyer.name || '',
         recipient_phone: buyer.phone || '',
         shipping_address: buyer.address || '',
@@ -633,9 +634,21 @@ export default function CheckoutIndex({ product, availableVouchers = [], seller,
                                         <span className="text-[10px] text-neutral-500 block">
                                             1 Unit &bull; {product.weight_gram} gram
                                         </span>
-                                        <span className="font-mono font-extrabold text-sm text-[#ee4d2d]">
-                                            {formatRupiah(product.price)}
-                                        </span>
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <span className="font-mono font-extrabold text-sm text-[#ee4d2d]">
+                                                {formatRupiah(product.price)}
+                                            </span>
+                                            {product.original_price && product.original_price > product.price && (
+                                                <span className="text-xs text-neutral-400 line-through">
+                                                    {formatRupiah(product.original_price)}
+                                                </span>
+                                            )}
+                                            {product.is_flash_sale && (
+                                                <span className="px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-950/60 text-red-600 text-[10px] font-black uppercase">
+                                                    Flash Sale
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 

@@ -58,6 +58,7 @@ export interface BuyerProduct {
     image_url: string;
     gallery?: string[];
     price: number;
+    original_price?: number;
     is_flash_sale?: boolean;
     flash_sale_price?: number | null;
     flash_sale_discount_percent?: number;

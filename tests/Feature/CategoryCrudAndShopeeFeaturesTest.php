@@ -4,12 +4,12 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
 class CategoryCrudAndShopeeFeaturesTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     public function test_category_list_endpoint_returns_json()
     {

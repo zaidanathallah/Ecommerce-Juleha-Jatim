@@ -386,7 +386,7 @@ export default function Index({ products, flashSaleProducts = [], vouchers = [],
                                             </Button>
                                             <Button
                                                 size="sm"
-                                                onClick={() => buyNow(product, 1, auth.user)}
+                                                onClick={() => buyNow(product, 1, auth.user, true)}
                                                 className="flex-1 text-xs font-bold bg-[#ee4d2d] hover:bg-[#d73211] text-white rounded-xl shadow-sm"
                                             >
                                                 Beli
@@ -487,7 +487,7 @@ export default function Index({ products, flashSaleProducts = [], vouchers = [],
 
                                         <Button
                                             size="sm"
-                                            onClick={() => buyNow(product, 1, auth.user)}
+                                            onClick={() => buyNow(product, 1, auth.user, false)}
                                             className="flex-1 text-xs font-bold bg-[#ee4d2d] hover:bg-[#d73211] text-white rounded-2xl shadow-sm"
                                         >
                                             Beli

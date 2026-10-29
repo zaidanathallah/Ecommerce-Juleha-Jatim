@@ -91,34 +91,34 @@ class TemanQrisWebhookController extends Controller
                     try {
                         $seller = $order->seller;
                         $origin = [
-                            'name' => $seller->name,
+                            'name' => $seller->shop_name ?? $seller->name,
                             'phone' => $seller->phone ?? '081234567890',
                             'address' => $seller->address ?? 'DPW Juleha Jawa Timur',
-                            'lat' => (float) ($seller->latitude ?? -7.3195),
-                            'lng' => (float) ($seller->longitude ?? 112.7300),
+                            'lat' => (float) ($seller->lat ?? -7.4726),
+                            'lng' => (float) ($seller->lng ?? 112.7058),
                         ];
 
                         $shipping = is_array($order->shipping_address) ? $order->shipping_address : json_decode($order->shipping_address, true);
                         $destination = [
                             'name' => $shipping['recipient_name'] ?? 'Pembeli Juleha',
-                            'phone' => $shipping['phone'] ?? '08123456789',
-                            'address' => $shipping['address_line'] ?? 'Jawa Timur',
-                            'lat' => (float) ($shipping['latitude'] ?? -7.2650),
-                            'lng' => (float) ($shipping['longitude'] ?? 112.7480),
+                            'phone' => $shipping['recipient_phone'] ?? $shipping['phone'] ?? '081234567890',
+                            'address' => $shipping['address'] ?? $shipping['address_line'] ?? 'Surabaya, Jawa Timur',
+                            'lat' => (float) ($shipping['lat'] ?? $shipping['latitude'] ?? -7.2825),
+                            'lng' => (float) ($shipping['lng'] ?? $shipping['longitude'] ?? 112.7638),
                         ];
 
                         $items = $order->items->map(function ($item) {
                             return [
-                                'name' => $item->product_name,
-                                'description' => 'Peralatan Juleha',
-                                'value' => (int) $item->unit_price,
-                                'quantity' => (int) $item->quantity,
+                                'name' => $item->product_title ?? $item->product_name ?? 'Produk Juleha',
+                                'description' => 'Peralatan Juleha Halal',
+                                'value' => (int) ($item->final_price ?? $item->unit_price ?? 50000),
+                                'quantity' => (int) ($item->quantity ?? 1),
                                 'weight' => 500,
                             ];
                         })->toArray();
 
-                        $courierCompany = $order->shipping_courier ?? 'jne';
-                        $courierType = $order->shipping_service ?? 'reg';
+                        $courierCompany = strtolower((string) ($order->shipping_courier ?? 'jne'));
+                        $courierType = strtolower((string) ($order->shipping_service ?? 'reg'));
 
                         $biteshipResult = $biteship->createOrder($origin, $destination, $items, $courierCompany, $courierType);
 

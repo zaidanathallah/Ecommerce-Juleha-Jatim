@@ -111,7 +111,7 @@ class JulehaAuthAndMarketplaceTest extends TestCase
         $product = Product::where('status', Product::STATUS_LIVE)->first();
 
         $pricing = new PricingService();
-        $buyerData = $pricing->formatForBuyer($product);
+        $buyerData = $pricing->formatForBuyer($product, false);
 
         $this->assertArrayNotHasKey('base_price', $buyerData);
         $this->assertArrayNotHasKey('ekop_margin', $buyerData);
