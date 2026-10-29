@@ -42,7 +42,7 @@ export default function Dashboard({
                 {/* Member Identity Banner */}
                 <div className="border border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-lg p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
                     <div className="flex items-center gap-4">
-                        <div className="h-14 w-14 rounded bg-emerald-100 text-emerald-800 flex items-center justify-center font-black text-xl border border-emerald-300">
+                        <div className="h-14 w-14 rounded bg-orange-100 text-[#ee4d2d] flex items-center justify-center font-black text-xl border border-orange-200">
                             {user?.name?.slice(0, 2).toUpperCase()}
                         </div>
                         <div>
@@ -56,7 +56,7 @@ export default function Dashboard({
                                 </Badge>
                             </div>
                             <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-500 mt-1">
-                                <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
+                                <span className="font-mono font-bold text-[#ee4d2d]">
                                     ID JULEHA: {user?.juleha_id ?? '-'}
                                 </span>
                                 <span>&bull;</span>
@@ -84,7 +84,7 @@ export default function Dashboard({
                             </Button>
                         </Link>
                         <Link href={route('seller.shop.edit')}>
-                            <Button size="sm" variant="outline" className="text-xs gap-1.5 font-bold border-emerald-600 text-emerald-700 hover:bg-emerald-50">
+                            <Button size="sm" variant="outline" className="text-xs gap-1.5 font-bold border-[#ee4d2d] text-[#ee4d2d] hover:bg-orange-50">
                                 <Store className="h-4 w-4" />
                                 Pengaturan Toko
                             </Button>
@@ -94,7 +94,7 @@ export default function Dashboard({
 
                 {/* KPI Metrics: Data-dense, high-contrast, zero-slop */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <Card className="border-l-4 border-l-emerald-600">
+                    <Card className="border-l-4 border-l-[#ee4d2d]">
                         <CardContent className="p-4 flex items-center justify-between">
                             <div>
                                 <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider block">
@@ -108,17 +108,17 @@ export default function Dashboard({
                         </CardContent>
                     </Card>
 
-                    <Card className="border-l-4 border-l-green-600">
+                    <Card className="border-l-4 border-l-[#ee4d2d]">
                         <CardContent className="p-4 flex items-center justify-between">
                             <div>
                                 <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider block">
                                     Produk Live di Marketplace
                                 </span>
-                                <span className="text-2xl font-black text-green-700">
+                                <span className="text-2xl font-black text-[#ee4d2d]">
                                     {myLiveCount}
                                 </span>
                             </div>
-                            <CheckCircle2 className="h-8 w-8 text-green-500" />
+                            <CheckCircle2 className="h-8 w-8 text-orange-500" />
                         </CardContent>
                     </Card>
 
@@ -156,7 +156,7 @@ export default function Dashboard({
                         {recentProducts.length === 0 ? (
                             <div className="text-center py-8 text-xs text-neutral-500">
                                 Anda belum memiliki produk jualan.{' '}
-                                <Link href={route('seller.products.create')} className="text-emerald-700 font-bold hover:underline">
+                                <Link href={route('seller.products.create')} className="text-[#ee4d2d] font-bold hover:underline">
                                     Klik di sini untuk upload bilah/peralatan sembelih pertama Anda.
                                 </Link>
                             </div>

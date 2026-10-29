@@ -141,17 +141,17 @@ export default function GlobalAudioPlayer() {
                                 ) : (
                                     <>
                                         <div className="text-xs font-black text-white flex items-center gap-1.5 truncate">
-                                            <span className="text-emerald-400 font-extrabold">{currentJuz?.name || 'Juz'}</span>
+                                            <span className="text-orange-400 font-extrabold">{currentJuz?.name || 'Juz'}</span>
                                             <span className="text-neutral-300 font-normal">({currentJuz?.arabicName})</span>
                                         </div>
                                         <div className="text-[10px] text-neutral-400 truncate mt-0.5">
-                                            Mulai: {currentJuz?.startVerse}
+                                            Mulai: {currentJuz?.startVerse} &bull; Syaikh Misyari Rasyid
                                         </div>
                                     </>
                                 )}
 
                                 <div className="text-[9px] text-neutral-500 font-mono mt-0.5 flex items-center gap-1">
-                                    <MapPin className="h-2.5 w-2.5 text-emerald-500 shrink-0" />
+                                    <MapPin className="h-2.5 w-2.5 text-[#ee4d2d] shrink-0" />
                                     <span className="truncate">Lokasi: {userLocation}</span>
                                 </div>
                             </div>
@@ -163,11 +163,11 @@ export default function GlobalAudioPlayer() {
                                     className="text-right shrink-0 block hover:opacity-90 transition group"
                                     title="Klik untuk membuka Halaman Jadwal Waktu Sholat Lengkap"
                                 >
-                                    <div className="inline-flex items-center gap-1.5 text-[10px] font-mono px-2.5 py-1 bg-emerald-950/80 border border-emerald-700/60 text-emerald-300 rounded-lg group-hover:border-emerald-500">
-                                        <Clock className="h-3 w-3 text-emerald-400" />
+                                    <div className="inline-flex items-center gap-1.5 text-[10px] font-mono px-2.5 py-1 bg-orange-950/80 border border-orange-700/60 text-orange-300 rounded-lg group-hover:border-orange-500">
+                                        <Clock className="h-3 w-3 text-orange-400" />
                                         <span>{nextPrayer.name} {nextPrayer.time}</span>
                                     </div>
-                                    <div className="text-[9px] text-emerald-400/80 font-mono mt-0.5 flex items-center justify-end gap-1">
+                                    <div className="text-[9px] text-orange-400/80 font-mono mt-0.5 flex items-center justify-end gap-1">
                                         <Calendar className="h-2.5 w-2.5" />
                                         <span>Jadwal Sholat &gt;</span>
                                     </div>
@@ -232,7 +232,7 @@ export default function GlobalAudioPlayer() {
                                 className="h-8 text-xs font-bold rounded-xl border-neutral-700 bg-neutral-800/80 text-white hover:bg-neutral-700 gap-1.5"
                                 title="Buka Halaman Al-Qur'an 30 Juz Lengkap"
                             >
-                                <BookOpen className="h-3.5 w-3.5 text-emerald-400" />
+                                <BookOpen className="h-3.5 w-3.5 text-orange-400" />
                                 <span>Al-Qur'an 30 Juz</span>
                             </Button>
                         </div>

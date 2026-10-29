@@ -236,7 +236,7 @@ export default function PrayerSchedule() {
                 {/* Action Strip: Notification & Adzan Test */}
                 <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
                     <div className="flex items-center gap-3">
-                        <div className="p-2.5 rounded-xl bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                        <div className="p-2.5 rounded-xl bg-orange-100 text-[#ee4d2d] dark:bg-orange-950 dark:text-orange-300">
                             <Bell className="h-5 w-5" />
                         </div>
                         <div>
@@ -256,7 +256,7 @@ export default function PrayerSchedule() {
                             <Button
                                 size="sm"
                                 onClick={requestNotificationPermission}
-                                className="text-xs font-bold bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl shadow-sm"
+                                className="text-xs font-bold bg-[#ee4d2d] hover:bg-[#d73211] text-white rounded-xl shadow-sm"
                             >
                                 Aktifkan Notifikasi
                             </Button>
@@ -275,7 +275,7 @@ export default function PrayerSchedule() {
                                 </>
                             ) : (
                                 <>
-                                    <Volume2 className="h-4 w-4 text-emerald-700" />
+                                    <Volume2 className="h-4 w-4 text-[#ee4d2d]" />
                                     <span>Tes Suara Adzan Merdu</span>
                                 </>
                             )}
@@ -300,12 +300,12 @@ export default function PrayerSchedule() {
                                     key={prayer.key}
                                     className={`relative overflow-hidden rounded-2xl border-2 transition-all shadow-sm ${
                                         isNext
-                                            ? 'border-emerald-600 dark:border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/40 shadow-md scale-[1.02]'
+                                            ? 'border-[#ee4d2d] dark:border-orange-500 bg-orange-50/50 dark:bg-orange-950/40 shadow-md scale-[1.02]'
                                             : `${prayer.borderColor} ${prayer.bgLight} hover:border-neutral-400`
                                     }`}
                                 >
                                     {isNext && (
-                                        <div className="bg-emerald-700 text-white text-[10px] font-black uppercase text-center py-1 tracking-wider">
+                                        <div className="bg-[#ee4d2d] text-white text-[10px] font-black uppercase text-center py-1 tracking-wider">
                                             WAKTU BERIKUTNYA
                                         </div>
                                     )}
@@ -335,9 +335,9 @@ export default function PrayerSchedule() {
                 </div>
 
                 {/* Doa Setelah Adzan */}
-                <div className="p-6 bg-emerald-50 dark:bg-emerald-950/30 rounded-3xl border border-emerald-200 dark:border-emerald-800 space-y-3">
-                    <div className="flex items-center gap-2 text-emerald-900 dark:text-emerald-300 font-black text-sm">
-                        <Sparkles className="h-4 w-4 text-emerald-600" />
+                <div className="p-6 bg-orange-50 dark:bg-orange-950/30 rounded-3xl border border-orange-200 dark:border-orange-800 space-y-3">
+                    <div className="flex items-center gap-2 text-orange-900 dark:text-orange-300 font-black text-sm">
+                        <Sparkles className="h-4 w-4 text-[#ee4d2d]" />
                         <span>Doa Setelah Mendengar Kumandang Adzan</span>
                     </div>
 
@@ -349,7 +349,7 @@ export default function PrayerSchedule() {
                         "Allahumma rabba hazihid da'watit tammah, wash shalatil qa'imah, ati muhammadanil wasilata wal fadhilah, wab'atshu maqamam mahmudanillazi wa'adtah."
                     </p>
 
-                    <p className="text-xs text-neutral-600 dark:text-neutral-400 border-t border-emerald-200 dark:border-emerald-800 pt-2 leading-relaxed">
+                    <p className="text-xs text-neutral-600 dark:text-neutral-400 border-t border-orange-200 dark:border-orange-800 pt-2 leading-relaxed">
                         <strong>Artinya:</strong> "Ya Allah, Tuhan pemilik seruan yang sempurna ini dan sholat yang senantiasa didirikan, berikanlah kepada Nabi Muhammad wasilah (kedudukan yang mulia) dan keutamaan, serta tempatkanlah beliau pada tempat terpuji yang telah Engkau janjikan." (HR. Bukhari).
                     </p>
                 </div>

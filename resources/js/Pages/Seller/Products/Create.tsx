@@ -45,7 +45,7 @@ export default function Create({ categories }: Props) {
 
             <div className="max-w-2xl mx-auto space-y-4">
                 <nav className="flex items-center gap-2 text-xs text-neutral-500">
-                    <Link href={route('seller.products.index')} className="hover:text-emerald-700 flex items-center gap-1 font-semibold">
+                    <Link href={route('seller.products.index')} className="hover:text-[#ee4d2d] flex items-center gap-1 font-semibold">
                         <ArrowLeft className="h-3.5 w-3.5" />
                         Kembali ke Produk Saya
                     </Link>
@@ -54,7 +54,7 @@ export default function Create({ categories }: Props) {
                 <Card>
                     <CardHeader className="bg-neutral-50 dark:bg-neutral-900 border-b">
                         <div className="flex items-center gap-2 mb-1">
-                            <ShieldCheck className="h-5 w-5 text-emerald-700" />
+                            <ShieldCheck className="h-5 w-5 text-[#ee4d2d]" />
                             <Badge variant="default" className="text-[10px]">
                                 ALUR APPROVAL BERJENJANG
                             </Badge>
@@ -86,7 +86,7 @@ export default function Create({ categories }: Props) {
                                     value={data.category_id}
                                     onChange={(e) => setData('category_id', e.target.value)}
                                     required
-                                    className="w-full text-xs rounded border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700"
+                                    className="w-full text-xs rounded border-neutral-300 dark:border-neutral-700 focus:ring-orange-500"
                                 >
                                     {categories.map((c) => (
                                         <option key={c.id} value={c.id}>
@@ -107,7 +107,7 @@ export default function Create({ categories }: Props) {
                                     value={data.title}
                                     onChange={(e) => setData('title', e.target.value)}
                                     required
-                                    className="w-full text-xs rounded border-neutral-300 focus:ring-emerald-700 font-medium"
+                                    className="w-full text-xs rounded border-neutral-300 focus:ring-orange-500 font-medium"
                                 />
                                 {errors.title && <p className="text-xs text-red-600 mt-1">{errors.title}</p>}
                             </div>
@@ -126,7 +126,7 @@ export default function Create({ categories }: Props) {
                                         value={data.base_price}
                                         onChange={(e) => setData('base_price', e.target.value)}
                                         required
-                                        className="w-full text-sm font-mono font-bold rounded border-neutral-300 focus:ring-emerald-700"
+                                        className="w-full text-sm font-mono font-bold rounded border-neutral-300 focus:ring-orange-500"
                                     />
                                     <span className="text-[10px] text-neutral-500 mt-1 block">
                                         Nominal bersih yang Anda terima per unit terjual.
@@ -144,7 +144,7 @@ export default function Create({ categories }: Props) {
                                         value={data.stock}
                                         onChange={(e) => setData('stock', Number(e.target.value))}
                                         required
-                                        className="w-full text-xs font-mono rounded border-neutral-300 focus:ring-emerald-700"
+                                        className="w-full text-xs font-mono rounded border-neutral-300 focus:ring-orange-500"
                                     />
                                     {errors.stock && <p className="text-xs text-red-600 mt-1">{errors.stock}</p>}
                                 </div>
@@ -153,7 +153,7 @@ export default function Create({ categories }: Props) {
                             {/* Spesifikasi Biteship Kurir */}
                             <div className="p-3 bg-neutral-50 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded space-y-2">
                                 <div className="flex items-center gap-1.5 text-xs font-bold text-neutral-900 dark:text-neutral-100">
-                                    <Scale className="h-4 w-4 text-emerald-700" />
+                                    <Scale className="h-4 w-4 text-[#ee4d2d]" />
                                     <span>Spesifikasi Paket untuk Biteship Logistik</span>
                                 </div>
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -211,7 +211,7 @@ export default function Create({ categories }: Props) {
                                     accept="image/*"
                                     onChange={(e) => setData('image', e.target.files ? e.target.files[0] : null)}
                                     required
-                                    className="block w-full text-xs text-neutral-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+                                    className="block w-full text-xs text-neutral-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-orange-50 file:text-[#ee4d2d] hover:file:bg-orange-100"
                                 />
                                 {errors.image && <p className="text-xs text-red-600 mt-1">{errors.image}</p>}
                             </div>
@@ -227,7 +227,7 @@ export default function Create({ categories }: Props) {
                                     value={data.description}
                                     onChange={(e) => setData('description', e.target.value)}
                                     required
-                                    className="w-full text-xs rounded border-neutral-300 focus:ring-emerald-700 leading-relaxed"
+                                    className="w-full text-xs rounded border-neutral-300 focus:ring-orange-500 leading-relaxed"
                                 />
                                 {errors.description && <p className="text-xs text-red-600 mt-1">{errors.description}</p>}
                             </div>
@@ -237,7 +237,7 @@ export default function Create({ categories }: Props) {
                                     type="submit"
                                     variant="default"
                                     disabled={processing}
-                                    className="w-full py-2.5 text-sm font-bold bg-emerald-700 hover:bg-emerald-800"
+                                    className="w-full py-3 text-sm font-bold bg-[#ee4d2d] hover:bg-[#d73211] text-white rounded-xl shadow-sm"
                                 >
                                     {processing ? 'Menyimpan & Mengirim ke Admin...' : 'Simpan & Ajukan ke Admin Ekop'}
                                 </Button>

@@ -29,7 +29,13 @@ export default function Navbar() {
     const user = auth.user;
     const [searchQuery, setSearchQuery] = useState('');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const { totalItems, openCart } = useCart();
+    const { totalItems, openCart, syncUser } = useCart();
+
+    React.useEffect(() => {
+        if (syncUser) {
+            syncUser(user ?? null);
+        }
+    }, [user]);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -54,7 +60,7 @@ export default function Navbar() {
         }
         if (user.is_member) {
             return (
-                <Badge variant="success" className="font-mono text-[9px] bg-emerald-600 text-white">
+                <Badge variant="default" className="font-mono text-[9px] bg-[#ee4d2d] text-white">
                     ANGGOTA {user.juleha_id ?? ''}
                 </Badge>
             );

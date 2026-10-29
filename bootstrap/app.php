@@ -21,7 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->validateCsrfTokens(except: [
-            'webhook/doku',
+            'webhook/temanqris',
             'webhook/*',
             'api/*',
         ]);

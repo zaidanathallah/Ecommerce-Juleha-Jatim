@@ -30,7 +30,7 @@ export default function CategoryIcon({ slug, iconName, className = 'w-10 h-10' }
             case 'sparkles':
                 return <Sparkles className={`${className} text-yellow-500`} />;
             case 'shield':
-                return <ShieldCheck className={`${className} text-emerald-600`} />;
+                return <ShieldCheck className={`${className} text-[#ee4d2d]`} />;
             case 'link':
                 return <Link2 className={`${className} text-stone-600`} />;
             case 'heart':
@@ -88,7 +88,7 @@ export default function CategoryIcon({ slug, iconName, className = 'w-10 h-10' }
             );
         case 'wearpack-dan-apd':
             return (
-                <div className={`${className} rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center p-2 text-emerald-600 shadow-sm`}>
+                <div className={`${className} rounded-2xl bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800 flex items-center justify-center p-2 text-[#ee4d2d] shadow-sm`}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-full h-full">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                         <path d="M9 12l2 2 4-4" />

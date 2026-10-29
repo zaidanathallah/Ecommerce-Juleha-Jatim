@@ -101,8 +101,8 @@ export default function Login({ status, canResetPassword }: { status?: string; c
                             </div>
 
                             {status && (
-                                <div className="mb-4 text-xs font-bold text-emerald-800 bg-emerald-50 p-3 rounded border border-emerald-300 flex items-center gap-2">
-                                    <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
+                                <div className="mb-4 text-xs font-bold text-orange-900 bg-orange-50 p-3 rounded border border-orange-200 flex items-center gap-2">
+                                    <ShieldCheck className="h-4 w-4 text-[#ee4d2d] shrink-0" />
                                     <span>{status}</span>
                                 </div>
                             )}

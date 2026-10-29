@@ -42,8 +42,18 @@ class SellerProductController extends Controller
     /**
      * Form tambah produk baru
      */
-    public function create(): Response
+    public function create(): Response|\Illuminate\Http\RedirectResponse
     {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        if (!$user->isAllowedToSell()) {
+            if ($user->isAnggota() && !empty($user->juleha_id)) {
+                return redirect()->route('dashboard')->with('error', "Status keanggotaan Juleha Anda ({$user->juleha_id}) sedang NON-AKTIF di database pusat members.julehajatim.com. Anda tidak diperkenankan menjual produk sampai diaktifkan kembali oleh pengurus Juleha Jawa Timur.");
+            }
+            return redirect()->route('dashboard')->with('error', 'Hanya anggota resmi terdaftar Juleha Jawa Timur yang dapat menjual produk.');
+        }
+
         $categories = Category::where('is_active', true)->get(['id', 'name']);
 
         return Inertia::render('Seller/Products/Create', [
@@ -56,7 +66,15 @@ class SellerProductController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
+
+        if (!$user->isAllowedToSell()) {
+            if ($user->isAnggota() && !empty($user->juleha_id)) {
+                return redirect()->route('dashboard')->with('error', "Status keanggotaan Juleha Anda ({$user->juleha_id}) sedang NON-AKTIF di database pusat members.julehajatim.com. Anda tidak diperkenankan menjual produk sampai diaktifkan kembali oleh pengurus Juleha Jawa Timur.");
+            }
+            return redirect()->route('dashboard')->with('error', 'Hanya anggota resmi terdaftar Juleha Jawa Timur yang dapat menjual produk.');
+        }
 
         $validated = $request->validate([
             'category_id' => ['required', 'exists:categories,id'],
@@ -69,6 +87,11 @@ class SellerProductController extends Controller
             'width_cm' => ['nullable', 'integer', 'min:1'],
             'height_cm' => ['nullable', 'integer', 'min:1'],
             'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'is_flash_sale' => ['nullable', 'boolean'],
+            'flash_sale_price' => ['nullable', 'numeric', 'min:1000'],
+            'flash_sale_discount_percent' => ['nullable', 'integer', 'min:1', 'max:99'],
+            'flash_sale_stock' => ['nullable', 'integer', 'min:1'],
+            'flash_sale_end' => ['nullable', 'date'],
         ]);
 
         $imageUrl = null;
@@ -78,6 +101,21 @@ class SellerProductController extends Controller
 
         $baseSlug = Str::slug($validated['title']);
         $uniqueSlug = $baseSlug . '-' . Str::lower(Str::random(6));
+
+        $regionCode = $user->region_code ?: ($user->isSuperAdmin() ? 'JTM' : 'SBY');
+        $regionName = $user->region_name ?: ($user->isSuperAdmin() ? 'Jawa Timur' : 'Surabaya');
+
+        // Status persetujuan: Super Admin langsung LIVE, Ekop langsung APPROVED_EKOP
+        $initialStatus = Product::STATUS_PENDING;
+        $successMessage = 'Produk berhasil diupload dan menunggu persetujuan dari Admin Ekop wilayah Anda.';
+
+        if ($user->isSuperAdmin()) {
+            $initialStatus = Product::STATUS_LIVE;
+            $successMessage = 'Produk resmi DPW Juleha Jawa Timur berhasil diterbitkan dan langsung LIVE di marketplace!';
+        } elseif ($user->isAdminEkop()) {
+            $initialStatus = Product::STATUS_APPROVED_EKOP;
+            $successMessage = 'Produk resmi DPD Ekop ' . $regionName . ' berhasil disimpan dan diteruskan ke Super Admin untuk tayang LIVE!';
+        }
 
         Product::create([
             'user_id' => $user->id,
@@ -95,24 +133,36 @@ class SellerProductController extends Controller
             'super_margin' => 0.00,
             'final_price' => $validated['base_price'],
             'stock' => $validated['stock'],
-            'region_code' => $user->region_code,
-            'region_name' => $user->region_name,
-            'status' => Product::STATUS_PENDING,
+            'region_code' => $regionCode,
+            'region_name' => $regionName,
+            'status' => $initialStatus,
+            'is_flash_sale' => !empty($validated['is_flash_sale']),
+            'flash_sale_price' => $validated['flash_sale_price'] ?? null,
+            'flash_sale_discount_percent' => $validated['flash_sale_discount_percent'] ?? 0,
+            'flash_sale_stock' => $validated['flash_sale_stock'] ?? 0,
+            'flash_sale_end' => $validated['flash_sale_end'] ?? null,
         ]);
 
-        return redirect()->route('seller.products.index')
-            ->with('success', 'Produk berhasil diupload dan menunggu persetujuan dari Admin Ekop wilayah Anda.');
+        return redirect()->route('seller.products.index')->with('success', $successMessage);
     }
 
     /**
      * Form edit produk
      */
-    public function edit(Product $product): Response
+    public function edit(Product $product): Response|\Illuminate\Http\RedirectResponse
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
 
         if ($product->user_id !== $user->id && !$user->isSuperAdmin()) {
             abort(403, 'Anda tidak berhak mengedit produk ini.');
+        }
+
+        if (!$user->isAllowedToSell()) {
+            if ($user->isAnggota() && !empty($user->juleha_id)) {
+                return redirect()->route('dashboard')->with('error', "Status keanggotaan Juleha Anda ({$user->juleha_id}) sedang NON-AKTIF di database pusat members.julehajatim.com. Anda tidak diperkenankan menjual produk sampai diaktifkan kembali oleh pengurus Juleha Jawa Timur.");
+            }
+            return redirect()->route('dashboard')->with('error', 'Hanya anggota resmi terdaftar Juleha Jawa Timur yang dapat menjual produk.');
         }
 
         $categories = Category::where('is_active', true)->get(['id', 'name']);
@@ -126,14 +176,22 @@ class SellerProductController extends Controller
     /**
      * Update produk.
      * Aturan SRS: Jika penjual mengedit harga atau foto produk yang sudah LIVE,
-     * status otomatis kembali ke 'pending' (butuh re-ACC admin).
+     * status otomatis kembali ke 'pending' (kecuali jika diedit oleh Super Admin).
      */
     public function update(Request $request, Product $product): RedirectResponse
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
 
         if ($product->user_id !== $user->id && !$user->isSuperAdmin()) {
             abort(403, 'Anda tidak berhak mengubah produk ini.');
+        }
+
+        if (!$user->isAllowedToSell()) {
+            if ($user->isAnggota() && !empty($user->juleha_id)) {
+                return redirect()->route('dashboard')->with('error', "Status keanggotaan Juleha Anda ({$user->juleha_id}) sedang NON-AKTIF di database pusat members.julehajatim.com. Anda tidak diperkenankan menjual produk sampai diaktifkan kembali oleh pengurus Juleha Jawa Timur.");
+            }
+            return redirect()->route('dashboard')->with('error', 'Hanya anggota resmi terdaftar Juleha Jawa Timur yang dapat menjual produk.');
         }
 
         $validated = $request->validate([
@@ -144,6 +202,11 @@ class SellerProductController extends Controller
             'stock' => ['required', 'integer', 'min:0'],
             'weight_gram' => ['required', 'integer', 'min:50'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'is_flash_sale' => ['nullable', 'boolean'],
+            'flash_sale_price' => ['nullable', 'numeric', 'min:1000'],
+            'flash_sale_discount_percent' => ['nullable', 'integer', 'min:1', 'max:99'],
+            'flash_sale_stock' => ['nullable', 'integer', 'min:1'],
+            'flash_sale_end' => ['nullable', 'date'],
         ]);
 
         $priceChanged = (float) $product->base_price !== (float) $validated['base_price'];
@@ -159,9 +222,14 @@ class SellerProductController extends Controller
         $product->base_price = $validated['base_price'];
         $product->stock = $validated['stock'];
         $product->weight_gram = $validated['weight_gram'];
+        $product->is_flash_sale = !empty($validated['is_flash_sale']);
+        $product->flash_sale_price = $validated['flash_sale_price'] ?? null;
+        $product->flash_sale_discount_percent = $validated['flash_sale_discount_percent'] ?? 0;
+        $product->flash_sale_stock = $validated['flash_sale_stock'] ?? 0;
+        $product->flash_sale_end = $validated['flash_sale_end'] ?? null;
 
-        // Core Directive & SRS: Kembalikan ke pending jika Live dan terjadi perubahan sensitif (harga/gambar)
-        if ($product->status === Product::STATUS_LIVE && ($priceChanged || $hasNewImage)) {
+        // Core Directive & SRS: Kembalikan ke pending jika Live dan terjadi perubahan sensitif (harga/gambar) oleh penjual biasa
+        if ($product->status === Product::STATUS_LIVE && ($priceChanged || $hasNewImage) && !$user->isSuperAdmin()) {
             $product->status = Product::STATUS_PENDING;
             $product->rejection_reason = null;
             $product->ekop_margin = 0.00;

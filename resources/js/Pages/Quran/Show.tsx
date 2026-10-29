@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import MarketplaceLayout from '@/Layouts/MarketplaceLayout';
 import { useAudio, SurahSummary } from '@/Contexts/AudioContext';
@@ -12,7 +12,8 @@ import {
     Share2, 
     Radio,
     Copy,
-    Check
+    Check,
+    ArrowLeft
 } from 'lucide-react';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
@@ -20,11 +21,9 @@ import { Badge } from '@/Components/ui/badge';
 interface AyahItem {
     nomorAyat: number;
     teksArab: string;
-    teksLatin: string;
     teksIndonesia: string;
-    audio?: {
-        [key: string]: string;
-    };
+    verseKey?: string;
+    juzNumber?: number;
 }
 
 interface SurahDetail {
@@ -34,19 +33,8 @@ interface SurahDetail {
     jumlahAyat: number;
     tempatTurun: string;
     arti: string;
-    deskripsi: string;
-    audioFull?: {
-        [key: string]: string;
-    };
+    audioUrl?: string;
     ayat: AyahItem[];
-    suratSebelumnya?: {
-        nomor: number;
-        namaLatin: string;
-    } | false;
-    suratSelanjutnya?: {
-        nomor: number;
-        namaLatin: string;
-    } | false;
 }
 
 interface Props {
@@ -54,13 +42,11 @@ interface Props {
 }
 
 export default function QuranShow({ surah }: Props) {
-    const { playSurah, isPlaying, currentSurah, togglePlay } = useAudio();
-    const [playingAyah, setPlayingAyah] = useState<number | null>(null);
-    const ayahAudioRef = useRef<HTMLAudioElement | null>(null);
+    const { playSurah, isPlaying, currentSurah, playingMode, togglePlay } = useAudio();
     const [copiedAyah, setCopiedAyah] = useState<number | null>(null);
 
-    const isCurrentSurahPlaying = currentSurah.nomor === surah.nomor && isPlaying;
-    const fullAudioUrl = surah.audioFull?.['05'] || `https://cdn.equran.id/audio-full/Misyari-Rasyid-Al-Afasi/${String(surah.nomor).padStart(3, '0')}.mp3`;
+    const isCurrentSurahPlaying = playingMode === 'surah' && currentSurah?.nomor === surah.nomor && isPlaying;
+    const fullAudioUrl = surah.audioUrl || `https://download.quranicaudio.com/qdc/mishari_al_afasy/murattal/${surah.nomor}.mp3`;
 
     const handlePlayFullSurah = () => {
         const summary: SurahSummary = {
@@ -72,134 +58,106 @@ export default function QuranShow({ surah }: Props) {
             audioUrl: fullAudioUrl
         };
 
-        if (currentSurah.nomor === surah.nomor) {
+        if (currentSurah?.nomor === surah.nomor && playingMode === 'surah') {
             togglePlay();
         } else {
             playSurah(summary);
         }
     };
 
-    const handlePlayAyah = (ayah: AyahItem) => {
-        const audioUrl = ayah.audio?.['05'] || Object.values(ayah.audio || {})[0];
-        if (!audioUrl) return;
-
-        if (playingAyah === ayah.nomorAyat) {
-            if (ayahAudioRef.current) {
-                ayahAudioRef.current.pause();
-            }
-            setPlayingAyah(null);
-            return;
-        }
-
-        if (ayahAudioRef.current) {
-            ayahAudioRef.current.pause();
-        }
-
-        const audio = new Audio(audioUrl);
-        audio.play().then(() => {
-            setPlayingAyah(ayah.nomorAyat);
-        }).catch(console.error);
-
-        audio.onended = () => {
-            setPlayingAyah(null);
-        };
-
-        ayahAudioRef.current = audio;
-    };
-
     const handleCopyAyah = (ayah: AyahItem) => {
-        const textToCopy = `${ayah.teksArab}\n\n${ayah.teksLatin}\n\n"${ayah.teksIndonesia}" (QS. ${surah.namaLatin}: ${ayah.nomorAyat})`;
+        const textToCopy = `${ayah.teksArab}\n\n"${ayah.teksIndonesia}" (QS. ${surah.namaLatin} [${surah.nomor}:${ayah.nomorAyat}])`;
         navigator.clipboard.writeText(textToCopy);
         setCopiedAyah(ayah.nomorAyat);
-        setTimeout(() => setCopiedAyah(null), 2000);
+        setTimeout(() => setCopiedAyah(null), 2500);
     };
 
     return (
         <MarketplaceLayout>
-            <Head title={`Surat ${surah.namaLatin} (${surah.nama}) - Al-Qur'an Juleha`} />
+            <Head title={`QS. ${surah.namaLatin} (${surah.nama}) - Al-Qur'an Digital Juleha Jatim`} />
 
-            <div className="space-y-6 max-w-4xl mx-auto">
-                {/* Navigation Breadcrumb & Back button */}
-                <div className="flex items-center justify-between font-mono text-xs text-neutral-500">
+            <div className="space-y-6 max-w-4xl mx-auto px-4 sm:px-6 py-4">
+                {/* Navigation Bar */}
+                <div className="flex items-center justify-between text-xs text-neutral-500 font-mono">
                     <Link
                         href={route('quran.index')}
-                        className="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-bold hover:underline"
+                        className="hover:text-[#ee4d2d] flex items-center gap-1 font-bold"
                     >
-                        <ChevronLeft className="h-4 w-4" />
-                        <span>Daftar 114 Surat</span>
+                        <ArrowLeft className="h-4 w-4" />
+                        Daftar Surat & 30 Juz
                     </Link>
 
                     <div className="flex items-center gap-2">
-                        {surah.suratSebelumnya && (
+                        {surah.nomor > 1 && (
                             <Link
-                                href={route('quran.show', surah.suratSebelumnya.nomor)}
-                                className="hover:text-neutral-900 dark:hover:text-white px-2 py-1 border border-neutral-300 dark:border-neutral-700"
+                                href={route('quran.show', surah.nomor - 1)}
+                                className="hover:text-[#ee4d2d] px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800"
                             >
-                                ← QS. {surah.suratSebelumnya.namaLatin}
+                                ← Surat Sebelumnya
                             </Link>
                         )}
-                        {surah.suratSelanjutnya && (
+                        {surah.nomor < 114 && (
                             <Link
-                                href={route('quran.show', surah.suratSelanjutnya.nomor)}
-                                className="hover:text-neutral-900 dark:hover:text-white px-2 py-1 border border-neutral-300 dark:border-neutral-700"
+                                href={route('quran.show', surah.nomor + 1)}
+                                className="hover:text-[#ee4d2d] px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800"
                             >
-                                QS. {surah.suratSelanjutnya.namaLatin} →
+                                Surat Selanjutnya →
                             </Link>
                         )}
                     </div>
                 </div>
 
-                {/* Surah Header Banner */}
-                <div className="bg-emerald-950 text-white border-2 border-emerald-800 p-6 sm:p-8 space-y-4">
+                {/* Surah Header Banner - Shopee Clean Standard */}
+                <div className="bg-gradient-to-r from-neutral-900 to-neutral-800 text-white rounded-3xl border border-neutral-700 p-6 sm:p-8 space-y-4 shadow-lg">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="space-y-1">
-                            <div className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-emerald-400 font-bold">
+                            <div className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-orange-400 font-bold">
                                 <span>Surat ke-{surah.nomor}</span>
-                                <span>•</span>
+                                <span>&bull;</span>
                                 <span>{surah.tempatTurun}</span>
-                                <span>•</span>
+                                <span>&bull;</span>
                                 <span>{surah.jumlahAyat} Ayat</span>
                             </div>
                             <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white">
-                                {surah.namaLatin}
+                                QS. {surah.namaLatin}
                             </h1>
-                            <p className="text-xs text-emerald-200 font-medium">
+                            <p className="text-xs text-neutral-300 font-medium">
                                 Artinya: "{surah.arti}"
                             </p>
                         </div>
 
-                        <div className="text-right sm:text-right">
-                            <div className="font-serif text-3xl sm:text-4xl font-black text-emerald-300" dir="rtl">
+                        <div className="text-right">
+                            <div className="font-serif text-3xl sm:text-4xl font-black text-orange-400" dir="rtl">
                                 {surah.nama}
                             </div>
                         </div>
                     </div>
 
                     {/* Surah Audio Player Trigger */}
-                    <div className="pt-4 border-t border-emerald-900 flex flex-wrap items-center justify-between gap-3">
+                    <div className="pt-4 border-t border-neutral-700/80 flex flex-wrap items-center justify-between gap-3">
                         <div className="flex items-center gap-2 text-xs font-mono text-neutral-300">
-                            <Radio className={`h-4 w-4 ${isCurrentSurahPlaying ? 'text-emerald-400 animate-pulse' : 'text-neutral-400'}`} />
-                            <span>Qori: Syaikh Misyari Rasyid Al-Afasy (Full Audio)</span>
+                            <Radio className={`h-4 w-4 ${isCurrentSurahPlaying ? 'text-[#ee4d2d] animate-pulse' : 'text-neutral-400'}`} />
+                            <span>Qari: Syaikh Misyari Rasyid Al-Afasy (Quran Foundation v4)</span>
                         </div>
 
                         <Button
                             size="sm"
                             onClick={handlePlayFullSurah}
-                            className={`rounded-none font-mono text-xs font-bold uppercase transition ${
+                            className={`rounded-xl font-bold text-xs uppercase transition shadow-sm ${
                                 isCurrentSurahPlaying
                                     ? 'bg-amber-600 hover:bg-amber-700 text-white'
-                                    : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                                    : 'bg-[#ee4d2d] hover:bg-[#d73211] text-white'
                             }`}
                         >
                             {isCurrentSurahPlaying ? (
                                 <>
                                     <Pause className="h-4 w-4 mr-1.5" />
-                                    <span>Jeda Surat Penuh</span>
+                                    <span>Jeda Audio Surat</span>
                                 </>
                             ) : (
                                 <>
                                     <Play className="h-4 w-4 mr-1.5" />
-                                    <span>Putar Surat Penuh</span>
+                                    <span>Putar Audio Surat</span>
                                 </>
                             )}
                         </Button>
@@ -208,9 +166,9 @@ export default function QuranShow({ surah }: Props) {
 
                 {/* Bismillah Banner (Omitted on Surah At-Taubah #9) */}
                 {surah.nomor !== 9 && (
-                    <div className="bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-800 p-6 text-center shadow-sm">
+                    <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 text-center shadow-xs">
                         <div className="font-serif text-2xl sm:text-3xl text-neutral-900 dark:text-neutral-100 font-bold" dir="rtl">
-                            بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ
+                            بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
                         </div>
                         <div className="text-xs font-sans text-neutral-500 mt-2 italic">
                             Dengan nama Allah Yang Maha Pengasih lagi Maha Penyayang.
@@ -218,116 +176,66 @@ export default function QuranShow({ surah }: Props) {
                     </div>
                 )}
 
-                {/* Ayat List */}
+                {/* List of Verses (Ayat) */}
                 <div className="space-y-4">
-                    {surah.ayat.map((ayah) => {
-                        const isThisAyahPlaying = playingAyah === ayah.nomorAyat;
+                    {surah.ayat?.map((ayah) => {
+                        const isCopied = copiedAyah === ayah.nomorAyat;
 
                         return (
-                            <article
+                            <div
                                 key={ayah.nomorAyat}
                                 id={`ayat-${ayah.nomorAyat}`}
-                                className={`bg-white dark:bg-neutral-900 border ${
-                                    isThisAyahPlaying
-                                        ? 'border-emerald-600 ring-1 ring-emerald-600'
-                                        : 'border-neutral-300 dark:border-neutral-800'
-                                } p-5 sm:p-6 space-y-4 transition`}
+                                className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5 sm:p-6 space-y-4 shadow-xs hover:border-orange-200 transition"
                             >
-                                {/* Verse Header Toolbar */}
+                                {/* Verse Header & Action toolbar */}
                                 <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
                                     <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 font-mono text-xs font-black text-emerald-700 dark:text-emerald-400 flex items-center justify-center">
+                                        <div className="w-8 h-8 rounded-xl bg-orange-100 dark:bg-orange-950/60 text-[#ee4d2d] flex items-center justify-center font-mono font-black text-xs">
                                             {ayah.nomorAyat}
                                         </div>
-                                        <span className="font-mono text-[11px] text-neutral-400">
-                                            QS. {surah.namaLatin}:{ayah.nomorAyat}
+                                        <span className="text-[11px] font-mono text-neutral-400">
+                                            {surah.nomor}:{ayah.nomorAyat}
                                         </span>
                                     </div>
 
-                                    <div className="flex items-center gap-1.5">
-                                        <button
+                                    <div className="flex items-center gap-1">
+                                        <Button
                                             type="button"
-                                            onClick={() => handlePlayAyah(ayah)}
-                                            className={`p-1.5 text-xs font-mono font-bold flex items-center gap-1 border transition ${
-                                                isThisAyahPlaying
-                                                    ? 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300'
-                                                    : 'text-neutral-600 dark:text-neutral-300 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-                                            }`}
-                                            title="Putar audio ayat ini"
-                                        >
-                                            {isThisAyahPlaying ? (
-                                                <>
-                                                    <Pause className="h-3.5 w-3.5 text-amber-600" />
-                                                    <span className="text-[10px]">Jeda</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Play className="h-3.5 w-3.5 text-emerald-600" />
-                                                    <span className="text-[10px]">Dengar</span>
-                                                </>
-                                            )}
-                                        </button>
-
-                                        <button
-                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
                                             onClick={() => handleCopyAyah(ayah)}
-                                            className="p-1.5 text-neutral-400 hover:text-neutral-800 dark:hover:text-white border border-neutral-200 dark:border-neutral-700 transition"
-                                            title="Salin ayat & terjemahan"
+                                            className="h-8 text-neutral-500 hover:text-[#ee4d2d] gap-1 text-[11px] rounded-lg"
                                         >
-                                            {copiedAyah === ayah.nomorAyat ? (
-                                                <Check className="h-3.5 w-3.5 text-emerald-600" />
+                                            {isCopied ? (
+                                                <>
+                                                    <Check className="h-3.5 w-3.5 text-[#ee4d2d]" />
+                                                    <span className="text-[#ee4d2d] font-bold">Tersalin</span>
+                                                </>
                                             ) : (
-                                                <Copy className="h-3.5 w-3.5" />
+                                                <>
+                                                    <Copy className="h-3.5 w-3.5" />
+                                                    <span>Salin Ayat</span>
+                                                </>
                                             )}
-                                        </button>
+                                        </Button>
                                     </div>
                                 </div>
 
-                                {/* Arabic Text (Large, crisp font with right alignment) */}
-                                <div className="py-2 text-right">
-                                    <p 
-                                        className="font-serif text-2xl sm:text-3xl text-neutral-900 dark:text-neutral-100 leading-[2.2] tracking-wide" 
-                                        dir="rtl"
-                                    >
-                                        {ayah.teksArab}
-                                    </p>
+                                {/* Arabic Text with Uthmani script */}
+                                <div
+                                    className="font-serif text-2xl sm:text-3xl leading-[2.2] text-right text-neutral-900 dark:text-neutral-100 pt-2 selection:bg-orange-100"
+                                    dir="rtl"
+                                >
+                                    {ayah.teksArab}
                                 </div>
 
-                                {/* Latin Transliteration */}
-                                <div className="text-xs sm:text-sm font-sans text-emerald-800 dark:text-emerald-400 italic">
-                                    {ayah.teksLatin}
-                                </div>
-
-                                {/* Indonesian Translation */}
-                                <div className="text-xs sm:text-sm font-sans text-neutral-700 dark:text-neutral-300 leading-relaxed border-t border-neutral-100 dark:border-neutral-800/60 pt-3">
+                                {/* Indonesian Translation (Kemenag RI) */}
+                                <div className="text-xs sm:text-sm text-neutral-700 dark:text-neutral-300 font-sans leading-relaxed pt-2 border-t border-neutral-50 dark:border-neutral-800">
                                     {ayah.teksIndonesia}
                                 </div>
-                            </article>
+                            </div>
                         );
                     })}
-                </div>
-
-                {/* Bottom Pagination / Next Prev Surah */}
-                <div className="flex items-center justify-between pt-6 border-t border-neutral-200 dark:border-neutral-800 font-mono text-xs">
-                    {surah.suratSebelumnya ? (
-                        <Link
-                            href={route('quran.show', surah.suratSebelumnya.nomor)}
-                            className="inline-flex items-center gap-2 p-3 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 font-bold hover:bg-neutral-50 dark:hover:bg-neutral-800"
-                        >
-                            <ChevronLeft className="h-4 w-4 text-emerald-600" />
-                            <span>Sebelumnya: QS. {surah.suratSebelumnya.namaLatin}</span>
-                        </Link>
-                    ) : <div />}
-
-                    {surah.suratSelanjutnya ? (
-                        <Link
-                            href={route('quran.show', surah.suratSelanjutnya.nomor)}
-                            className="inline-flex items-center gap-2 p-3 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 font-bold hover:bg-neutral-50 dark:hover:bg-neutral-800"
-                        >
-                            <span>Selanjutnya: QS. {surah.suratSelanjutnya.namaLatin}</span>
-                            <ChevronRight className="h-4 w-4 text-emerald-600" />
-                        </Link>
-                    ) : <div />}
                 </div>
             </div>
         </MarketplaceLayout>

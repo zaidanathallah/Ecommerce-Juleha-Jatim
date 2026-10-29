@@ -16,8 +16,12 @@ import {
     MapPin,
     AlertCircle,
     Tags,
+    Plus,
+    Package,
+    Ticket,
 } from 'lucide-react';
 import CategoryManageModal from '@/Components/CategoryManageModal';
+import VoucherManageModal from '@/Components/VoucherManageModal';
 
 interface Props {
     regionName: string;
@@ -52,6 +56,7 @@ export default function AdminEkopDashboard({
     const [selectedProduct, setSelectedProduct] = useState<ManagementProduct | null>(null);
     const [actionType, setActionType] = useState<'approve' | 'reject' | null>(null);
     const [showCategoryModal, setShowCategoryModal] = useState(false);
+    const [showVoucherModal, setShowVoucherModal] = useState(false);
 
     const approveForm = useForm({
         ekop_margin: 25000,
@@ -108,6 +113,11 @@ export default function AdminEkopDashboard({
                 categories={categories}
             />
 
+            <VoucherManageModal
+                isOpen={showVoucherModal}
+                onClose={() => setShowVoucherModal(false)}
+            />
+
             <div className="space-y-6">
                 {/* Region Jurisdiction Header */}
                 <div className="border border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-lg p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
@@ -124,11 +134,39 @@ export default function AdminEkopDashboard({
                             Panel Admin Ekop: {regionName}
                         </h1>
                         <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
-                            Memverifikasi produk dari anggota di wilayah Anda dan menetapkan margin kas daerah (ekop_margin).
+                            Memverifikasi produk dari anggota di wilayah Anda, menerbitkan produk daerah, dan menetapkan margin kas daerah (ekop_margin).
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Link href={route('seller.products.create')}>
+                            <Button
+                                size="sm"
+                                className="bg-[#ee4d2d] hover:bg-[#d03e1f] text-white text-xs font-bold rounded-xl gap-1.5 shadow-sm"
+                            >
+                                <Plus className="h-4 w-4" />
+                                + Jual Produk Baru
+                            </Button>
+                        </Link>
+                        <Link href={route('seller.products.index')}>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-xs font-bold border-neutral-300 dark:border-neutral-700 rounded-xl gap-1.5"
+                            >
+                                <Package className="h-4 w-4" />
+                                Produk Jualan Saya
+                            </Button>
+                        </Link>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setShowVoucherModal(true)}
+                            className="text-xs font-bold border-orange-300 text-[#ee4d2d] hover:bg-orange-50 rounded-xl gap-1.5"
+                        >
+                            <Ticket className="h-4 w-4" />
+                            Kelola Voucher
+                        </Button>
                         <Button
                             size="sm"
                             variant="outline"
@@ -136,19 +174,19 @@ export default function AdminEkopDashboard({
                             className="text-xs font-bold border-[#ee4d2d] text-[#ee4d2d] hover:bg-orange-50 rounded-xl gap-1.5"
                         >
                             <Tags className="h-4 w-4" />
-                            Kelola Kategori & Ikon
+                            Kelola Kategori
                         </Button>
                         <a 
                             href="/biteship/simulation" 
-                            className="text-xs font-bold px-3 py-2 bg-neutral-100 dark:bg-neutral-800 rounded border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-200 inline-flex items-center gap-1.5 text-neutral-800 dark:text-neutral-200"
+                            className="text-xs font-bold px-3 py-2 bg-neutral-100 dark:bg-neutral-800 rounded-xl border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-200 inline-flex items-center gap-1.5 text-neutral-800 dark:text-neutral-200"
                         >
                             <span>📦</span> Simulator Biteship
                         </a>
-                        <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded border border-neutral-300 dark:border-neutral-700 text-right">
+                        <div className="p-2.5 bg-neutral-100 dark:bg-neutral-800 rounded-xl border border-neutral-300 dark:border-neutral-700 text-right">
                             <span className="text-[10px] text-neutral-500 uppercase font-bold block">
                                 Anggota Wilayah
                             </span>
-                            <span className="text-xl font-mono font-black text-emerald-700">
+                            <span className="text-lg font-mono font-black text-[#ee4d2d]">
                                 {stats.totalMembers}
                             </span>
                         </div>
@@ -185,17 +223,17 @@ export default function AdminEkopDashboard({
                         </CardContent>
                     </Card>
 
-                    <Card className="border-l-4 border-l-emerald-600">
+                    <Card className="border-l-4 border-l-[#ee4d2d]">
                         <CardContent className="p-4 flex items-center justify-between">
                             <div>
                                 <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider block">
                                     Live Marketplace
                                 </span>
-                                <span className="text-2xl font-black text-emerald-700">
+                                <span className="text-2xl font-black text-[#ee4d2d]">
                                     {stats.liveProducts} Produk
                                 </span>
                             </div>
-                            <CheckCircle2 className="h-7 w-7 text-emerald-500" />
+                            <CheckCircle2 className="h-7 w-7 text-orange-500" />
                         </CardContent>
                     </Card>
 
@@ -284,7 +322,7 @@ export default function AdminEkopDashboard({
                                                     size="sm"
                                                     variant="default"
                                                     onClick={() => handleOpenApprove(p)}
-                                                    className="text-xs bg-emerald-700 hover:bg-emerald-800"
+                                                    className="text-xs bg-[#ee4d2d] hover:bg-[#d73211] text-white"
                                                 >
                                                     Setujui (ACC)
                                                 </Button>
@@ -349,15 +387,15 @@ export default function AdminEkopDashboard({
                                         value={approveForm.data.ekop_margin}
                                         onChange={(e) => approveForm.setData('ekop_margin', Number(e.target.value))}
                                         required
-                                        className="w-full text-sm font-mono font-bold rounded border-neutral-300 focus:ring-emerald-700"
+                                        className="w-full text-sm font-mono font-bold rounded border-neutral-300 focus:ring-orange-500"
                                     />
                                     <span className="text-[11px] text-neutral-500 mt-1 block">
                                         Nominal ini akan dialokasikan ke kas daerah {regionName} saat produk terjual.
                                     </span>
                                 </div>
 
-                                <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 rounded text-xs">
-                                    <div className="flex justify-between font-bold text-emerald-900 dark:text-emerald-300">
+                                <div className="p-3 bg-orange-50 dark:bg-orange-950/40 border border-orange-200 rounded text-xs">
+                                    <div className="flex justify-between font-bold text-orange-900 dark:text-orange-300">
                                         <span>Subtotal Sementara (Base + Ekop):</span>
                                         <span className="font-mono">
                                             {formatRupiah(selectedProduct.base_price + Number(approveForm.data.ekop_margin))}
@@ -382,7 +420,7 @@ export default function AdminEkopDashboard({
                                         variant="default"
                                         size="sm"
                                         disabled={approveForm.processing}
-                                        className="bg-emerald-700 hover:bg-emerald-800"
+                                        className="bg-[#ee4d2d] hover:bg-[#d73211] text-white"
                                     >
                                         {approveForm.processing ? 'Menyimpan...' : 'Konfirmasi ACC Ekop'}
                                     </Button>
@@ -438,7 +476,7 @@ export default function AdminEkopDashboard({
                     </div>
                 )}
 
-                {/* Penagihan Margin: Hutang Penjual ke Kas (Akibat Toko Non-PG DOKU) */}
+                {/* Penagihan Margin: Hutang Penjual ke Kas (Akibat Toko Non-PG / Transfer Rekening Pribadi) */}
                 <Card className="border-2 border-rose-300 dark:border-rose-900">
                     <CardHeader className="bg-rose-50/50 dark:bg-rose-950/20">
                         <div className="flex items-center justify-between">
@@ -459,7 +497,7 @@ export default function AdminEkopDashboard({
                     <CardContent className="p-0">
                         {!unsettledDebts || unsettledDebts.length === 0 ? (
                             <div className="text-center py-6 text-xs text-neutral-500">
-                                Tidak ada hutang margin yang tertunda. Semua penjual tertib atau menggunakan sistem otomatis Payment Gateway DOKU.
+                                Tidak ada hutang margin yang tertunda. Semua penjual tertib atau menggunakan sistem otomatis Payment Gateway QRIS Dinamis.
                             </div>
                         ) : (
                             <Table>
@@ -481,7 +519,7 @@ export default function AdminEkopDashboard({
                                             <TableCell>
                                                 <Link
                                                     href={route('orders.show', order.order_number)}
-                                                    className="font-mono font-bold text-xs text-emerald-700 hover:underline block"
+                                                    className="font-mono font-bold text-xs text-[#ee4d2d] hover:underline block"
                                                 >
                                                     {order.order_number}
                                                 </Link>
@@ -512,7 +550,7 @@ export default function AdminEkopDashboard({
                                                                 className="w-full h-full object-cover"
                                                             />
                                                         </div>
-                                                        <span className="text-[9px] text-emerald-700 font-bold block mt-0.5">
+                                                        <span className="text-[9px] text-orange-600 font-bold block mt-0.5">
                                                             Lihat HD
                                                         </span>
                                                     </a>
@@ -565,13 +603,13 @@ export default function AdminEkopDashboard({
                                                             router.post(route('ekop.orders.settle-debt', order.id));
                                                         }
                                                     }}
-                                                    className="text-xs bg-emerald-700 hover:bg-emerald-800 w-full"
+                                                    className="text-xs bg-[#ee4d2d] hover:bg-[#d73211] text-white w-full"
                                                 >
                                                     Tandai Lunas
                                                 </Button>
                                                 <Link
                                                     href={route('orders.show', order.order_number)}
-                                                    className="block text-[10px] text-neutral-500 hover:text-emerald-700 font-bold"
+                                                    className="block text-[10px] text-neutral-500 hover:text-[#ee4d2d] font-bold"
                                                 >
                                                     Detail &rarr;
                                                 </Link>
@@ -613,7 +651,7 @@ export default function AdminEkopDashboard({
                                         <TableCell className="font-mono text-xs text-amber-700">
                                             {p.ekop_margin != null ? formatRupiah(p.ekop_margin) : '-'}
                                         </TableCell>
-                                        <TableCell className="font-mono font-bold text-xs text-emerald-700">
+                                        <TableCell className="font-mono font-bold text-xs text-[#ee4d2d]">
                                             {formatRupiah(p.final_price)}
                                         </TableCell>
                                         <TableCell>

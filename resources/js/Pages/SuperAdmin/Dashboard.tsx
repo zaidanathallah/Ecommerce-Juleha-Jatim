@@ -23,8 +23,12 @@ import {
     BellRing,
     Music,
     Tags,
+    Plus,
+    Package,
+    Ticket,
 } from 'lucide-react';
 import CategoryManageModal from '@/Components/CategoryManageModal';
+import VoucherManageModal from '@/Components/VoucherManageModal';
 
 interface Props {
     stats: {
@@ -55,6 +59,7 @@ export default function SuperAdminDashboard({
     const [selectedProduct, setSelectedProduct] = useState<ManagementProduct | null>(null);
     const [actionType, setActionType] = useState<'publish' | 'reject' | null>(null);
     const [showCategoryModal, setShowCategoryModal] = useState(false);
+    const [showVoucherModal, setShowVoucherModal] = useState(false);
 
     const { site_settings } = usePage<PageProps>().props;
 
@@ -125,6 +130,11 @@ export default function SuperAdminDashboard({
                 categories={categories}
             />
 
+            <VoucherManageModal
+                isOpen={showVoucherModal}
+                onClose={() => setShowVoucherModal(false)}
+            />
+
             <div className="space-y-6">
                 {/* Header Banner */}
                 <div className="border border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-lg p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
@@ -141,25 +151,55 @@ export default function SuperAdminDashboard({
                             Pusat Komando & Finansial Super Admin
                         </h1>
                         <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
-                            Otoritas tertinggi persetujuan publikasi (LIVE), audit kas organisasi (hierarki harga), dan pengawasan transaksi DOKU/Biteship.
+                            Otoritas tertinggi persetujuan publikasi (LIVE), audit kas organisasi (hierarki harga), dan pengawasan transaksi QRIS Dinamis & Biteship.
                         </p>
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3">
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setShowCategoryModal(true)}
-                            className="text-xs font-bold border-[#ee4d2d] text-[#ee4d2d] hover:bg-orange-50 rounded-xl gap-1.5"
-                        >
-                            <Tags className="h-4 w-4" />
-                            Kelola Kategori & Ikon
-                        </Button>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Link href={route('seller.products.create')}>
+                                <Button
+                                    size="sm"
+                                    className="bg-[#ee4d2d] hover:bg-[#d03e1f] text-white text-xs font-bold rounded-xl gap-1.5 shadow-sm"
+                                >
+                                    <Plus className="h-4 w-4" />
+                                    + Jual Produk Baru
+                                </Button>
+                            </Link>
+                            <Link href={route('seller.products.index')}>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-xs font-bold border-neutral-300 dark:border-neutral-700 rounded-xl gap-1.5"
+                                >
+                                    <Package className="h-4 w-4" />
+                                    Produk Jualan Saya
+                                </Button>
+                            </Link>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setShowVoucherModal(true)}
+                                className="text-xs font-bold border-orange-300 text-[#ee4d2d] hover:bg-orange-50 rounded-xl gap-1.5"
+                            >
+                                <Ticket className="h-4 w-4" />
+                                Kelola Voucher
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setShowCategoryModal(true)}
+                                className="text-xs font-bold border-[#ee4d2d] text-[#ee4d2d] hover:bg-orange-50 rounded-xl gap-1.5"
+                            >
+                                <Tags className="h-4 w-4" />
+                                Kelola Kategori
+                            </Button>
+                        </div>
                         <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded border border-neutral-300 dark:border-neutral-700 text-right">
                             <span className="text-[10px] text-neutral-500 uppercase font-bold block">
                                 Kas Provinsi (super_margin)
                             </span>
-                            <span className="text-lg font-mono font-black text-emerald-700">
+                            <span className="text-lg font-mono font-black text-[#ee4d2d]">
                                 {formatRupiah(stats.totalKasProvinsi)}
                             </span>
                         </div>
@@ -204,17 +244,17 @@ export default function SuperAdminDashboard({
                         </CardContent>
                     </Card>
 
-                    <Card className="border-l-4 border-l-green-600">
+                    <Card className="border-l-4 border-l-[#ee4d2d]">
                         <CardContent className="p-4 flex items-center justify-between">
                             <div>
                                 <span className="text-[10px] font-bold text-neutral-500 uppercase block">
                                     Produk Live di Jatim
                                 </span>
-                                <span className="text-xl font-black text-green-700">
+                                <span className="text-xl font-black text-[#ee4d2d]">
                                     {stats.liveProducts} Item
                                 </span>
                             </div>
-                            <CheckCircle2 className="h-7 w-7 text-green-500" />
+                            <CheckCircle2 className="h-7 w-7 text-orange-500" />
                         </CardContent>
                     </Card>
 
@@ -234,16 +274,16 @@ export default function SuperAdminDashboard({
                 </div>
 
                 {/* Pengaturan Fitur Islami (Murottal Global & Adzan) */}
-                <Card className="border-2 border-emerald-800 dark:border-emerald-700">
-                    <CardHeader className="bg-emerald-900 text-white py-3 rounded-t-lg">
+                <Card className="border-2 border-orange-400 dark:border-orange-500">
+                    <CardHeader className="bg-[#ee4d2d] text-white py-3 rounded-t-lg">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                <Moon className="h-5 w-5 text-emerald-300" />
+                                <Moon className="h-5 w-5 text-orange-200" />
                                 <div>
                                     <CardTitle className="text-sm text-white">
                                         Konfigurasi Global Fitur Islami (Murottal & Pengingat Adzan)
                                     </CardTitle>
-                                    <CardDescription className="text-emerald-100 text-[11px]">
+                                    <CardDescription className="text-orange-100 text-[11px]">
                                         Pengaturan otomatis suasana Islami untuk seluruh pengunjung platform jualbeli.julehajatim.com
                                     </CardDescription>
                                 </div>
@@ -260,7 +300,7 @@ export default function SuperAdminDashboard({
                                 <div className="p-4 rounded-lg border border-neutral-300 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 space-y-2">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <Music className="h-4 w-4 text-emerald-700" />
+                                            <Music className="h-4 w-4 text-[#ee4d2d]" />
                                             <span className="text-xs font-bold text-neutral-900 dark:text-neutral-100">
                                                 Murottal Al-Qur'an Otomatis (Global)
                                             </span>
@@ -271,7 +311,7 @@ export default function SuperAdminDashboard({
                                         />
                                     </div>
                                     <p className="text-[11px] text-neutral-500">
-                                        Memutar lantunan Al-Qur'an (Misyari Rasyid) via EQuran API secara otomatis saat pengunjung berinteraksi dengan website.
+                                        Memutar lantunan Al-Qur'an (Misyari Rasyid) via Quran Foundation API v4 secara otomatis saat pengunjung berinteraksi dengan website.
                                     </p>
                                 </div>
 
@@ -279,7 +319,7 @@ export default function SuperAdminDashboard({
                                 <div className="p-4 rounded-lg border border-neutral-300 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 space-y-2">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <BellRing className="h-4 w-4 text-emerald-700" />
+                                            <BellRing className="h-4 w-4 text-[#ee4d2d]" />
                                             <span className="text-xs font-bold text-neutral-900 dark:text-neutral-100">
                                                 Pengingat & Audio Adzan Waktu Sholat
                                             </span>
@@ -317,13 +357,13 @@ export default function SuperAdminDashboard({
                                         step={5}
                                         value={settingsForm.data.murottal_volume}
                                         onChange={(e) => settingsForm.setData('murottal_volume', parseInt(e.target.value))}
-                                        className="w-full accent-emerald-700 cursor-pointer"
+                                        className="w-full accent-[#ee4d2d] cursor-pointer"
                                     />
                                     <Button
                                         type="submit"
                                         disabled={settingsForm.processing}
                                         size="sm"
-                                        className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shrink-0"
+                                        className="bg-[#ee4d2d] hover:bg-[#d73211] text-white text-xs font-bold shrink-0"
                                     >
                                         {settingsForm.processing ? 'Menyimpan...' : 'Simpan Pengaturan'}
                                     </Button>
@@ -383,7 +423,7 @@ export default function SuperAdminDashboard({
                                                     </div>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="font-bold text-xs text-emerald-700">
+                                            <TableCell className="font-bold text-xs text-orange-600">
                                                 {p.region_name} ({p.region_code})
                                             </TableCell>
                                             <TableCell className="font-mono text-xs">
@@ -400,7 +440,7 @@ export default function SuperAdminDashboard({
                                                     size="sm"
                                                     variant="default"
                                                     onClick={() => handleOpenPublish(p)}
-                                                    className="text-xs bg-emerald-700 hover:bg-emerald-800"
+                                                    className="text-xs bg-[#ee4d2d] hover:bg-[#d73211] text-white"
                                                 >
                                                     Publish LIVE
                                                 </Button>
@@ -471,7 +511,7 @@ export default function SuperAdminDashboard({
                                         value={publishForm.data.super_margin}
                                         onChange={(e) => publishForm.setData('super_margin', Number(e.target.value))}
                                         required
-                                        className="w-full text-sm font-mono font-bold rounded border-neutral-300 focus:ring-emerald-700"
+                                        className="w-full text-sm font-mono font-bold rounded border-neutral-300 focus:ring-orange-500"
                                     />
                                     <span className="text-[11px] text-neutral-500 mt-1 block">
                                         Nominal ini akan dialokasikan ke Kas Juleha Jatim untuk operasional dakwah dan pembinaan sembelih halal.
@@ -479,15 +519,15 @@ export default function SuperAdminDashboard({
                                 </div>
 
                                 {/* Live Kalkulasi Final Price */}
-                                <div className="p-4 bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-400 rounded text-xs space-y-2">
-                                    <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-900 dark:text-emerald-300 block">
+                                <div className="p-4 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded text-xs space-y-2">
+                                    <span className="text-[11px] font-bold uppercase tracking-wider text-orange-900 dark:text-orange-300 block">
                                         Kalkulasi Final Price (Harga yang Tampil ke Pembeli):
                                     </span>
-                                    <div className="flex justify-between items-baseline pt-1 border-t border-emerald-300">
-                                        <span className="font-semibold text-emerald-800 dark:text-emerald-200">
+                                    <div className="flex justify-between items-baseline pt-1 border-t border-orange-200">
+                                        <span className="font-semibold text-orange-800 dark:text-orange-200">
                                             Grand Total Final Publik:
                                         </span>
-                                        <span className="text-xl font-mono font-black text-emerald-900 dark:text-emerald-100">
+                                        <span className="text-xl font-mono font-black text-[#ee4d2d]">
                                             {formatRupiah(
                                                 selectedProduct.base_price +
                                                 Number(selectedProduct.ekop_margin || 0) +
@@ -495,7 +535,7 @@ export default function SuperAdminDashboard({
                                             )}
                                         </span>
                                     </div>
-                                    <p className="text-[10px] text-emerald-800 dark:text-emerald-300 italic">
+                                    <p className="text-[10px] text-orange-700 dark:text-orange-400 italic">
                                         *Catatan Keamanan: Rincian margin disembunyikan secara absolut dari frontend pembeli publik.
                                     </p>
                                 </div>
@@ -514,7 +554,7 @@ export default function SuperAdminDashboard({
                                         variant="default"
                                         size="sm"
                                         disabled={publishForm.processing}
-                                        className="bg-emerald-700 hover:bg-emerald-800"
+                                        className="bg-[#ee4d2d] hover:bg-[#d73211] text-white"
                                     >
                                         {publishForm.processing ? 'Menerbitkan...' : 'Terbitkan LIVE Sekarang'}
                                     </Button>
@@ -596,7 +636,7 @@ export default function SuperAdminDashboard({
                                 {allProducts.data.map((p) => (
                                     <TableRow key={p.id}>
                                         <TableCell className="font-bold text-xs">{p.title}</TableCell>
-                                        <TableCell className="text-xs font-bold text-emerald-700">
+                                        <TableCell className="text-xs font-bold text-orange-600">
                                             {p.region_name}
                                         </TableCell>
                                         <TableCell className="text-xs">{p.seller_name}</TableCell>
@@ -607,7 +647,7 @@ export default function SuperAdminDashboard({
                                         <TableCell className="font-mono text-xs text-red-700 font-bold">
                                             {p.super_margin != null ? formatRupiah(p.super_margin) : '-'}
                                         </TableCell>
-                                        <TableCell className="font-mono font-black text-xs text-emerald-800">
+                                        <TableCell className="font-mono font-black text-xs text-[#ee4d2d]">
                                             {formatRupiah(p.final_price)}
                                         </TableCell>
                                         <TableCell>
@@ -664,7 +704,7 @@ export default function SuperAdminDashboard({
                                             <TableCell>
                                                 <Link
                                                     href={route('orders.show', order.order_number)}
-                                                    className="font-mono font-bold text-xs text-emerald-700 hover:underline block"
+                                                    className="font-mono font-bold text-xs text-[#ee4d2d] hover:underline block"
                                                 >
                                                     {order.order_number}
                                                 </Link>
@@ -688,7 +728,7 @@ export default function SuperAdminDashboard({
                                                     variant={order.payment_method_type === 'manual_transfer' ? 'warning' : 'success'}
                                                     className="text-[10px]"
                                                 >
-                                                    {order.payment_method_type === 'manual_transfer' ? 'Rek. Pribadi' : 'DOKU SNAP'}
+                                                    {order.payment_method_type === 'manual_transfer' ? 'Rek. Pribadi' : 'QRIS Dinamis'}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
@@ -706,7 +746,7 @@ export default function SuperAdminDashboard({
                                                                 className="w-full h-full object-cover"
                                                             />
                                                         </div>
-                                                        <span className="text-[9px] text-emerald-700 font-bold block mt-0.5">
+                                                        <span className="text-[9px] text-orange-600 font-bold block mt-0.5">
                                                             Lihat HD
                                                         </span>
                                                     </a>
@@ -750,7 +790,7 @@ export default function SuperAdminDashboard({
                                             <TableCell className="text-right">
                                                 <Link
                                                     href={route('orders.show', order.order_number)}
-                                                    className="inline-block text-xs font-bold text-emerald-700 hover:text-emerald-800 underline"
+                                                    className="inline-block text-xs font-bold text-[#ee4d2d] hover:underline"
                                                 >
                                                     Detail &rarr;
                                                 </Link>

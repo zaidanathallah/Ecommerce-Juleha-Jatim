@@ -45,7 +45,7 @@ class SellerShopController extends Controller
                 'max:1000',
                 function ($attribute, $value, $fail) use ($request) {
                     if (!$request->boolean('is_pg_active') && empty(trim((string) $value))) {
-                        $fail('Nama Bank, Nomor Rekening, dan Atas Nama wajib diisi jika Payment Gateway DOKU dinonaktifkan.');
+                        $fail('Nama Bank, Nomor Rekening, dan Atas Nama wajib diisi jika Payment Gateway QRIS Dinamis dinonaktifkan.');
                     }
                 },
             ],

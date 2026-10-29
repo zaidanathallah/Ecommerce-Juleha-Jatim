@@ -31,4 +31,10 @@ return [
         ],
     ],
 
+    'temanqris' => [
+        'base_url' => env('TEMANQRIS_BASE_URL', 'https://temanqris.com'),
+        'api_key' => env('TEMANQRIS_API_KEY'),
+        'webhook_secret' => env('TEMANQRIS_WEBHOOK_SECRET'),
+    ],
+
 ];

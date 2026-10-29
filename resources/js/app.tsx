@@ -23,10 +23,11 @@ createInertiaApp({
     setup({ el, App, props }) {
         const root = createRoot(el);
         const siteSettings = (props.initialPage.props as any)?.site_settings;
+        const initialUser = (props.initialPage.props as any)?.auth?.user;
 
         root.render(
             <AudioProvider initialSettings={siteSettings}>
-                <CartProvider>
+                <CartProvider initialUser={initialUser}>
                     <App {...props} />
                     <CartDrawer />
                     <GlobalAudioPlayer />
@@ -36,6 +37,6 @@ createInertiaApp({
         );
     },
     progress: {
-        color: '#059669',
+        color: '#ee4d2d',
     },
 });

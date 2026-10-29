@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import MarketplaceLayout from '@/Layouts/MarketplaceLayout';
 import { BuyerProduct, Category, Voucher } from '@/types';
 import CategoryIcon from '@/Components/CategoryIcon';
@@ -47,7 +47,8 @@ interface Props {
 }
 
 export default function Index({ products, flashSaleProducts = [], vouchers = [], categories, filters, schemaJson }: Props) {
-    const { addToCart } = useCart();
+    const { auth } = usePage<any>().props;
+    const { addToCart, buyNow } = useCart();
     const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
     // Flash sale countdown timer (simulating 2 hours 40 mins)
@@ -155,7 +156,7 @@ export default function Index({ products, flashSaleProducts = [], vouchers = [],
                     </div>
 
                     <div className="p-3.5 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-sm flex flex-col items-center text-center gap-1.5 hover:shadow-md transition">
-                        <div className="w-10 h-10 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-2xl bg-orange-100 dark:bg-orange-950/60 text-[#ee4d2d] flex items-center justify-center">
                             <ShieldCheck className="h-5 w-5" />
                         </div>
                         <span className="text-[11px] font-bold text-neutral-800 dark:text-neutral-200">100% Syar'i Halal</span>
@@ -377,7 +378,7 @@ export default function Index({ products, flashSaleProducts = [], vouchers = [],
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                onClick={() => addToCart(product, 1)}
+                                                onClick={() => addToCart(product, 1, auth.user)}
                                                 className="flex-1 text-xs font-bold rounded-xl border-[#ee4d2d] text-[#ee4d2d] hover:bg-orange-50 gap-1"
                                             >
                                                 <Plus className="h-3.5 w-3.5" />
@@ -385,7 +386,7 @@ export default function Index({ products, flashSaleProducts = [], vouchers = [],
                                             </Button>
                                             <Button
                                                 size="sm"
-                                                onClick={() => addToCart(product, 1)}
+                                                onClick={() => buyNow(product, 1, auth.user)}
                                                 className="flex-1 text-xs font-bold bg-[#ee4d2d] hover:bg-[#d73211] text-white rounded-xl shadow-sm"
                                             >
                                                 Beli
@@ -439,13 +440,13 @@ export default function Index({ products, flashSaleProducts = [], vouchers = [],
                                             />
                                             {/* Location Tag */}
                                             <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
-                                                <MapPin className="h-3 w-3 text-emerald-400" />
+                                                <MapPin className="h-3 w-3 text-orange-400" />
                                                 <span>{product.region_name}</span>
                                             </div>
                                         </div>
 
                                         <div className="p-4 space-y-2">
-                                            <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                                            <div className="text-[10px] font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">
                                                 {product.category?.name || 'Halal Equipment'}
                                             </div>
 
@@ -477,21 +478,20 @@ export default function Index({ products, flashSaleProducts = [], vouchers = [],
                                         <Button
                                             size="sm"
                                             variant="outline"
-                                            onClick={() => addToCart(product, 1)}
+                                            onClick={() => addToCart(product, 1, auth.user)}
                                             className="flex-1 text-xs font-bold rounded-2xl border-orange-200 text-[#ee4d2d] hover:bg-orange-50 gap-1"
                                         >
                                             <Plus className="h-3.5 w-3.5" />
                                             <span>Keranjang</span>
                                         </Button>
 
-                                        <Link href={route('products.show', product.slug)} className="flex-1">
-                                            <Button
-                                                size="sm"
-                                                className="w-full text-xs font-bold bg-[#ee4d2d] hover:bg-orange-700 text-white rounded-2xl shadow-sm"
-                                            >
-                                                Beli
-                                            </Button>
-                                        </Link>
+                                        <Button
+                                            size="sm"
+                                            onClick={() => buyNow(product, 1, auth.user)}
+                                            className="flex-1 text-xs font-bold bg-[#ee4d2d] hover:bg-[#d73211] text-white rounded-2xl shadow-sm"
+                                        >
+                                            Beli
+                                        </Button>
                                     </div>
                                 </div>
                             ))}

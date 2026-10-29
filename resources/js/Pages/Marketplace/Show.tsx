@@ -21,17 +21,19 @@ import {
     User as UserIcon,
     Plus,
     Minus,
+    AlertCircle,
 } from 'lucide-react';
 
 interface Props {
     product: BuyerProduct;
     schemaJson: any;
+    sellerIsActive?: boolean;
 }
 
-export default function Show({ product, schemaJson }: Props) {
+export default function Show({ product, schemaJson, sellerIsActive = true }: Props) {
     const { auth } = usePage<PageProps>().props;
     const user = auth.user;
-    const { addToCart } = useCart();
+    const { addToCart, buyNow } = useCart();
 
     const [selectedImage, setSelectedImage] = useState<string>(product.image_url || '/logo-juleha.jpg');
     const [quantity, setQuantity] = useState<number>(1);
@@ -49,7 +51,11 @@ export default function Show({ product, schemaJson }: Props) {
     };
 
     const handleAddToCart = () => {
-        addToCart(product, quantity);
+        if (!sellerIsActive) {
+            alert('Status keanggotaan penjual produk ini sedang NON-AKTIF di database pusat members.julehajatim.com. Pembelian ditangguhkan.');
+            return;
+        }
+        addToCart(product, quantity, user);
     };
 
     const ratingAvg = product.rating_avg ?? 5.0;
@@ -72,7 +78,7 @@ export default function Show({ product, schemaJson }: Props) {
 
             {/* Breadcrumb Navigation */}
             <nav className="mb-4 flex items-center gap-2 text-xs text-neutral-500 font-medium">
-                <Link href={route('home')} className="hover:text-emerald-700 flex items-center gap-1">
+                <Link href={route('home')} className="hover:text-[#ee4d2d] flex items-center gap-1">
                     <ArrowLeft className="h-3.5 w-3.5" />
                     Etalase
                 </Link>
@@ -102,7 +108,7 @@ export default function Show({ product, schemaJson }: Props) {
                                 type="button"
                                 onClick={() => setSelectedImage(product.image_url)}
                                 className={`h-16 w-16 rounded-xl overflow-hidden border-2 shrink-0 ${
-                                    selectedImage === product.image_url ? 'border-emerald-700' : 'border-neutral-200'
+                                    selectedImage === product.image_url ? 'border-[#ee4d2d]' : 'border-neutral-200'
                                 }`}
                             >
                                 <img src={product.image_url} alt="Cover" className="h-full w-full object-cover" />
@@ -113,7 +119,7 @@ export default function Show({ product, schemaJson }: Props) {
                                     type="button"
                                     onClick={() => setSelectedImage(img)}
                                     className={`h-16 w-16 rounded-xl overflow-hidden border-2 shrink-0 ${
-                                        selectedImage === img ? 'border-emerald-700' : 'border-neutral-200'
+                                        selectedImage === img ? 'border-[#ee4d2d]' : 'border-neutral-200'
                                     }`}
                                 >
                                     <img src={img} alt={`Detail ${idx + 1}`} className="h-full w-full object-cover" />
@@ -123,8 +129,8 @@ export default function Show({ product, schemaJson }: Props) {
                     )}
 
                     {/* Trust Badges */}
-                    <div className="p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800 rounded-2xl space-y-2 text-xs">
-                        <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-bold">
+                    <div className="p-4 bg-orange-50/70 dark:bg-neutral-800 border border-orange-200 dark:border-neutral-700 rounded-2xl space-y-2 text-xs">
+                        <div className="flex items-center gap-2 text-[#ee4d2d] dark:text-orange-400 font-bold">
                             <ShieldCheck className="h-4 w-4" />
                             <span>Jaminan Keaslian & Syar'i Juleha Jawa Timur</span>
                         </div>
@@ -138,15 +144,15 @@ export default function Show({ product, schemaJson }: Props) {
                 <div className="lg:col-span-7 flex flex-col justify-between space-y-6">
                     <div className="space-y-4">
                         <div className="flex flex-wrap items-center gap-2">
-                            <Badge variant="default" className="text-xs bg-emerald-700">
+                            <Badge variant="default" className="text-xs bg-[#ee4d2d]">
                                 {product.category?.name || 'Peralatan Juleha'}
                             </Badge>
-                            <Badge variant="success" className="text-xs gap-1">
+                            <Badge variant="outline" className="text-xs gap-1 border-orange-200 text-[#ee4d2d]">
                                 <CheckCircle2 className="h-3 w-3" />
                                 Terverifikasi
                             </Badge>
                             <Badge variant="secondary" className="text-xs gap-1">
-                                <MapPin className="h-3 w-3 text-emerald-700" />
+                                <MapPin className="h-3 w-3 text-[#ee4d2d]" />
                                 {product.region_name}
                             </Badge>
                         </div>
@@ -174,13 +180,13 @@ export default function Show({ product, schemaJson }: Props) {
                         </div>
 
                         {/* Final Price Block */}
-                        <div className="p-5 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-2xl border border-emerald-200 dark:border-emerald-800">
+                        <div className="p-5 bg-orange-50/60 dark:bg-neutral-800/80 rounded-2xl border border-orange-200 dark:border-neutral-700">
                             <div className="flex items-baseline justify-between flex-wrap gap-2">
                                 <div>
                                     <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider block">
                                         Harga Resmi Terverifikasi
                                     </span>
-                                    <div className="text-3xl sm:text-4xl font-black text-emerald-700 dark:text-emerald-400">
+                                    <div className="text-3xl sm:text-4xl font-black text-[#ee4d2d]">
                                         {formatRupiah(product.price)}
                                     </div>
                                 </div>
@@ -188,7 +194,7 @@ export default function Show({ product, schemaJson }: Props) {
                                     <span className="text-xs font-bold text-neutral-600 dark:text-neutral-400 block">
                                         Stok Siap Kirim
                                     </span>
-                                    <span className="text-sm font-mono font-black text-emerald-700 dark:text-emerald-400">
+                                    <span className="text-sm font-mono font-black text-orange-600 dark:text-orange-400">
                                         {product.stock} Unit
                                     </span>
                                 </div>
@@ -206,7 +212,7 @@ export default function Show({ product, schemaJson }: Props) {
                                     Asal Pengiriman: {product.seller.region_name}
                                 </span>
                             </div>
-                            <Badge variant="outline" className="font-mono text-[10px] text-emerald-700 border-emerald-300">
+                            <Badge variant="outline" className="font-mono text-[10px] text-orange-600 border-orange-300">
                                 MITRA TERDAFTAR
                             </Badge>
                         </div>
@@ -238,11 +244,26 @@ export default function Show({ product, schemaJson }: Props) {
                                         <CreditCard className="h-3.5 w-3.5 text-neutral-400" /> Metode Pembayaran:
                                     </span>
                                     <strong className="text-neutral-900 dark:text-neutral-100">
-                                        DOKU SNAP (QRIS & VA) / Transfer Bank
+                                        QRIS Dinamis Otomatis / Transfer Bank
                                     </strong>
                                 </div>
                             </div>
                         </div>
+
+                        {/* Inactive Member Warning Banner */}
+                        {!sellerIsActive && (
+                            <div className="p-3.5 bg-red-50 dark:bg-red-950/40 border border-red-300 dark:border-red-800 rounded-2xl flex items-start gap-2.5 text-xs text-red-700 dark:text-red-300">
+                                <AlertCircle className="w-5 h-5 shrink-0 text-red-600 mt-0.5" />
+                                <div>
+                                    <h4 className="font-bold text-red-800 dark:text-red-200">
+                                        Toko / Mitra Sedang Non-Aktif
+                                    </h4>
+                                    <p className="text-[11px] text-red-600 dark:text-red-400 mt-0.5">
+                                        Status keanggotaan penjual produk ini sedang <strong>NON-AKTIF</strong> di database pusat <code>members.julehajatim.com</code>. Pembelian untuk produk ini dinonaktifkan sementara sampai status keanggotaan diaktifkan kembali.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Product Description */}
                         <div>
@@ -263,8 +284,9 @@ export default function Show({ product, schemaJson }: Props) {
                             <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-800 rounded-xl p-1 border border-neutral-300 dark:border-neutral-700">
                                 <button
                                     type="button"
+                                    disabled={!sellerIsActive}
                                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                    className="p-1 rounded-lg bg-white dark:bg-neutral-700 hover:bg-neutral-200 text-neutral-700 dark:text-neutral-200"
+                                    className="p-1 rounded-lg bg-white dark:bg-neutral-700 hover:bg-neutral-200 text-neutral-700 dark:text-neutral-200 disabled:opacity-40"
                                 >
                                     <Minus className="h-3.5 w-3.5" />
                                 </button>
@@ -273,8 +295,9 @@ export default function Show({ product, schemaJson }: Props) {
                                 </span>
                                 <button
                                     type="button"
+                                    disabled={!sellerIsActive}
                                     onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                                    className="p-1 rounded-lg bg-white dark:bg-neutral-700 hover:bg-neutral-200 text-neutral-700 dark:text-neutral-200"
+                                    className="p-1 rounded-lg bg-white dark:bg-neutral-700 hover:bg-neutral-200 text-neutral-700 dark:text-neutral-200 disabled:opacity-40"
                                 >
                                     <Plus className="h-3.5 w-3.5" />
                                 </button>
@@ -290,25 +313,24 @@ export default function Show({ product, schemaJson }: Props) {
                                 type="button"
                                 size="lg"
                                 variant="outline"
+                                disabled={!sellerIsActive}
                                 onClick={handleAddToCart}
-                                className="flex-1 font-bold text-xs gap-2 rounded-2xl border-emerald-700 text-emerald-800 hover:bg-emerald-50 py-6"
+                                className="flex-1 font-bold text-xs gap-2 rounded-2xl border-[#ee4d2d] text-[#ee4d2d] hover:bg-orange-50 py-6 disabled:opacity-40 disabled:cursor-not-allowed"
                             >
                                 <ShoppingBag className="h-4 w-4" />
                                 <span>+ Masukkan Keranjang</span>
                             </Button>
 
-                            <Link
-                                href={user ? route('checkout.index', product.slug) : route('login')}
-                                className="flex-1"
+                            <Button
+                                type="button"
+                                size="lg"
+                                disabled={!sellerIsActive}
+                                onClick={() => buyNow(product, quantity, user)}
+                                className="flex-1 font-extrabold text-xs bg-[#ee4d2d] hover:bg-[#d73211] text-white gap-2 rounded-2xl shadow-md py-6 disabled:opacity-40 disabled:cursor-not-allowed"
                             >
-                                <Button
-                                    size="lg"
-                                    className="w-full font-extrabold text-xs bg-emerald-700 hover:bg-emerald-800 text-white gap-2 rounded-2xl shadow-md py-6"
-                                >
-                                    <CreditCard className="h-4 w-4" />
-                                    <span>Beli Sekarang</span>
-                                </Button>
-                            </Link>
+                                <CreditCard className="h-4 w-4" />
+                                <span>{sellerIsActive ? 'Beli Sekarang' : 'Toko Non-Aktif'}</span>
+                            </Button>
 
                             <a
                                 href={`https://wa.me/6281262227663?text=Halo%2C%20saya%20tertarik%20dengan%20produk%20${encodeURIComponent(product.title)}%20di%20Marketplace%20Juleha%20Jatim`}
@@ -333,7 +355,7 @@ export default function Show({ product, schemaJson }: Props) {
                 <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800 pb-4">
                     <div>
                         <h2 className="text-lg font-black text-neutral-950 dark:text-white flex items-center gap-2">
-                            <MessageSquare className="h-5 w-5 text-emerald-600" />
+                            <MessageSquare className="h-5 w-5 text-[#ee4d2d]" />
                             <span>Penilaian & Ulasan Pembeli ({reviewsCount})</span>
                         </h2>
                         <p className="text-xs text-neutral-500 mt-0.5">
@@ -388,7 +410,7 @@ export default function Show({ product, schemaJson }: Props) {
                                 onChange={(e) => setData('comment', e.target.value)}
                                 placeholder="Bagaimana pengalaman Anda menggunakan produk ini? (contoh: bilah sangat tajam, pengiriman cepat, packing aman)"
                                 required
-                                className="w-full text-xs rounded-xl border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700"
+                                className="w-full text-xs rounded-xl border-neutral-300 dark:border-neutral-700 focus:ring-[#ee4d2d]"
                             />
                             {errors.comment && <p className="text-xs text-red-600 font-bold">{errors.comment}</p>}
 
@@ -397,7 +419,7 @@ export default function Show({ product, schemaJson }: Props) {
                                     type="submit"
                                     disabled={processing}
                                     size="sm"
-                                    className="bg-emerald-700 hover:bg-emerald-800 text-xs font-bold rounded-xl gap-1.5"
+                                    className="bg-[#ee4d2d] hover:bg-[#d73211] text-white text-xs font-bold rounded-xl gap-1.5"
                                 >
                                     <Send className="h-3.5 w-3.5" />
                                     {processing ? 'Menyimpan Ulasan...' : 'Kirim Ulasan'}
@@ -408,7 +430,7 @@ export default function Show({ product, schemaJson }: Props) {
                         <div className="text-center py-3 text-xs text-neutral-600 dark:text-neutral-400 flex items-center justify-between flex-wrap gap-2">
                             <span>Ingin memberikan rating bintang dan ulasan untuk produk ini?</span>
                             <Link href={route('login')}>
-                                <Button size="sm" variant="default" className="text-xs font-bold bg-emerald-700 hover:bg-emerald-800 rounded-xl">
+                                <Button size="sm" variant="default" className="text-xs font-bold bg-[#ee4d2d] hover:bg-[#d73211] text-white rounded-xl">
                                     Masuk untuk Beri Ulasan
                                 </Button>
                             </Link>
@@ -430,7 +452,7 @@ export default function Show({ product, schemaJson }: Props) {
                             >
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
-                                        <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-emerald-800 dark:text-emerald-300 font-bold text-xs">
+                                        <div className="h-8 w-8 rounded-full bg-orange-100 dark:bg-orange-950/60 flex items-center justify-center text-[#ee4d2d] font-bold text-xs">
                                             {rev.user_name.charAt(0).toUpperCase()}
                                         </div>
                                         <div>
@@ -438,7 +460,7 @@ export default function Show({ product, schemaJson }: Props) {
                                                 <strong className="text-xs font-bold text-neutral-900 dark:text-neutral-100">
                                                     {rev.user_name}
                                                 </strong>
-                                                <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
+                                                <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-orange-50 dark:bg-orange-950/40 text-[#ee4d2d] border border-orange-200">
                                                     <CheckCircle2 className="h-2.5 w-2.5" />
                                                     Pembeli
                                                 </span>

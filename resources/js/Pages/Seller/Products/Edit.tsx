@@ -56,7 +56,7 @@ export default function Edit({ product, categories }: Props) {
 
             <div className="max-w-2xl mx-auto space-y-4">
                 <nav className="flex items-center gap-2 text-xs text-neutral-500">
-                    <Link href={route('seller.products.index')} className="hover:text-emerald-700 flex items-center gap-1 font-semibold">
+                    <Link href={route('seller.products.index')} className="hover:text-[#ee4d2d] flex items-center gap-1 font-semibold">
                         <ArrowLeft className="h-3.5 w-3.5" />
                         Kembali ke Daftar Produk
                     </Link>
@@ -90,15 +90,15 @@ export default function Edit({ product, categories }: Props) {
                                     <button
                                         type="button"
                                         onClick={() => setShowAddCategory(!showAddCategory)}
-                                        className="text-[11px] font-bold text-emerald-700 hover:underline"
+                                        className="text-[11px] font-bold text-[#ee4d2d] hover:underline"
                                     >
                                         {showAddCategory ? 'Batal' : '+ Tambah Kategori Baru'}
                                     </button>
                                 </div>
 
                                 {showAddCategory && (
-                                    <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800 rounded-lg space-y-2 mb-2">
-                                        <span className="text-[11px] font-bold text-emerald-900 dark:text-emerald-200">
+                                    <div className="p-3 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-lg space-y-2 mb-2">
+                                        <span className="text-[11px] font-bold text-orange-900 dark:text-orange-200">
                                             Buat Kategori Produk Baru:
                                         </span>
                                         <div className="flex gap-2">
@@ -107,14 +107,14 @@ export default function Edit({ product, categories }: Props) {
                                                 value={newCategoryName}
                                                 onChange={(e) => setNewCategoryName(e.target.value)}
                                                 placeholder="Contoh: Daging Segar, Bumbu Halal, Ternak Qurban..."
-                                                className="flex-1 text-xs rounded border-neutral-300 dark:border-neutral-700 focus:ring-emerald-700"
+                                                className="flex-1 text-xs rounded border-neutral-300 dark:border-neutral-700 focus:ring-orange-500"
                                             />
                                             <Button
                                                 type="button"
                                                 size="sm"
                                                 onClick={handleAddCategory}
                                                 disabled={isCreatingCategory || !newCategoryName.trim()}
-                                                className="bg-emerald-700 hover:bg-emerald-800 text-xs font-bold"
+                                                className="bg-[#ee4d2d] hover:bg-[#d73211] text-white text-xs font-bold"
                                             >
                                                 {isCreatingCategory ? 'Menyimpan...' : 'Simpan Kategori'}
                                             </Button>
@@ -126,7 +126,7 @@ export default function Edit({ product, categories }: Props) {
                                     value={data.category_id}
                                     onChange={(e) => setData('category_id', Number(e.target.value))}
                                     required
-                                    className="w-full text-xs rounded border-neutral-300 focus:ring-emerald-700"
+                                    className="w-full text-xs rounded border-neutral-300 focus:ring-orange-500"
                                 >
                                     {categories.map((c) => (
                                         <option key={c.id} value={c.id}>
@@ -146,7 +146,7 @@ export default function Edit({ product, categories }: Props) {
                                     value={data.title}
                                     onChange={(e) => setData('title', e.target.value)}
                                     required
-                                    className="w-full text-xs rounded border-neutral-300 focus:ring-emerald-700 font-medium"
+                                    className="w-full text-xs rounded border-neutral-300 focus:ring-orange-500 font-medium"
                                 />
                                 {errors.title && <p className="text-xs text-red-600 mt-1">{errors.title}</p>}
                             </div>
@@ -163,7 +163,7 @@ export default function Edit({ product, categories }: Props) {
                                         value={data.base_price}
                                         onChange={(e) => setData('base_price', e.target.value)}
                                         required
-                                        className="w-full text-xs font-mono font-bold rounded border-neutral-300 focus:ring-emerald-700"
+                                        className="w-full text-xs font-mono font-bold rounded border-neutral-300 focus:ring-orange-500"
                                     />
                                     {errors.base_price && <p className="text-xs text-red-600 mt-1">{errors.base_price}</p>}
                                 </div>
@@ -178,7 +178,7 @@ export default function Edit({ product, categories }: Props) {
                                         value={data.stock}
                                         onChange={(e) => setData('stock', Number(e.target.value))}
                                         required
-                                        className="w-full text-xs font-mono rounded border-neutral-300 focus:ring-emerald-700"
+                                        className="w-full text-xs font-mono rounded border-neutral-300 focus:ring-orange-500"
                                     />
                                     {errors.stock && <p className="text-xs text-red-600 mt-1">{errors.stock}</p>}
                                 </div>
@@ -193,7 +193,7 @@ export default function Edit({ product, categories }: Props) {
                                         value={data.weight_gram}
                                         onChange={(e) => setData('weight_gram', Number(e.target.value))}
                                         required
-                                        className="w-full text-xs font-mono rounded border-neutral-300 focus:ring-emerald-700"
+                                        className="w-full text-xs font-mono rounded border-neutral-300 focus:ring-orange-500"
                                     />
                                     {errors.weight_gram && <p className="text-xs text-red-600 mt-1">{errors.weight_gram}</p>}
                                 </div>
@@ -228,7 +228,7 @@ export default function Edit({ product, categories }: Props) {
                                     value={data.description}
                                     onChange={(e) => setData('description', e.target.value)}
                                     required
-                                    className="w-full text-xs rounded border-neutral-300 focus:ring-emerald-700"
+                                    className="w-full text-xs rounded border-neutral-300 focus:ring-orange-500"
                                 />
                                 {errors.description && <p className="text-xs text-red-600 mt-1">{errors.description}</p>}
                             </div>
@@ -238,7 +238,7 @@ export default function Edit({ product, categories }: Props) {
                                     type="submit"
                                     variant="default"
                                     disabled={processing}
-                                    className="w-full py-2.5 text-sm font-bold bg-emerald-700 hover:bg-emerald-800"
+                                    className="w-full py-3 text-sm font-bold bg-[#ee4d2d] hover:bg-[#d73211] text-white rounded-xl shadow-sm"
                                 >
                                     {processing ? 'Menyimpan Perubahan...' : 'Simpan Perubahan'}
                                 </Button>

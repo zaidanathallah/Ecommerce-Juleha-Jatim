@@ -46,12 +46,39 @@ class Phase6MediaAndProofsTest extends TestCase
         $this->assertEquals(800, $readImage->height());
     }
 
+    private function getBuyerAndSeller(): array
+    {
+        $buyer = User::where('role', User::ROLE_USER)->first();
+        if (!$buyer) {
+            $buyer = User::create([
+                'name' => 'Buyer Test',
+                'email' => 'buyertest' . rand(1000, 9999) . '@example.com',
+                'password' => bcrypt('password'),
+                'role' => User::ROLE_USER,
+            ]);
+        }
+
+        $seller = User::where('id', '!=', $buyer->id)->first();
+        if (!$seller) {
+            $seller = User::create([
+                'name' => 'Seller Test',
+                'email' => 'sellertest' . rand(1000, 9999) . '@example.com',
+                'password' => bcrypt('password'),
+                'role' => User::ROLE_USER,
+                'user_type' => 'seller',
+                'is_member' => true,
+                'juleha_id' => 'JLH-TEST-SELLER',
+            ]);
+        }
+
+        return [$buyer, $seller];
+    }
+
     public function test_buyer_can_upload_transfer_receipt_for_manual_order(): void
     {
         Storage::fake('public');
 
-        $buyer = User::where('role', User::ROLE_USER)->first();
-        $seller = User::where('id', '!=', $buyer->id)->first();
+        [$buyer, $seller] = $this->getBuyerAndSeller();
 
         $order = Order::create([
             'order_number' => 'JLH-RECEIPT-' . time(),
@@ -100,9 +127,16 @@ class Phase6MediaAndProofsTest extends TestCase
     {
         Storage::fake('public');
 
-        $buyer = User::where('role', User::ROLE_USER)->first();
-        $stranger = User::where('id', '!=', $buyer->id)->where('role', User::ROLE_USER)->first();
-        $seller = User::where('id', '!=', $buyer->id)->where('id', '!=', $stranger->id)->first();
+        [$buyer, $seller] = $this->getBuyerAndSeller();
+        $stranger = User::where('id', '!=', $buyer->id)->where('id', '!=', $seller->id)->first();
+        if (!$stranger) {
+            $stranger = User::create([
+                'name' => 'Stranger Test',
+                'email' => 'stranger' . rand(1000, 9999) . '@example.com',
+                'password' => bcrypt('password'),
+                'role' => User::ROLE_USER,
+            ]);
+        }
 
         $order = Order::create([
             'order_number' => 'JLH-AUTH-' . time(),
@@ -140,8 +174,7 @@ class Phase6MediaAndProofsTest extends TestCase
     {
         Storage::fake('public');
 
-        $buyer = User::where('role', User::ROLE_USER)->first();
-        $seller = User::where('id', '!=', $buyer->id)->first();
+        [$buyer, $seller] = $this->getBuyerAndSeller();
 
         $order = Order::create([
             'order_number' => 'JLH-DELIVERY-' . time(),
@@ -153,7 +186,7 @@ class Phase6MediaAndProofsTest extends TestCase
             'total_product_price' => 330000,
             'shipping_cost' => 20000,
             'grand_total' => 350000,
-            'payment_method_type' => Order::PAYMENT_METHOD_DOKU,
+            'payment_method_type' => Order::PAYMENT_METHOD_QRIS,
             'payment_status' => Order::PAYMENT_PAID,
             'shipping_status' => Order::SHIPPING_IN_TRANSIT,
             'shipping_address' => [
@@ -185,8 +218,7 @@ class Phase6MediaAndProofsTest extends TestCase
 
     public function test_seller_can_confirm_manual_payment_received(): void
     {
-        $buyer = User::where('role', User::ROLE_USER)->first();
-        $seller = User::where('id', '!=', $buyer->id)->first();
+        [$buyer, $seller] = $this->getBuyerAndSeller();
 
         $order = Order::create([
             'order_number' => 'JLH-SELLER-CONFIRM-' . time(),

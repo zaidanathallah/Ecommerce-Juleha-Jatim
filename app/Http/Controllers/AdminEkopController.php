@@ -57,7 +57,7 @@ class AdminEkopController extends Controller
             ->paginate(15)
             ->through(fn($p) => $this->pricingService->formatForManagement($p, $user));
 
-        // Daftar pesanan dengan Hutang Margin Penjual ke Kas (karena Penjual mematikan PG DOKU)
+        // Daftar pesanan dengan Hutang Margin Penjual ke Kas (karena Penjual menggunakan Transfer Rekening Pribadi)
         $unsettledDebts = \App\Models\Order::with(['seller', 'items'])
             ->when($regionCode, function ($q) use ($regionCode) {
                 $q->whereHas('seller', fn($sq) => $sq->where('region_code', $regionCode));

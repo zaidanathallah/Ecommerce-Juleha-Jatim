@@ -261,9 +261,9 @@ export default function Register() {
                                 </div>
 
                                 {verificationState === 'success' && verifiedMember && (
-                                    <div className="p-3 bg-emerald-50 border border-emerald-300 rounded text-xs space-y-1">
-                                        <div className="flex items-center gap-1.5 text-emerald-800 font-bold">
-                                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                                    <div className="p-3 bg-orange-50 border border-orange-200 rounded text-xs space-y-1">
+                                        <div className="flex items-center gap-1.5 text-orange-900 font-bold">
+                                            <CheckCircle2 className="h-4 w-4 text-[#ee4d2d]" />
                                             <span>ID Terverifikasi: Anggota Sah Juleha Jawa Timur</span>
                                         </div>
                                         <p className="text-neutral-700">

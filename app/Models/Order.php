@@ -24,7 +24,7 @@ class Order extends Model
     public const SHIPPING_DELIVERED = 'delivered';
     public const SHIPPING_CANCELLED = 'cancelled';
 
-    public const PAYMENT_METHOD_DOKU = 'doku_snap';
+    public const PAYMENT_METHOD_QRIS = 'qris_dinamis';
     public const PAYMENT_METHOD_MANUAL = 'manual_transfer';
 
     public const SHIPPING_METHOD_BITESHIP = 'biteship';
@@ -52,11 +52,13 @@ class Order extends Model
         'biteship_order_id',
         'biteship_waybill_id',
         'biteship_tracking_status',
-        'doku_invoice_number',
-        'doku_payment_url',
-        'doku_qris_content',
-        'doku_va_number',
-        'doku_channel',
+        'qris_invoice_number',
+        'qris_payment_url',
+        'qris_content',
+        'qris_image_url',
+        'voucher_id',
+        'voucher_code',
+        'discount_amount',
         'payment_method_type',
         'payment_status',
         'margin_settlement_status',
@@ -80,11 +82,17 @@ class Order extends Model
             'total_product_price' => 'decimal:2',
             'shipping_cost' => 'decimal:2',
             'insurance_cost' => 'decimal:2',
+            'discount_amount' => 'decimal:2',
             'grand_total' => 'decimal:2',
             'received_quantity' => 'integer',
             'paid_at' => 'datetime',
             'delivered_at' => 'datetime',
         ];
+    }
+
+    public function voucher(): BelongsTo
+    {
+        return $this->belongsTo(Voucher::class, 'voucher_id');
     }
 
     public function buyer(): BelongsTo

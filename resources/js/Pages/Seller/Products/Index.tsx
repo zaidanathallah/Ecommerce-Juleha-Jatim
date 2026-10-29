@@ -7,8 +7,9 @@ import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/Components/ui/table';
 import { formatRupiah } from '@/lib/utils';
-import { PlusCircle, Edit, Store, ExternalLink, Tags } from 'lucide-react';
+import { PlusCircle, Edit, Store, ExternalLink, Tags, Ticket } from 'lucide-react';
 import CategoryManageModal from '@/Components/CategoryManageModal';
+import VoucherManageModal from '@/Components/VoucherManageModal';
 
 interface Props {
     products: {
@@ -20,6 +21,7 @@ interface Props {
 
 export default function Index({ products, categories = [] }: Props) {
     const [showCategoryModal, setShowCategoryModal] = React.useState(false);
+    const [showVoucherModal, setShowVoucherModal] = React.useState(false);
 
     return (
         <MarketplaceLayout>
@@ -29,6 +31,11 @@ export default function Index({ products, categories = [] }: Props) {
                 isOpen={showCategoryModal}
                 onClose={() => setShowCategoryModal(false)}
                 categories={categories}
+            />
+
+            <VoucherManageModal
+                isOpen={showVoucherModal}
+                onClose={() => setShowVoucherModal(false)}
             />
 
             <div className="space-y-6">
@@ -42,7 +49,17 @@ export default function Index({ products, categories = [] }: Props) {
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setShowVoucherModal(true)}
+                            className="text-xs gap-1.5 font-bold border-orange-300 text-[#ee4d2d] hover:bg-orange-50 rounded-xl"
+                        >
+                            <Ticket className="h-4 w-4" />
+                            Kelola Voucher Toko
+                        </Button>
+
                         <Button
                             size="sm"
                             variant="outline"
@@ -68,7 +85,7 @@ export default function Index({ products, categories = [] }: Props) {
                             <div className="text-center py-12 text-xs text-neutral-500">
                                 <Store className="h-10 w-10 text-neutral-400 mx-auto mb-2" />
                                 Anda belum memiliki produk jualan.{' '}
-                                <Link href={route('seller.products.create')} className="text-emerald-700 font-bold hover:underline">
+                                <Link href={route('seller.products.create')} className="text-[#ee4d2d] font-bold hover:underline">
                                     Mulai upload produk pertama Anda.
                                 </Link>
                             </div>
@@ -109,7 +126,7 @@ export default function Index({ products, categories = [] }: Props) {
                                             <TableCell className="font-mono text-xs font-bold">
                                                 {formatRupiah(p.base_price)}
                                             </TableCell>
-                                            <TableCell className="font-mono text-xs font-bold text-emerald-700">
+                                            <TableCell className="font-mono text-xs font-bold text-[#ee4d2d]">
                                                 {formatRupiah(p.final_price)}
                                             </TableCell>
                                             <TableCell className="font-mono text-xs">{p.stock} unit</TableCell>

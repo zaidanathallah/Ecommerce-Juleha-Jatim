@@ -72,6 +72,43 @@ class User extends Authenticatable
         return $this->role === self::ROLE_USER;
     }
 
+    /**
+     * Cek apakah user diperbolehkan menjual produk:
+     * - Super Admin & Admin Ekop otomatis berhak menjual produk daerah / provinsi.
+     * - Anggota Juleha Jatim HANYA boleh menjual jika status keanggotaannya AKTIF di database pusat members.julehajatim.com.
+     * - Pembeli umum (non-anggota) tidak diizinkan menjual produk.
+     */
+    public function isAllowedToSell(): bool
+    {
+        if ($this->isSuperAdmin() || $this->isAdminEkop()) {
+            return true;
+        }
+
+        if ($this->user_type === 'buyer' || !$this->is_verified) {
+            return false;
+        }
+
+        if ($this->isAnggota()) {
+            if (empty($this->juleha_id)) {
+                return false;
+            }
+
+            try {
+                $centralMember = CentralMember::where('juleha_id', $this->juleha_id)->first();
+                if (!$centralMember || !$centralMember->is_active) {
+                    return false;
+                }
+            } catch (\Exception $e) {
+                // Fallback toleran jika koneksi DB pusat timeout
+                return true;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
     public function canManageRegion(?string $regionCode): bool
     {
         if ($this->isSuperAdmin()) {

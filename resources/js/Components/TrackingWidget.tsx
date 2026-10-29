@@ -32,13 +32,13 @@ export default function TrackingWidget({ className = '', compact = false }: Trac
                         value={waybill}
                         onChange={(e) => setWaybill(e.target.value)}
                         placeholder="No. Resi Pengiriman..."
-                        className="w-full pl-8 pr-2 py-1 text-xs bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-emerald-700 font-mono"
+                        className="w-full pl-8 pr-2 py-1 text-xs bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-[#ee4d2d] font-mono"
                     />
                 </div>
                 <Button
                     type="submit"
                     size="sm"
-                    className="h-7 px-2.5 text-xs bg-emerald-700 hover:bg-emerald-800 text-white font-bold flex items-center gap-1 shrink-0"
+                    className="h-7 px-2.5 text-xs bg-[#ee4d2d] hover:bg-[#d73211] text-white font-bold flex items-center gap-1 shrink-0 rounded-lg shadow-sm"
                 >
                     <span>Lacak</span>
                     <ExternalLink className="h-3 w-3" />

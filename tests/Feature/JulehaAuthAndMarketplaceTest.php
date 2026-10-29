@@ -234,7 +234,7 @@ class JulehaAuthAndMarketplaceTest extends TestCase
         $this->assertEquals('cancelled', $response->json('data.cancelled_status'));
     }
 
-    public function test_doku_webhook_updates_order_to_paid(): void
+    public function test_temanqris_webhook_updates_order_to_paid(): void
     {
         $order = \App\Models\Order::first();
         if (!$order) {
@@ -257,28 +257,27 @@ class JulehaAuthAndMarketplaceTest extends TestCase
                     'phone' => '08123456789',
                     'address_line' => 'Surabaya',
                 ],
-                'payment_method_type' => \App\Models\Order::PAYMENT_METHOD_DOKU,
+                'payment_method_type' => \App\Models\Order::PAYMENT_METHOD_QRIS,
                 'shipping_method_type' => \App\Models\Order::SHIPPING_METHOD_MANUAL,
                 'margin_settlement_status' => \App\Models\Order::MARGIN_SETTLED_PG,
             ]);
         }
 
         $payload = [
-            'originalPartnerReferenceNo' => $order->order_number,
-            'originalReferenceNo' => 'DOKU-REF-' . time(),
-            'latestTransactionStatus' => '00',
-            'amount' => [
-                'value' => number_format((float) $order->grand_total, 2, '.', ''),
-                'currency' => 'IDR',
+            'event' => 'payment.confirmed',
+            'data' => [
+                'order_id' => $order->order_number,
+                'amount' => (int) $order->grand_total,
+                'status' => 'paid',
             ],
         ];
 
-        $response = $this->postJson(route('webhook.doku'), $payload);
+        $response = $this->postJson(route('webhook.temanqris'), $payload);
 
         $response->assertStatus(200)
             ->assertJson([
-                'responseCode' => '2005600',
-                'responseMessage' => 'Successful',
+                'success' => true,
+                'message' => 'Payment processed successfully',
             ]);
 
         $order->refresh();

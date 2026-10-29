@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { usePage, router } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import { BuyerProduct } from '@/types';
 
 export interface CartItem {
@@ -18,7 +18,8 @@ export interface CartItem {
 
 interface CartContextType {
     items: CartItem[];
-    addToCart: (product: BuyerProduct, quantity?: number) => void;
+    addToCart: (product: BuyerProduct, quantity?: number, userParam?: any) => void;
+    buyNow: (product: BuyerProduct, quantity?: number, userParam?: any) => void;
     removeFromCart: (id: number) => void;
     updateQuantity: (id: number, quantity: number) => void;
     clearCart: () => void;
@@ -29,6 +30,7 @@ interface CartContextType {
     openCart: () => void;
     closeCart: () => void;
     currentUserId: number | null;
+    syncUser: (user: any) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -45,59 +47,113 @@ function loadUserItemsFromStorage(userId: number | null): CartItem[] {
     }
 }
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
-    let currentUserId: number | null = null;
-    try {
-        const page = usePage();
-        currentUserId = (page?.props as any)?.auth?.user?.id ?? null;
-    } catch {
-        currentUserId = null;
-    }
+interface CartProviderProps {
+    children: React.ReactNode;
+    initialUser?: any;
+}
 
-    const [userId, setUserId] = useState<number | null>(currentUserId);
+export function CartProvider({ children, initialUser }: CartProviderProps) {
+    const getInitialUser = () => {
+        if (initialUser) return initialUser;
+        if (typeof window !== 'undefined') {
+            try {
+                const appEl = document.getElementById('app');
+                if (appEl?.dataset?.page) {
+                    const parsed = JSON.parse(appEl.dataset.page);
+                    if (parsed?.props?.auth?.user) return parsed.props.auth.user;
+                }
+            } catch (e) {}
+        }
+        return null;
+    };
+
+    const [currentUser, setCurrentUser] = useState<any>(getInitialUser);
+    const activeUserIdRef = useRef<number | null>(currentUser?.id ?? null);
+
     // Strict Shopee-style: Guests cannot have cart items in memory
     const [items, setItems] = useState<CartItem[]>(() => {
-        if (!currentUserId) return [];
-        return loadUserItemsFromStorage(currentUserId);
+        const uid = currentUser?.id ?? null;
+        if (!uid) return [];
+        return loadUserItemsFromStorage(uid);
     });
+
     const [isCartOpen, setIsCartOpen] = useState(false);
-    const activeUserIdRef = useRef<number | null>(currentUserId);
 
-    // Watch for auth user changes (Login, Account Switch, Logout)
-    useEffect(() => {
-        if (currentUserId !== activeUserIdRef.current) {
-            activeUserIdRef.current = currentUserId;
-            setUserId(currentUserId);
-
-            if (currentUserId) {
-                // User logged in: load their personal isolated cart
-                const userCart = loadUserItemsFromStorage(currentUserId);
-                setItems(userCart);
+    const syncUser = (user: any) => {
+        const newUid = user?.id ?? null;
+        if (newUid !== activeUserIdRef.current) {
+            activeUserIdRef.current = newUid;
+            setCurrentUser(user);
+            if (newUid) {
+                setItems(loadUserItemsFromStorage(newUid));
             } else {
-                // User logged out: clear memory immediately so no stale items leak to next user
                 setItems([]);
             }
         }
-    }, [currentUserId]);
+    };
+
+    // Keep active user in sync across Inertia navigation, login, and logout
+    useEffect(() => {
+        const updateFromPage = (props: any) => {
+            const pageUser = props?.auth?.user ?? null;
+            syncUser(pageUser);
+        };
+
+        const removeSuccessListener = router.on('success', (event) => {
+            updateFromPage(event.detail.page.props);
+        });
+
+        const removeNavigateListener = router.on('navigate', (event) => {
+            updateFromPage(event.detail.page.props);
+        });
+
+        return () => {
+            removeSuccessListener();
+            removeNavigateListener();
+        };
+    }, []);
 
     // Save cart strictly to current user's isolated storage ONLY when authenticated
     useEffect(() => {
         if (typeof window === 'undefined') return;
-        if (!userId) return; // Do not save guest items
+        const uid = currentUser?.id;
+        if (!uid) return; // Do not save guest items
         try {
-            const key = `juleha_cart_user_${userId}`;
+            const key = `juleha_cart_user_${uid}`;
             localStorage.setItem(key, JSON.stringify(items));
         } catch (e) {
             console.error('Failed to save cart to storage', e);
         }
-    }, [items, userId]);
+    }, [items, currentUser]);
 
-    const addToCart = (product: BuyerProduct, quantity: number = 1) => {
+    const getActiveUser = (explicitUser?: any) => {
+        if (explicitUser?.id) return explicitUser;
+        if (currentUser?.id) return currentUser;
+        if (initialUser?.id) return initialUser;
+        if (typeof window !== 'undefined') {
+            try {
+                const appEl = document.getElementById('app');
+                if (appEl?.dataset?.page) {
+                    const parsed = JSON.parse(appEl.dataset.page);
+                    if (parsed?.props?.auth?.user) return parsed.props.auth.user;
+                }
+            } catch (e) {}
+        }
+        return null;
+    };
+
+    const addToCart = (product: BuyerProduct, quantity: number = 1, userParam?: any) => {
+        const activeUser = getActiveUser(userParam);
+
         // Strict Gate: Must be logged in to shop or add to cart
-        if (!currentUserId && !userId) {
+        if (!activeUser || !activeUser.id) {
             alert('Silakan Masuk ke akun Anda terlebih dahulu untuk memasukkan barang ke keranjang dan mulai berbelanja.');
             router.visit(route('login'));
             return;
+        }
+
+        if (activeUser.id !== currentUser?.id) {
+            syncUser(activeUser);
         }
 
         // Accurate Flash Sale vs Regular Price
@@ -135,6 +191,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         setIsCartOpen(true);
     };
 
+    const buyNow = (product: BuyerProduct, quantity: number = 1, userParam?: any) => {
+        const activeUser = getActiveUser(userParam);
+
+        if (!activeUser || !activeUser.id) {
+            alert('Silakan Masuk ke akun Anda terlebih dahulu untuk mulai berbelanja.');
+            router.visit(route('login'));
+            return;
+        }
+
+        if (activeUser.id !== currentUser?.id) {
+            syncUser(activeUser);
+        }
+
+        // Add to cart first
+        addToCart(product, quantity, activeUser);
+
+        // Immediate direct checkout
+        router.visit(route('checkout.index', product.slug));
+    };
+
     const removeFromCart = (id: number) => {
         setItems((prev) => prev.filter((item) => item.id !== id));
     };
@@ -151,9 +227,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     const clearCart = () => {
         setItems([]);
-        if (userId && typeof window !== 'undefined') {
+        const activeUser = getActiveUser();
+        if (activeUser?.id && typeof window !== 'undefined') {
             try {
-                localStorage.removeItem(`juleha_cart_user_${userId}`);
+                localStorage.removeItem(`juleha_cart_user_${activeUser.id}`);
             } catch (e) {
                 console.error(e);
             }
@@ -164,7 +241,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const totalPrice = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
     const openCart = () => {
-        if (!currentUserId && !userId) {
+        const activeUser = getActiveUser();
+        if (!activeUser || !activeUser.id) {
             alert('Silakan Masuk ke akun Anda terlebih dahulu untuk melihat keranjang belanja.');
             router.visit(route('login'));
             return;
@@ -179,6 +257,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             value={{
                 items,
                 addToCart,
+                buyNow,
                 removeFromCart,
                 updateQuantity,
                 clearCart,
@@ -188,7 +267,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                 setIsCartOpen,
                 openCart,
                 closeCart,
-                currentUserId: userId,
+                currentUserId: currentUser?.id ?? null,
+                syncUser,
             }}
         >
             {children}

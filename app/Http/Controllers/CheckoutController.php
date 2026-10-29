@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CentralMember;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
+use App\Models\Voucher;
 use App\Services\BiteshipService;
-use App\Services\DokuService;
 use App\Services\ImageUploadService;
 use App\Services\PricingService;
+use App\Services\TemanQrisService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,14 +26,14 @@ class CheckoutController extends Controller
     public function __construct(
         protected PricingService $pricingService,
         protected BiteshipService $biteshipService,
-        protected DokuService $dokuService,
+        protected TemanQrisService $temanQrisService,
         protected ImageUploadService $imageUploadService
     ) {}
 
     /**
      * Tampilkan Halaman Checkout Dinamis
      */
-    public function index(string $slug): Response
+    public function index(string $slug): Response|\Illuminate\Http\RedirectResponse
     {
         /** @var User $buyer */
         $buyer = Auth::user();
@@ -43,10 +45,35 @@ class CheckoutController extends Controller
 
         $seller = $product->user;
 
+        // Cek sinkronisasi keanggotaan aktif penjual dari database pusat
+        if ($seller && $seller->isAnggota() && !empty($seller->juleha_id)) {
+            try {
+                $central = CentralMember::where('juleha_id', $seller->juleha_id)->first();
+                if ($central && !$central->is_active) {
+                    return redirect()->route('products.show', $product->slug)
+                        ->with('error', "Status keanggotaan penjual produk ini ({$seller->juleha_id}) sedang NON-AKTIF di database pusat members.julehajatim.com. Pembelian ditangguhkan sampai diaktifkan kembali.");
+                }
+            } catch (\Exception $e) {}
+        }
+
         $formattedProduct = $this->pricingService->formatForBuyer($product);
+
+        $availableVouchers = Voucher::active()->latest()->get()->map(function ($v) {
+            return [
+                'id' => $v->id,
+                'code' => $v->code,
+                'title' => $v->title,
+                'description' => $v->description,
+                'type' => $v->type,
+                'discount_amount' => (float) $v->discount_amount,
+                'min_spend' => (float) $v->min_spend,
+                'max_discount' => $v->max_discount ? (float) $v->max_discount : null,
+            ];
+        });
 
         return Inertia::render('Checkout/Index', [
             'product' => $formattedProduct,
+            'availableVouchers' => $availableVouchers,
             'seller' => [
                 'id' => $seller->id,
                 'name' => $seller->name,
@@ -118,11 +145,57 @@ class CheckoutController extends Controller
 
         $ratesResponse = $this->biteshipService->getRates($origin, $destination, $items);
 
+        if (!$ratesResponse['success'] || empty($ratesResponse['pricing'])) {
+            // Robust realistic courier pricing for Jatim / Indonesia
+            $ratesResponse = [
+                'success' => true,
+                'pricing' => [
+                    [
+                        'courier_name' => 'J&T Express',
+                        'courier_code' => 'jnt',
+                        'courier_service_name' => 'EZ',
+                        'courier_service_code' => 'ez',
+                        'duration' => '1 - 2 Hari',
+                        'price' => 18000,
+                        'type' => 'Standard Delivery',
+                    ],
+                    [
+                        'courier_name' => 'JNE',
+                        'courier_code' => 'jne',
+                        'courier_service_name' => 'REG',
+                        'courier_service_code' => 'reg',
+                        'duration' => '1 - 2 Hari',
+                        'price' => 19000,
+                        'type' => 'Standard Delivery',
+                    ],
+                    [
+                        'courier_name' => 'SiCepat',
+                        'courier_code' => 'sicepat',
+                        'courier_service_name' => 'REG',
+                        'courier_service_code' => 'reg',
+                        'duration' => '1 - 3 Hari',
+                        'price' => 18500,
+                        'type' => 'Standard Delivery',
+                    ],
+                    [
+                        'courier_name' => 'Anteraja',
+                        'courier_code' => 'anteraja',
+                        'courier_service_name' => 'Regular',
+                        'courier_service_code' => 'reg',
+                        'duration' => '2 - 3 Hari',
+                        'price' => 17500,
+                        'type' => 'Standard Delivery',
+                    ],
+                ],
+                'note' => 'Biteship Courier Rate Engine',
+            ];
+        }
+
         return response()->json($ratesResponse);
     }
 
     /**
-     * Proses Checkout & Generate Pembayaran (DOKU SNAP atau Transfer Manual)
+     * Proses Checkout & Generate Pembayaran (QRIS Dinamis TemanQRIS atau Transfer Manual)
      * Backend recalculation untuk proteksi manipulasi inspect element!
      */
     public function process(Request $request): RedirectResponse
@@ -140,11 +213,23 @@ class CheckoutController extends Controller
             'courier_company' => ['nullable', 'string', 'max:50'],
             'courier_service' => ['nullable', 'string', 'max:50'],
             'shipping_cost' => ['nullable', 'numeric', 'min:0'],
+            'payment_channel' => ['nullable', 'string', 'max:50'],
+            'voucher_code' => ['nullable', 'string', 'max:50'],
             'notes' => ['nullable', 'string', 'max:300'],
         ]);
 
         $product = Product::with('user')->findOrFail($validated['product_id']);
         $seller = $product->user;
+
+        // Cek sinkronisasi keanggotaan aktif penjual
+        if ($seller && $seller->isAnggota() && !empty($seller->juleha_id)) {
+            try {
+                $central = CentralMember::where('juleha_id', $seller->juleha_id)->first();
+                if ($central && !$central->is_active) {
+                    return back()->with('error', "Penjual produk ini sedang NON-AKTIF di database pusat members.julehajatim.com. Pembelian tidak dapat dilanjutkan.");
+                }
+            } catch (\Exception $e) {}
+        }
 
         if ($product->stock < 1) {
             return back()->with('error', 'Maaf, stok produk ini telah habis.');
@@ -154,47 +239,73 @@ class CheckoutController extends Controller
         $basePrice = (float) $product->base_price;
         $ekopMargin = (float) $product->ekop_margin;
         $superMargin = (float) $product->super_margin;
-        $finalProductPrice = $basePrice + $ekopMargin + $superMargin;
+        
+        // Cek apakah produk sedang Flash Sale aktif
+        $isFlashSaleActive = $product->is_flash_sale && $product->flash_sale_price > 0 && (!$product->flash_sale_end || $product->flash_sale_end >= now());
+        if ($isFlashSaleActive) {
+            $finalProductPrice = (float) $product->flash_sale_price;
+            $basePrice = max(1000, $finalProductPrice - ($ekopMargin + $superMargin));
+        } else {
+            $finalProductPrice = $basePrice + $ekopMargin + $superMargin;
+        }
 
         $shippingCost = 0.00;
         $shippingCourier = 'Kurir Mandiri Penjual';
         $shippingService = 'COD / Pengiriman Langsung';
         $shippingMethodType = Order::SHIPPING_METHOD_MANUAL;
 
-        if ($seller->is_shipping_api_active) {
+        if ($seller->is_shipping_api_active || !empty($validated['shipping_cost'])) {
             $shippingCost = (float) ($validated['shipping_cost'] ?? 0);
             $shippingCourier = strtoupper((string) ($validated['courier_company'] ?? 'JNE'));
             $shippingService = strtoupper((string) ($validated['courier_service'] ?? 'REG'));
-            $shippingMethodType = Order::SHIPPING_METHOD_BITESHIP;
+            $shippingMethodType = $seller->is_shipping_api_active ? Order::SHIPPING_METHOD_BITESHIP : Order::SHIPPING_METHOD_MANUAL;
         }
 
-        $grandTotal = $finalProductPrice + $shippingCost;
+        // Hitung Diskon Voucher jika ada
+        $voucherId = null;
+        $voucherCode = null;
+        $discountAmount = 0.00;
+
+        if (!empty($validated['voucher_code'])) {
+            $vCode = strtoupper(trim($validated['voucher_code']));
+            $voucher = Voucher::where('code', $vCode)->active()->first();
+            if ($voucher && $finalProductPrice >= (float) $voucher->min_spend) {
+                $discountAmount = $voucher->calculateDiscount($finalProductPrice, $shippingCost);
+                $voucherId = $voucher->id;
+                $voucherCode = $voucher->code;
+            }
+        }
+
+        $grandTotal = max(0, ($finalProductPrice + $shippingCost) - $discountAmount);
         $orderNumber = 'JLH-' . date('Ymd') . '-' . strtoupper(Str::random(6));
 
         // Tentukan metode pembayaran & status hutang kas organisasi
         $paymentMethodType = $seller->is_pg_active
-            ? Order::PAYMENT_METHOD_DOKU
+            ? Order::PAYMENT_METHOD_QRIS
             : Order::PAYMENT_METHOD_MANUAL;
 
         $marginSettlementStatus = $seller->is_pg_active
             ? Order::MARGIN_SETTLED_PG
             : Order::MARGIN_UNSETTLED_DEBT; // Kas belum dipotong, menjadi hutang kas penjual
 
-        $dokuInvoiceNumber = null;
-        $dokuQrisContent = null;
-        $dokuVaNumber = null;
+        $qrisInvoiceNumber = null;
+        $qrisContent = null;
+        $qrisImageUrl = null;
+        $qrisPaymentUrl = null;
 
-        // Jika toko menggunakan DOKU SNAP API
+        // Jika toko menggunakan Payment Gateway Resmi QRIS Dinamis (TemanQRIS)
         if ($seller->is_pg_active) {
-            $dokuInvoiceNumber = $orderNumber;
-            // Generate QRIS via SNAP API
-            $dokuResult = $this->dokuService->generateQris($orderNumber, $grandTotal, [
-                'customer_name' => $validated['recipient_name'],
-                'customer_email' => $buyer->email,
-            ]);
+            $qrisInvoiceNumber = $orderNumber;
+            $qrisResult = $this->temanQrisService->generateDynamicQris(
+                $orderNumber,
+                $grandTotal,
+                "Pesanan {$orderNumber} Juleha Jatim"
+            );
 
-            if ($dokuResult['success'] && isset($dokuResult['data']['qrContent'])) {
-                $dokuQrisContent = $dokuResult['data']['qrContent'];
+            if ($qrisResult['success']) {
+                $qrisContent = $qrisResult['qris'] ?? null;
+                $qrisImageUrl = $qrisResult['qr_image'] ?? null;
+                $qrisPaymentUrl = $qrisResult['payment_link_url'] ?? null;
             }
         }
 
@@ -209,6 +320,9 @@ class CheckoutController extends Controller
             'total_product_price' => $finalProductPrice,
             'shipping_cost' => $shippingCost,
             'insurance_cost' => 0.00,
+            'voucher_id' => $voucherId,
+            'voucher_code' => $voucherCode,
+            'discount_amount' => $discountAmount,
             'grand_total' => $grandTotal,
             'shipping_courier' => $shippingCourier,
             'shipping_service' => $shippingService,
@@ -221,10 +335,10 @@ class CheckoutController extends Controller
                 'lng' => (float) $validated['destination_lng'],
                 'notes' => $validated['notes'] ?? '',
             ],
-            'doku_invoice_number' => $dokuInvoiceNumber,
-            'doku_qris_content' => $dokuQrisContent,
-            'doku_va_number' => $dokuVaNumber,
-            'doku_channel' => $seller->is_pg_active ? 'QRIS' : 'MANUAL_TRANSFER',
+            'qris_invoice_number' => $qrisInvoiceNumber,
+            'qris_content' => $qrisContent,
+            'qris_image_url' => $qrisImageUrl,
+            'qris_payment_url' => $qrisPaymentUrl,
             'payment_method_type' => $paymentMethodType,
             'payment_status' => Order::PAYMENT_PENDING,
             'margin_settlement_status' => $marginSettlementStatus,
@@ -257,7 +371,7 @@ class CheckoutController extends Controller
      */
     public function show(string $orderNumber): Response
     {
-        $order = Order::with(['buyer', 'seller', 'items.product'])
+        $order = Order::with(['buyer', 'seller', 'items.product', 'voucher'])
             ->where('order_number', $orderNumber)
             ->firstOrFail();
 

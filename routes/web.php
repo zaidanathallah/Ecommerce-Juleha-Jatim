@@ -79,10 +79,16 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/categories/{category}', [\App\Http\Controllers\CategoryController::class, 'update'])->name('categories.update');
         Route::delete('/categories/{category}', [\App\Http\Controllers\CategoryController::class, 'destroy'])->name('categories.destroy');
 
-        // Seller Shop Settings (Toggles: DOKU PG & Biteship API)
+        // Seller Shop Settings (Toggles: Payment Gateway & Biteship API)
         Route::get('/shop/settings', [\App\Http\Controllers\SellerShopController::class, 'edit'])->name('shop.edit');
         Route::put('/shop/settings', [\App\Http\Controllers\SellerShopController::class, 'update'])->name('shop.update');
     });
+
+    // Voucher Promo Management (CRUD untuk Penjual, Admin Ekop, Super Admin)
+    Route::get('/vouchers/list', [\App\Http\Controllers\VoucherController::class, 'index'])->name('vouchers.index');
+    Route::post('/vouchers', [\App\Http\Controllers\VoucherController::class, 'store'])->name('vouchers.store');
+    Route::put('/vouchers/{voucher}', [\App\Http\Controllers\VoucherController::class, 'update'])->name('vouchers.update');
+    Route::delete('/vouchers/{voucher}', [\App\Http\Controllers\VoucherController::class, 'destroy'])->name('vouchers.destroy');
 
     // Dynamic Checkout Engine
     Route::get('/checkout/{slug}', [\App\Http\Controllers\CheckoutController::class, 'index'])->name('checkout.index');
@@ -124,12 +130,13 @@ Route::match(['get', 'post'], '/api/biteship-simulate', [\App\Http\Controllers\B
 Route::match(['get', 'post'], '/api/biteship-simulate-rates', [\App\Http\Controllers\BiteshipSimulationController::class, 'apiSimulateRates'])
     ->name('biteship.api-simulate-rates');
 
-// 6. DOKU Webhook Notification Endpoint (CSRF-exempted)
-Route::post('/webhook/doku', [\App\Http\Controllers\DokuWebhookController::class, 'handle'])
-    ->name('webhook.doku');
+// 6. TemanQRIS Webhook Notification Endpoint (CSRF-exempted)
+Route::post('/webhook/temanqris', [\App\Http\Controllers\TemanQrisWebhookController::class, 'handle'])
+    ->name('webhook.temanqris');
 
-// 7. Al-Qur'an Digital (EQuran API v2)
+// 7. Al-Qur'an Digital (Quran Foundation API v4)
 Route::get('/quran', [\App\Http\Controllers\QuranController::class, 'index'])->name('quran.index');
+Route::get('/quran/juz/{number}', [\App\Http\Controllers\QuranController::class, 'juz'])->name('quran.juz');
 Route::get('/quran/{nomor}', [\App\Http\Controllers\QuranController::class, 'show'])->name('quran.show');
 
 require __DIR__.'/auth.php';

@@ -81,8 +81,8 @@ export default function BiteshipSimulation({ simulationData }: Props) {
                 {simulationData ? (
                     <div className="space-y-6">
                         {/* Summary Alert */}
-                        <div className="border-2 border-emerald-600/40 bg-emerald-500/10 p-4 rounded-lg flex items-start gap-3">
-                            <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+                        <div className="border-2 border-orange-500/40 bg-orange-500/10 p-4 rounded-lg flex items-start gap-3">
+                            <CheckCircle2 className="h-5 w-5 text-[#ee4d2d] shrink-0 mt-0.5" />
                             <div className="text-sm">
                                 <p className="font-semibold text-foreground">Simulasi Sandbox Berhasil!</p>
                                 <p className="text-muted-foreground mt-0.5">
@@ -98,7 +98,7 @@ export default function BiteshipSimulation({ simulationData }: Props) {
                                 <CardHeader className="pb-3 border-b border-border/50 bg-muted/20">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <div className="p-1.5 bg-emerald-500/10 text-emerald-600 rounded">
+                                            <div className="p-1.5 bg-orange-500/10 text-[#ee4d2d] rounded">
                                                 <Truck className="h-4 w-4" />
                                             </div>
                                             <div>
@@ -110,7 +110,7 @@ export default function BiteshipSimulation({ simulationData }: Props) {
                                                 </CardDescription>
                                             </div>
                                         </div>
-                                        <span className="px-2 py-0.5 text-xs font-mono font-medium rounded bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                                        <span className="px-2 py-0.5 text-xs font-mono font-medium rounded bg-orange-500/10 text-[#ee4d2d] border border-orange-500/20">
                                             DELIVERED
                                         </span>
                                     </div>
@@ -131,7 +131,7 @@ export default function BiteshipSimulation({ simulationData }: Props) {
                                                 className="shrink-0 h-9"
                                             >
                                                 {copiedKey === 'delivered' ? (
-                                                    <Check className="h-4 w-4 text-emerald-600" />
+                                                    <Check className="h-4 w-4 text-[#ee4d2d]" />
                                                 ) : (
                                                     <Copy className="h-4 w-4" />
                                                 )}
@@ -203,7 +203,7 @@ export default function BiteshipSimulation({ simulationData }: Props) {
                                                 className="shrink-0 h-9"
                                             >
                                                 {copiedKey === 'cancelled' ? (
-                                                    <Check className="h-4 w-4 text-emerald-600" />
+                                                    <Check className="h-4 w-4 text-[#ee4d2d]" />
                                                 ) : (
                                                     <Copy className="h-4 w-4" />
                                                 )}

@@ -4,117 +4,89 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Services\BiteshipService;
-use App\Services\DokuService;
+use App\Services\TemanQrisService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
-class DokuWebhookController extends Controller
+class TemanQrisWebhookController extends Controller
 {
     /**
-     * Handle payment notification from DOKU
-     * Endpoint: POST /webhook/doku
+     * Handle payment notification from TemanQRIS
+     * Endpoint: POST /webhook/temanqris
      */
-    public function handle(Request $request, BiteshipService $biteship, DokuService $doku): JsonResponse
+    public function handle(Request $request, BiteshipService $biteship, TemanQrisService $temanQris): JsonResponse
     {
         $rawBody = $request->getContent();
         $payload = $request->json()->all();
 
-        Log::info('DOKU Webhook Notification Received', [
+        Log::info('TemanQRIS Webhook Received', [
             'headers' => $request->headers->all(),
             'body' => $payload,
         ]);
 
         // 1. Signature Verification
-        $signature = $request->header('X-SIGNATURE') ?? $request->header('Signature');
-        $timestamp = $request->header('X-TIMESTAMP') ?? $request->header('Request-Timestamp');
-        $clientId = $request->header('X-PARTNER-ID') ?? $request->header('Client-Id');
-        $externalId = $request->header('X-EXTERNAL-ID') ?? $request->header('Request-Id');
-        $authHeader = $request->header('Authorization', '');
-        $accessToken = str_starts_with($authHeader, 'Bearer ') ? substr($authHeader, 7) : '';
-
-        $secretKey = (string) env('DOKU_SECRET_KEY', 'SK-ZyRDS7MBHysv2Tav2ID5');
-        $requestPath = '/' . ltrim($request->path(), '/');
+        $signature = $request->header('X-TemanQRIS-Signature')
+            ?? $request->header('X-Signature')
+            ?? $request->header('Signature');
 
         $isValidSignature = false;
 
-        if ($signature && $secretKey) {
-            // SNAP standard HMAC-SHA512
-            // stringToSign = HTTPMethod + ":" + EndpointUrl + ":" + AccessToken + ":" + Lowercase(HexEncode(SHA-256(minify(RequestBody)))) + ":" + TimeStamp
-            $bodyHash = strtolower(hash('sha256', $rawBody));
-            $snapStringToSign = "POST:{$requestPath}:{$accessToken}:{$bodyHash}:{$timestamp}";
-            $expectedSnap = base64_encode(hash_hmac('sha512', $snapStringToSign, $secretKey, true));
+        if ($signature) {
+            $isValidSignature = $temanQris->verifyWebhookSignature($rawBody, $signature);
+        }
 
-            // SNAP without token stringToSign
-            $snapStringToSignNoToken = "POST:{$requestPath}::{$bodyHash}:{$timestamp}";
-            $expectedSnapNoToken = base64_encode(hash_hmac('sha512', $snapStringToSignNoToken, $secretKey, true));
-
-            // Non-SNAP standard HMAC-SHA256
-            $digest = base64_encode(hash('sha256', $rawBody, true));
-            $nonSnapStringToSign = "Client-Id:{$clientId}\nRequest-Id:{$externalId}\nRequest-Timestamp:{$timestamp}\nRequest-Target:{$requestPath}\nDigest:{$digest}";
-            $expectedNonSnap = base64_encode(hash_hmac('sha256', $nonSnapStringToSign, $secretKey, true));
-
-            if (
-                hash_equals($expectedSnap, $signature) ||
-                hash_equals($expectedSnapNoToken, $signature) ||
-                hash_equals($expectedNonSnap, $signature) ||
-                app()->environment('local', 'testing')
-            ) {
-                $isValidSignature = true;
-            }
-        } elseif (app()->environment('local', 'testing')) {
+        // Allow bypassing signature in local/testing if header not configured
+        if (!$isValidSignature && app()->environment('local', 'testing')) {
             $isValidSignature = true;
         }
 
         if (!$isValidSignature) {
-            Log::warning('DOKU Webhook Rejected: Invalid Signature', [
+            Log::warning('TemanQRIS Webhook Rejected: Invalid Signature', [
                 'received' => $signature,
-                'path' => $requestPath,
             ]);
 
             return response()->json([
-                'responseCode' => '4015600',
-                'responseMessage' => 'Unauthorized. Invalid Signature',
+                'success' => false,
+                'message' => 'Unauthorized. Invalid Signature',
             ], 401);
         }
 
         // 2. Identify Target Order
-        $partnerReferenceNo = $payload['originalPartnerReferenceNo']
-            ?? $payload['partnerReferenceNo']
-            ?? $payload['order']['invoice_number']
+        $orderId = $payload['data']['order_id']
+            ?? $payload['order_id']
+            ?? $payload['data']['order_number']
             ?? $payload['order_number']
             ?? null;
 
-        if (!$partnerReferenceNo) {
+        if (!$orderId) {
             return response()->json([
-                'responseCode' => '4005600',
-                'responseMessage' => 'Bad Request. Missing partnerReferenceNo',
+                'success' => false,
+                'message' => 'Bad Request. Missing order_id',
             ], 400);
         }
 
-        $order = Order::where('order_number', $partnerReferenceNo)->first();
+        $order = Order::where('order_number', $orderId)->first();
 
         if (!$order) {
-            Log::warning("DOKU Webhook Order Not Found: {$partnerReferenceNo}");
+            Log::warning("TemanQRIS Webhook Order Not Found: {$orderId}");
             return response()->json([
-                'responseCode' => '4045600',
-                'responseMessage' => 'Order Not Found',
+                'success' => false,
+                'message' => 'Order Not Found',
             ], 404);
         }
 
         // 3. Check Payment Status
-        $statusCode = $payload['latestTransactionStatus']
-            ?? $payload['transactionStatus']
-            ?? $payload['transaction']['status']
-            ?? '00';
+        $event = $payload['event'] ?? 'payment.confirmed';
+        $status = strtolower((string) ($payload['data']['status'] ?? $payload['status'] ?? 'paid'));
 
-        // Code '00' = Success in SNAP
-        if ($statusCode === '00' || strtoupper((string) $statusCode) === 'SUCCESS') {
+        if ($status === 'paid' || $status === 'success' || $event === 'payment.confirmed') {
             if ($order->payment_status !== Order::PAYMENT_PAID) {
                 $order->payment_status = Order::PAYMENT_PAID;
                 $order->paid_at = now();
+                $order->margin_settlement_status = Order::MARGIN_SETTLED_PG;
 
-                // If seller uses Biteship shipping, automatically trigger courier pickup
+                // Automated Biteship shipping pickup if applicable
                 if ($order->shipping_method_type === Order::SHIPPING_METHOD_BITESHIP) {
                     try {
                         $seller = $order->seller;
@@ -162,15 +134,15 @@ class DokuWebhookController extends Controller
                 }
 
                 $order->save();
-                Log::info("Order {$order->order_number} marked as PAID via DOKU Webhook.");
+                Log::info("Order {$order->order_number} marked as PAID via TemanQRIS Webhook.");
             }
         }
 
-        // Return SNAP Acknowledgment
         return response()->json([
-            'responseCode' => '2005600',
-            'responseMessage' => 'Successful',
-            'approvalCode' => 'APP' . time(),
+            'success' => true,
+            'message' => 'Payment processed successfully',
+            'order_id' => $order->order_number,
         ], 200);
     }
 }
+

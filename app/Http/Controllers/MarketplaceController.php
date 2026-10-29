@@ -121,6 +121,17 @@ class MarketplaceController extends Controller
 
         $buyerProduct = $this->pricingService->formatForBuyer($product);
 
+        // Cek status keanggotaan penjual di database pusat
+        $sellerIsActive = true;
+        if ($product->user && $product->user->isAnggota() && !empty($product->user->juleha_id)) {
+            try {
+                $central = \App\Models\CentralMember::where('juleha_id', $product->user->juleha_id)->first();
+                if ($central && !$central->is_active) {
+                    $sellerIsActive = false;
+                }
+            } catch (\Exception $e) {}
+        }
+
         // Rich Snippets Schema.org/Product for Google No. 1 and AI Agent Search
         $productSchema = [
             '@context' => 'https://schema.org/',
@@ -155,6 +166,7 @@ class MarketplaceController extends Controller
 
         return Inertia::render('Marketplace/Show', [
             'product' => $buyerProduct,
+            'sellerIsActive' => $sellerIsActive,
             'schemaJson' => $productSchema,
         ]);
     }

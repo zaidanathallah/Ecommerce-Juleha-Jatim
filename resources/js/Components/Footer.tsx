@@ -32,8 +32,8 @@ export default function Footer() {
                             <CreditCard className="h-5 w-5 text-[#ee4d2d]" />
                         </div>
                         <div>
-                            <h4 className="font-bold text-neutral-800 text-xs">Pembayaran DOKU SNAP</h4>
-                            <p className="text-[11px] text-neutral-500">QRIS instan & Virtual Account 24 Jam</p>
+                            <h4 className="font-bold text-neutral-800 text-xs">Pembayaran QRIS Dinamis</h4>
+                            <p className="text-[11px] text-neutral-500">QRIS instan semua e-wallet & mobile banking</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -64,7 +64,7 @@ export default function Footer() {
                         <li><a href="https://wa.me/6281262227663" target="_blank" rel="noreferrer" className="hover:text-[#ee4d2d] transition-colors">Bantuan & Customer Service</a></li>
                         <li><span className="hover:text-[#ee4d2d] cursor-pointer">Cara Membeli & Checkout</span></li>
                         <li><span className="hover:text-[#ee4d2d] cursor-pointer">Lacak Pesanan (Biteship)</span></li>
-                        <li><span className="hover:text-[#ee4d2d] cursor-pointer">Metode Pembayaran (DOKU)</span></li>
+                        <li><span className="hover:text-[#ee4d2d] cursor-pointer">Metode Pembayaran (QRIS Dinamis)</span></li>
                         <li><span className="hover:text-[#ee4d2d] cursor-pointer">Garansi Bilah Sembelih Sesuai Syariat</span></li>
                     </ul>
                 </div>
@@ -85,7 +85,7 @@ export default function Footer() {
                 <div>
                     <h5 className="font-bold text-neutral-800 uppercase text-xs tracking-wider mb-3">Pembayaran</h5>
                     <div className="grid grid-cols-3 gap-2">
-                        <div className="p-2 bg-white rounded border border-neutral-200 text-center font-bold text-[10px] text-neutral-700 shadow-2xs">DOKU</div>
+                        <div className="p-2 bg-white rounded border border-neutral-200 text-center font-bold text-[10px] text-orange-600 shadow-2xs">TemanQRIS</div>
                         <div className="p-2 bg-white rounded border border-neutral-200 text-center font-bold text-[10px] text-red-600 shadow-2xs">QRIS</div>
                         <div className="p-2 bg-white rounded border border-neutral-200 text-center font-bold text-[10px] text-blue-700 shadow-2xs">BCA</div>
                         <div className="p-2 bg-white rounded border border-neutral-200 text-center font-bold text-[10px] text-blue-900 shadow-2xs">Mandiri</div>
