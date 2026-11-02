@@ -41,7 +41,7 @@ export default function Footer() {
                             <Truck className="h-5 w-5 text-[#ee4d2d]" />
                         </div>
                         <div>
-                            <h4 className="font-bold text-neutral-800 text-xs">Logistik Otomatis Biteship</h4>
+                            <h4 className="font-bold text-neutral-800 text-xs">Logistik Pengiriman Resmi</h4>
                             <p className="text-[11px] text-neutral-500">Cek ongkir real-time & pickup kurir</p>
                         </div>
                     </div>
@@ -63,7 +63,7 @@ export default function Footer() {
                     <ul className="space-y-2 text-[11px] text-neutral-500">
                         <li><a href="https://wa.me/6281262227663" target="_blank" rel="noreferrer" className="hover:text-[#ee4d2d] transition-colors">Bantuan & Customer Service</a></li>
                         <li><span className="hover:text-[#ee4d2d] cursor-pointer">Cara Membeli & Checkout</span></li>
-                        <li><span className="hover:text-[#ee4d2d] cursor-pointer">Lacak Pesanan (Biteship)</span></li>
+                        <li><span className="hover:text-[#ee4d2d] cursor-pointer">Lacak Pengiriman Pesanan</span></li>
                         <li><span className="hover:text-[#ee4d2d] cursor-pointer">Metode Pembayaran (QRIS Dinamis)</span></li>
                         <li><span className="hover:text-[#ee4d2d] cursor-pointer">Garansi Bilah Sembelih Sesuai Syariat</span></li>
                     </ul>
@@ -85,7 +85,7 @@ export default function Footer() {
                 <div>
                     <h5 className="font-bold text-neutral-800 uppercase text-xs tracking-wider mb-3">Pembayaran</h5>
                     <div className="grid grid-cols-3 gap-2">
-                        <div className="p-2 bg-white rounded border border-neutral-200 text-center font-bold text-[10px] text-orange-600 shadow-2xs">TemanQRIS</div>
+                        <div className="p-2 bg-white rounded border border-neutral-200 text-center font-bold text-[10px] text-red-600 shadow-2xs">QRIS Dinamis</div>
                         <div className="p-2 bg-white rounded border border-neutral-200 text-center font-bold text-[10px] text-red-600 shadow-2xs">QRIS</div>
                         <div className="p-2 bg-white rounded border border-neutral-200 text-center font-bold text-[10px] text-blue-700 shadow-2xs">BCA</div>
                         <div className="p-2 bg-white rounded border border-neutral-200 text-center font-bold text-[10px] text-blue-900 shadow-2xs">Mandiri</div>
@@ -103,7 +103,7 @@ export default function Footer() {
                         <div className="p-2 bg-white rounded border border-neutral-200 text-center font-bold text-[10px] text-red-700 shadow-2xs">SiCepat</div>
                         <div className="p-2 bg-white rounded border border-neutral-200 text-center font-bold text-[10px] text-amber-700 shadow-2xs">Anteraja</div>
                     </div>
-                    <p className="text-[10px] text-neutral-400 mt-2 font-mono">Terintegrasi otomatis via Biteship API</p>
+                    <p className="text-[10px] text-neutral-400 mt-2 font-mono">Terintegrasi otomatis logistik resmi syariat</p>
                 </div>
 
                 {/* Col 5: Secretariat */}

@@ -371,7 +371,7 @@ export default function Register() {
                                     <div className="flex justify-between items-center mb-1">
                                         <label className="text-xs font-bold text-neutral-700 flex items-center gap-1.5">
                                             <MapPin className="h-3.5 w-3.5 text-[#ee4d2d]" />
-                                            <span>{accountType === 'seller' ? 'Alamat Pickup Toko (Syarat Kurir Biteship)' : 'Alamat Lengkap Pengiriman'}</span>
+                                            <span>{accountType === 'seller' ? 'Alamat Pickup Toko (Syarat Kurir Pengiriman)' : 'Alamat Lengkap Pengiriman'}</span>
                                         </label>
                                         <span className="text-[10px] text-neutral-500">Jalan, RT/RW, Kelurahan, Kota</span>
                                     </div>

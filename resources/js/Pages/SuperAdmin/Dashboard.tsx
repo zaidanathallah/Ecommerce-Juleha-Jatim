@@ -151,7 +151,7 @@ export default function SuperAdminDashboard({
                             Pusat Komando & Finansial Super Admin
                         </h1>
                         <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
-                            Otoritas tertinggi persetujuan publikasi (LIVE), audit kas organisasi (hierarki harga), dan pengawasan transaksi QRIS Dinamis & Biteship.
+                            Otoritas tertinggi persetujuan publikasi (LIVE), audit kas organisasi (hierarki harga), dan pengawasan transaksi QRIS Dinamis & Logistik Kurir.
                         </p>
                     </div>
 

@@ -93,20 +93,21 @@
             margin-top: -2px;
         }
 
-        .biteship-brand {
+        .logistics-brand {
             display: flex;
             align-items: center;
             gap: 6px;
             font-weight: 900;
-            font-size: 18px;
+            font-size: 14px;
             color: #111;
+            text-align: right;
         }
 
-        .biteship-brand span {
+        .logistics-brand span {
             font-size: 8px;
             display: block;
-            font-weight: normal;
-            color: #444;
+            font-weight: bold;
+            color: #ee4d2d;
             text-align: right;
         }
 
@@ -312,16 +313,14 @@
                 <span class="courier-sub">EXPRESS ACROSS NATIONS</span>
             </div>
             <div>
-                <div class="biteship-brand">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                        <path d="M4 6a2 2 0 0 1 2-2h4v8H4V6z" fill="#00c0a3"/>
-                        <path d="M14 4h4a2 2 0 0 1 2 2v6h-6V4z" fill="#2b3990"/>
-                        <path d="M4 14h6v6H6a2 2 0 0 1-2-2v-4z" fill="#6c5ce7"/>
-                        <path d="M14 12h6v6a2 2 0 0 1-2 2h-4v-8z" fill="#0984e3"/>
+                <div class="logistics-brand">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ee4d2d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        <path d="m9 12 2 2 4-4"/>
                     </svg>
-                    biteship
+                    JULEHA LOGISTIK
                 </div>
-                <span style="font-size: 8px; color: #555; display: block; text-align: right;">biteship.com</span>
+                <span style="font-size: 8px; color: #555; display: block; text-align: right; font-weight: bold;">STANDAR SYARIAT</span>
             </div>
         </div>
 
@@ -404,10 +403,11 @@
 
         <!-- 7. Footer -->
         <div class="footer-section">
-            Pengiriman melalui platform <strong>Biteship</strong> terintegrasi <strong>Jual Beli Juleha Jatim</strong><br>
-            biteship.com &bull; jualbeli.julehajatim.com
+            Pengiriman Logistik Resmi Terstandarisasi <strong>Jual Beli Juleha Jatim</strong><br>
+            Standar Mutu Syariat &bull; jualbeli.julehajatim.com
         </div>
     </div>
 
 </body>
 </html>
+

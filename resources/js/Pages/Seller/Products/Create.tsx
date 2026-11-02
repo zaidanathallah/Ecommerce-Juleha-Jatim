@@ -154,7 +154,7 @@ export default function Create({ categories }: Props) {
                             <div className="p-3 bg-neutral-50 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded space-y-2">
                                 <div className="flex items-center gap-1.5 text-xs font-bold text-neutral-900 dark:text-neutral-100">
                                     <Scale className="h-4 w-4 text-[#ee4d2d]" />
-                                    <span>Spesifikasi Paket untuk Biteship Logistik</span>
+                                    <span>Spesifikasi Dimensi Paket Pengiriman</span>
                                 </div>
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                     <div>

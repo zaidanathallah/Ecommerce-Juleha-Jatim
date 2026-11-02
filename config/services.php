@@ -31,19 +31,12 @@ return [
         ],
     ],
 
-    'temanqris' => [
-        'mode' => env('TEMANQRIS_MODE', 'sandbox'),
-        'base_url' => env('TEMANQRIS_BASE_URL', 'https://temanqris.com'),
-        'api_key' => env('TEMANQRIS_API_KEY'),
-        'webhook_secret' => env('TEMANQRIS_WEBHOOK_SECRET'),
-        'sandbox' => [
-            'api_key' => env('TEMANQRIS_SANDBOX_API_KEY'),
-            'webhook_secret' => env('TEMANQRIS_SANDBOX_WEBHOOK_SECRET'),
-        ],
-        'live' => [
-            'api_key' => env('TEMANQRIS_LIVE_API_KEY'),
-            'webhook_secret' => env('TEMANQRIS_LIVE_WEBHOOK_SECRET'),
-        ],
+    'wijayapay' => [
+        'mode' => env('WIJAYAPAY_MODE', 'sandbox'),
+        'base_url' => env('WIJAYAPAY_BASE_URL', 'https://gateway.wijayapay.com'),
+        'merchant_code' => env('WIJAYAPAY_MERCHANT_CODE', 'WP6ae1f439e5139'),
+        'api_key' => env('WIJAYAPAY_API_KEY', 'yxdnarumkwqkdz38fwzjkezmx6tpkw'),
+        'whitelist_ip' => env('WIJAYAPAY_WHITELIST_IP', '172.235.245.77'),
     ],
 
     'biteship' => [

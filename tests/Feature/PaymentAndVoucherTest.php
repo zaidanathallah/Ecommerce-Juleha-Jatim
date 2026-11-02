@@ -9,7 +9,7 @@ use App\Models\User;
 use App\Models\Voucher;
 use Tests\TestCase;
 
-class TemanQrisAndVoucherTest extends TestCase
+class PaymentAndVoucherTest extends TestCase
 {
     private function getOrCreateSuperAdmin(): User
     {

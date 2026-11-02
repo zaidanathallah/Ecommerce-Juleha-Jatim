@@ -320,7 +320,7 @@ export default function OrderShow({ order }: Props) {
         e.preventDefault();
         if (
             confirm(
-                'Simulasikan pembayaran QRIS berhasil lunas? Status pesanan akan otomatis terverifikasi LUNAS dan penjemputan kurir Biteship akan diproses.'
+                'Simulasikan pembayaran QRIS berhasil lunas? Status pesanan akan otomatis terverifikasi LUNAS dan penjemputan kurir pengiriman akan diproses.'
             )
         ) {
             paymentConfirmForm.post(route('orders.simulate-qris-paid', order.order_number), {
@@ -678,7 +678,7 @@ export default function OrderShow({ order }: Props) {
                                 </CardContent>
                             </Card>
                         ) : (
-                            /* QRIS DINAMIS PAYMENT CARD (TEMANQRIS) */
+                            /* QRIS DINAMIS PAYMENT CARD */
                             <Card className="border border-neutral-200 shadow-md rounded-2xl overflow-hidden">
                                 <CardHeader className="bg-[#ee4d2d] text-white py-3.5">
                                     <div className="flex items-center justify-between">
@@ -719,7 +719,7 @@ export default function OrderShow({ order }: Props) {
                                             {order.qris_image_url ? (
                                                 <img
                                                     src={order.qris_image_url}
-                                                    alt="QRIS Dinamis TemanQRIS"
+                                                    alt="QRIS Dinamis Otomatis"
                                                     className="w-full h-auto rounded"
                                                 />
                                             ) : qrData ? (
@@ -743,30 +743,13 @@ export default function OrderShow({ order }: Props) {
                                         </div>
 
                                         <div className="pt-2 flex flex-wrap justify-center gap-2">
-                                            {order.qris_payment_url && (
-                                                <a
-                                                    href={order.qris_payment_url}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    className="inline-block"
-                                                >
-                                                    <Button
-                                                        type="button"
-                                                        size="sm"
-                                                        className="text-xs h-8 bg-[#ee4d2d] hover:bg-[#d03e1f] text-white font-bold rounded-lg px-3 gap-1"
-                                                    >
-                                                        <span>Buka Link Pembayaran</span>
-                                                        <ExternalLink className="h-3 w-3" />
-                                                    </Button>
-                                                </a>
-                                            )}
                                             {qrData && (
                                                 <Button
                                                     type="button"
                                                     variant="outline"
                                                     size="sm"
                                                     onClick={() => copyToClipboard(qrData, 'qris')}
-                                                    className="text-xs h-8 border-orange-200 text-[#ee4d2d] hover:bg-orange-50"
+                                                    className="text-xs h-8 border-orange-200 text-[#ee4d2d] hover:bg-orange-50 font-bold rounded-lg px-3 gap-1.5"
                                                 >
                                                     {copiedText === 'qris' ? (
                                                         <>
@@ -790,7 +773,7 @@ export default function OrderShow({ order }: Props) {
                                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[#ee4d2d]"></span>
                                             </span>
                                             <span>
-                                                Pengecekan Otomatis Realtime Aktif: Webhook TemanQRIS akan otomatis memverifikasi pesanan menjadi LUNAS seketika setelah pembayaran berhasil.
+                                                Pengecekan Otomatis Realtime Aktif: Sistem akan otomatis memverifikasi pesanan menjadi LUNAS seketika setelah pembayaran berhasil.
                                             </span>
                                         </div>
 
@@ -951,7 +934,7 @@ export default function OrderShow({ order }: Props) {
                                                     className="w-full text-xs font-bold border-indigo-200 text-indigo-700 hover:bg-indigo-50 gap-1.5 h-8 rounded-xl"
                                                 >
                                                     <ExternalLink className="h-3 w-3" />
-                                                    <span>Download PDF Resmi Biteship</span>
+                                                    <span>Download Dokumen Resi Pengiriman</span>
                                                 </Button>
                                             </a>
                                         )}
@@ -991,7 +974,7 @@ export default function OrderShow({ order }: Props) {
                                                             <span>
                                                                 {requestPickupProcessing
                                                                     ? 'Meminta Pickup...'
-                                                                    : 'Request Pickup Kurir Biteship'}
+                                                                    : 'Request Pickup Kurir Pengiriman'}
                                                             </span>
                                                         </Button>
                                                     </form>

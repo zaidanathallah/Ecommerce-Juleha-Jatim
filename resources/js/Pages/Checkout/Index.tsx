@@ -391,7 +391,7 @@ export default function CheckoutIndex({ product, availableVouchers = [], seller,
                                         2. Opsi Pengiriman Kurir
                                     </CardTitle>
                                     <Badge className="text-[10px] bg-[#ee4d2d] text-white">
-                                        LOGISTIK RESMI BITESHIP
+                                        LOGISTIK RESMI KURIR
                                     </Badge>
                                 </div>
                             </CardHeader>
@@ -466,7 +466,7 @@ export default function CheckoutIndex({ product, availableVouchers = [], seller,
                             </CardContent>
                         </Card>
 
-                        {/* 3. Metode Pembayaran: QRIS Dinamis TemanQRIS */}
+                        {/* 3. Metode Pembayaran: QRIS Dinamis Otomatis */}
                         <Card className="border-neutral-200 shadow-sm">
                             <CardHeader className="bg-neutral-50 dark:bg-neutral-900 border-b py-3">
                                 <div className="flex items-center justify-between">

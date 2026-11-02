@@ -60,13 +60,13 @@ export default function ShopSettings({ settings }: Props) {
                             Pengaturan Toko & Metode Transaksi
                         </CardTitle>
                         <CardDescription>
-                            Atur apakah toko Anda menggunakan sistem gateway resmi (QRIS Dinamis & Biteship) atau menggunakan kurir mandiri dan rekening pribadi.
+                            Atur apakah toko Anda menggunakan sistem gateway resmi (QRIS Dinamis & Kurir Otomatis) atau menggunakan kurir mandiri dan rekening pribadi.
                         </CardDescription>
                     </CardHeader>
 
                     <CardContent className="p-6">
                         <form onSubmit={submit} className="space-y-6">
-                            {/* Toggle 1: Payment Gateway QRIS Dinamis (TemanQRIS) */}
+                            {/* Toggle 1: Payment Gateway QRIS Dinamis */}
                             <div className="p-4 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 space-y-3">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
@@ -75,7 +75,7 @@ export default function ShopSettings({ settings }: Props) {
                                         </div>
                                         <div>
                                             <h4 className="text-sm font-bold text-neutral-900 dark:text-neutral-100 leading-tight">
-                                                Gunakan Payment Gateway QRIS Dinamis (TemanQRIS)
+                                                Gunakan Payment Gateway QRIS Dinamis Otomatis
                                             </h4>
                                             <p className="text-xs text-neutral-500 mt-0.5">
                                                 {data.is_pg_active ? 'Aktif: QRIS Dinamis Otomatis Semua E-Wallet & Bank' : 'Non-Aktif: Menggunakan Rekening Bank Pribadi'}
@@ -134,7 +134,7 @@ export default function ShopSettings({ settings }: Props) {
                                         </div>
                                         <div>
                                             <h4 className="text-sm font-bold text-neutral-900 dark:text-neutral-100 leading-tight">
-                                                Gunakan Otomasi Pengiriman Biteship API
+                                                Gunakan Otomasi Pengiriman Kurir Resmi
                                             </h4>
                                             <p className="text-xs text-neutral-500 mt-0.5">
                                                 {data.is_shipping_api_active ? 'Aktif: Cek Ongkir Otomatis & Request Pickup Kurir' : 'Non-Aktif: Kurir Mandiri / COD Penjual'}

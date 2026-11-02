@@ -409,7 +409,7 @@ export default function Index({ products, flashSaleProducts = [], vouchers = [],
                                     : 'SEMUA PRODUK TERVERIFIKASI'}
                             </h2>
                             <p className="text-xs text-neutral-500">
-                                Daging, pisau, perlengkapan sembelih teruji syar'i siap dikirim via Biteship
+                                Daging, pisau, perlengkapan sembelih teruji syar'i siap dikirim ke seluruh Indonesia
                             </p>
                         </div>
                     </div>

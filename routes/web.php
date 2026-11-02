@@ -138,9 +138,9 @@ Route::match(['get', 'post'], '/api/biteship-simulate', [\App\Http\Controllers\B
 Route::match(['get', 'post'], '/api/biteship-simulate-rates', [\App\Http\Controllers\BiteshipSimulationController::class, 'apiSimulateRates'])
     ->name('biteship.api-simulate-rates');
 
-// 6. TemanQRIS Webhook Notification Endpoint (CSRF-exempted)
-Route::post('/webhook/temanqris', [\App\Http\Controllers\TemanQrisWebhookController::class, 'handle'])
-    ->name('webhook.temanqris');
+// 6. Payment Gateway Webhook Notification Endpoint (CSRF-exempted)
+Route::post('/webhook/wijayapay', [\App\Http\Controllers\WijayaPayWebhookController::class, 'handle'])
+    ->name('webhook.wijayapay');
 
 // 7. Biteship Webhook Notification Endpoint (CSRF-exempted)
 Route::post('/webhook/biteship', [\App\Http\Controllers\BiteshipWebhookController::class, 'handle'])

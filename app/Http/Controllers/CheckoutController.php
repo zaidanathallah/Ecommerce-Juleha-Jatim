@@ -11,7 +11,7 @@ use App\Models\Voucher;
 use App\Services\BiteshipService;
 use App\Services\ImageUploadService;
 use App\Services\PricingService;
-use App\Services\TemanQrisService;
+use App\Services\WijayaPayService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,7 +28,7 @@ class CheckoutController extends Controller
     public function __construct(
         protected PricingService $pricingService,
         protected BiteshipService $biteshipService,
-        protected TemanQrisService $temanQrisService,
+        protected WijayaPayService $wijayaPayService,
         protected ImageUploadService $imageUploadService
     ) {}
 
@@ -324,28 +324,22 @@ class CheckoutController extends Controller
         $qrisContent = null;
         $qrisImageUrl = null;
         $qrisPaymentUrl = null;
-        $paymentExpiresAt = now()->addHours(24);
+        // Waktu kedaluwarsa pesanan wajib 23 jam
+        $paymentExpiresAt = now()->addHours(23);
 
-        // Jika toko menggunakan Payment Gateway Resmi QRIS Dinamis (TemanQRIS)
+        // Jika toko menggunakan Payment Gateway Resmi QRIS Dinamis
         if ($seller->is_pg_active) {
             $qrisInvoiceNumber = $orderNumber;
-            $qrisResult = $this->temanQrisService->generateDynamicQris(
+            $qrisResult = $this->wijayaPayService->generateDynamicQris(
                 $orderNumber,
                 $grandTotal,
-                "Pesanan {$orderNumber} Juleha Jatim"
+                "Pesanan {$orderNumber}"
             );
 
             if ($qrisResult['success']) {
                 $qrisContent = $qrisResult['qris'] ?? null;
                 $qrisImageUrl = $qrisResult['qr_image'] ?? null;
-                $qrisPaymentUrl = $qrisResult['payment_link_url'] ?? null;
-                if (!empty($qrisResult['expires_at'])) {
-                    try {
-                        $paymentExpiresAt = \Carbon\Carbon::parse($qrisResult['expires_at']);
-                    } catch (\Exception $e) {
-                        $paymentExpiresAt = now()->addHours(24);
-                    }
-                }
+                $qrisPaymentUrl = null; // Scan langsung di website, tidak ada redirect/aggregator luar
             }
         }
 
@@ -662,10 +656,10 @@ class CheckoutController extends Controller
             ]);
         }
 
-        // 4. Jika menggunakan Payment Gateway QRIS Dinamis TemanQRIS, lakukan pengecekan ke TemanQRIS
+        // 4. Jika menggunakan Payment Gateway QRIS Dinamis, lakukan pengecekan status
         if ($order->payment_method_type === Order::PAYMENT_METHOD_QRIS && $order->payment_status === Order::PAYMENT_PENDING) {
-            $tqStatus = $this->temanQrisService->checkOrderStatus($orderNumber);
-            if (!empty($tqStatus['is_paid'])) {
+            $pgStatus = $this->wijayaPayService->checkOrderStatus($orderNumber);
+            if (!empty($pgStatus['is_paid'])) {
                 $order->update([
                     'payment_status' => Order::PAYMENT_PAID,
                     'paid_at' => now(),
@@ -685,7 +679,7 @@ class CheckoutController extends Controller
 
             return response()->json([
                 'success' => true,
-                'status' => $tqStatus['status'] ?? 'pending',
+                'status' => $pgStatus['status'] ?? 'pending',
                 'is_paid' => false,
             ]);
         }
@@ -781,10 +775,10 @@ class CheckoutController extends Controller
         $order->refresh();
 
         if (!empty($order->biteship_waybill_id)) {
-            return back()->with('success', "Permintaan pickup kurir berhasil dikirim ke Biteship! Nomor Resi: {$order->biteship_waybill_id}");
+            return back()->with('success', "Permintaan pickup kurir berhasil dikirim! Nomor Resi: {$order->biteship_waybill_id}");
         }
 
-        return back()->with('success', 'Permintaan pickup sedang diproses oleh Biteship.');
+        return back()->with('success', 'Permintaan pickup sedang diproses oleh kurir logistik.');
     }
 
     /**
@@ -827,16 +821,11 @@ class CheckoutController extends Controller
     }
 
     /**
-     * Simulasi Pembayaran QRIS Dinamis LUNAS (Memicu Sandbox TemanQRIS & Pickup Biteship Otomatis)
+     * Simulasi Pembayaran QRIS Dinamis LUNAS (Verifikasi LUNAS & Pickup Kurir Otomatis)
      */
     public function simulateQrisPaid(string $orderNumber): RedirectResponse
     {
         $order = Order::where('order_number', $orderNumber)->firstOrFail();
-
-        // Panggil simulator TemanQRIS jika sandbox
-        if ($this->temanQrisService->getMode() === 'sandbox') {
-            $this->temanQrisService->simulateSandboxPayment($orderNumber, 'paid');
-        }
 
         if ($order->payment_status !== Order::PAYMENT_PAID) {
             $order->update([
@@ -845,12 +834,12 @@ class CheckoutController extends Controller
                 'margin_settlement_status' => Order::MARGIN_SETTLED_PG,
             ]);
 
-            // Pemicu otomatis kurir Biteship jika metode Biteship aktif
+            // Pemicu otomatis logistik kurir pengiriman
             $this->triggerBiteshipPickup($order);
         }
 
         return redirect()->route('orders.show', $order->order_number)
-            ->with('success', 'Pembayaran QRIS berhasil diverifikasi LUNAS! Permintaan pickup kurir Biteship telah dikirimkan.');
+            ->with('success', 'Pembayaran QRIS berhasil diverifikasi LUNAS! Permintaan pickup kurir pengiriman telah dikirimkan.');
     }
 
     /**

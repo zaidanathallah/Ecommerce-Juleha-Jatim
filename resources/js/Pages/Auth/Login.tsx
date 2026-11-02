@@ -83,7 +83,7 @@ export default function Login({ status, canResetPassword }: { status?: string; c
                             </div>
                             <div className="flex items-center gap-2">
                                 <ShoppingBag className="h-5 w-5 text-amber-300" />
-                                <span>Logistik Otomatis Biteship</span>
+                                <span>Logistik Pengiriman Otomatis</span>
                             </div>
                         </div>
                     </div>

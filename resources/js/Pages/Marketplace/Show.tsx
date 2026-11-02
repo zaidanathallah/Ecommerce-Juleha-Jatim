@@ -236,7 +236,7 @@ export default function Show({ product, schemaJson, sellerIsActive = true }: Pro
                                         <Truck className="h-3.5 w-3.5 text-neutral-400" /> Logistik Pengiriman:
                                     </span>
                                     <strong className="text-neutral-900 dark:text-neutral-100">
-                                        Biteship Otomatis / Kurir Mandiri
+                                        Kurir Pengiriman Otomatis / Kurir Mandiri
                                     </strong>
                                 </div>
                                 <div className="grid grid-cols-2 p-2.5">

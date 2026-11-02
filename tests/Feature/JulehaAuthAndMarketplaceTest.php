@@ -248,7 +248,7 @@ class JulehaAuthAndMarketplaceTest extends TestCase
         $fsResponse->assertStatus(200);
     }
 
-    public function test_temanqris_webhook_updates_order_to_paid(): void
+    public function test_payment_webhook_updates_order_to_paid(): void
     {
         $order = \App\Models\Order::first();
         if (!$order) {
@@ -278,20 +278,16 @@ class JulehaAuthAndMarketplaceTest extends TestCase
         }
 
         $payload = [
-            'event' => 'payment.confirmed',
-            'data' => [
-                'order_id' => $order->order_number,
-                'amount' => (int) $order->grand_total,
-                'status' => 'paid',
-            ],
+            'ref_id' => $order->order_number,
+            'status' => 'success',
+            'nominal' => (int) $order->grand_total,
         ];
 
-        $response = $this->postJson(route('webhook.temanqris'), $payload);
+        $response = $this->postJson(route('webhook.wijayapay'), $payload);
 
         $response->assertStatus(200)
             ->assertJson([
-                'success' => true,
-                'message' => 'Payment processed successfully',
+                'status' => 'success',
             ]);
 
         $order->refresh();
