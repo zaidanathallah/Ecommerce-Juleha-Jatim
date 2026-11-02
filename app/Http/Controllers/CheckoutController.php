@@ -74,9 +74,15 @@ class CheckoutController extends Controller
             ];
         });
 
+        // Ambil channel pembayaran resmi real-time dari WijayaPay
+        $paymentChannels = $seller->is_pg_active
+            ? $this->wijayaPayService->getPaymentChannels()
+            : [];
+
         return Inertia::render('Checkout/Index', [
             'product' => $formattedProduct,
             'availableVouchers' => $availableVouchers,
+            'paymentChannels' => $paymentChannels,
             'seller' => [
                 'id' => $seller->id,
                 'name' => $seller->name,
@@ -95,6 +101,18 @@ class CheckoutController extends Controller
                 'lat' => $buyer->lat ?? -7.2575,
                 'lng' => $buyer->lng ?? 112.7521,
             ],
+        ]);
+    }
+
+    /**
+     * API Endpoint untuk mendapatkan daftar channel pembayaran aktif WijayaPay
+     */
+    public function paymentChannels(): JsonResponse
+    {
+        $channels = $this->wijayaPayService->getPaymentChannels();
+        return response()->json([
+            'success' => true,
+            'channels' => $channels,
         ]);
     }
 
@@ -312,8 +330,14 @@ class CheckoutController extends Controller
         $orderNumber = 'JLH-' . date('Ymd') . '-' . strtoupper(Str::random(6));
 
         // Tentukan metode pembayaran & status hutang kas organisasi
+        $selectedChannel = strtoupper(trim((string) $request->input('payment_channel', 'QRIS')));
+        if (empty($selectedChannel) || $selectedChannel === 'QRIS_DINAMIS') {
+            $selectedChannel = 'QRIS';
+        }
+
+        $isQris = ($selectedChannel === 'QRIS' || str_contains($selectedChannel, 'QRIS'));
         $paymentMethodType = $seller->is_pg_active
-            ? Order::PAYMENT_METHOD_QRIS
+            ? ($isQris ? Order::PAYMENT_METHOD_QRIS : Order::PAYMENT_METHOD_VA)
             : Order::PAYMENT_METHOD_MANUAL;
 
         $marginSettlementStatus = $seller->is_pg_active
@@ -324,22 +348,40 @@ class CheckoutController extends Controller
         $qrisContent = null;
         $qrisImageUrl = null;
         $qrisPaymentUrl = null;
+
+        $pgChannelCode = null;
+        $pgPaymentName = null;
+        $pgVaNumber = null;
+        $pgTrxReference = null;
+        $pgPaymentImage = null;
+        $pgPaymentInstructions = null;
+
         // Waktu kedaluwarsa pesanan wajib 23 jam
         $paymentExpiresAt = now()->addHours(23);
 
-        // Jika toko menggunakan Payment Gateway Resmi QRIS Dinamis
+        // Jika toko menggunakan Payment Gateway Resmi (WijayaPay)
         if ($seller->is_pg_active) {
-            $qrisInvoiceNumber = $orderNumber;
-            $qrisResult = $this->wijayaPayService->generateDynamicQris(
+            $pgResult = $this->wijayaPayService->generatePayment(
                 $orderNumber,
                 $grandTotal,
-                "Pesanan {$orderNumber}"
+                $selectedChannel,
+                $validated['recipient_name']
             );
 
-            if ($qrisResult['success']) {
-                $qrisContent = $qrisResult['qris'] ?? null;
-                $qrisImageUrl = $qrisResult['qr_image'] ?? null;
-                $qrisPaymentUrl = null; // Scan langsung di website, tidak ada redirect/aggregator luar
+            if ($pgResult['success']) {
+                $pgChannelCode = $pgResult['channel_code'] ?? $selectedChannel;
+                $pgPaymentName = $pgResult['payment_name'] ?? ($isQris ? 'QRIS Dinamis' : "{$selectedChannel} Virtual Account");
+                $pgVaNumber = $pgResult['va_number'] ?? null;
+                $pgTrxReference = $pgResult['trx_reference'] ?? null;
+                $pgPaymentImage = $pgResult['payment_image'] ?? null;
+                $pgPaymentInstructions = $pgResult['tutorial_pembayaran'] ?? null;
+
+                if ($isQris) {
+                    $qrisInvoiceNumber = $orderNumber;
+                    $qrisContent = $pgResult['qr_string'] ?? null;
+                    $qrisImageUrl = $pgResult['qr_image'] ?? null;
+                    $qrisPaymentUrl = null; // Scan langsung di website tanpa redirect ke aggregator luar
+                }
             }
         }
 
@@ -373,6 +415,12 @@ class CheckoutController extends Controller
             'qris_content' => $qrisContent,
             'qris_image_url' => $qrisImageUrl,
             'qris_payment_url' => $qrisPaymentUrl,
+            'pg_channel_code' => $pgChannelCode,
+            'pg_payment_name' => $pgPaymentName,
+            'pg_va_number' => $pgVaNumber,
+            'pg_trx_reference' => $pgTrxReference,
+            'pg_payment_image' => $pgPaymentImage,
+            'pg_payment_instructions' => $pgPaymentInstructions,
             'payment_method_type' => $paymentMethodType,
             'payment_status' => Order::PAYMENT_PENDING,
             'payment_expires_at' => $paymentExpiresAt,
@@ -656,8 +704,8 @@ class CheckoutController extends Controller
             ]);
         }
 
-        // 4. Jika menggunakan Payment Gateway QRIS Dinamis, lakukan pengecekan status
-        if ($order->payment_method_type === Order::PAYMENT_METHOD_QRIS && $order->payment_status === Order::PAYMENT_PENDING) {
+        // 4. Jika menggunakan Payment Gateway (QRIS atau Virtual Account), lakukan pengecekan status
+        if (($order->payment_method_type === Order::PAYMENT_METHOD_QRIS || $order->payment_method_type === Order::PAYMENT_METHOD_VA) && $order->payment_status === Order::PAYMENT_PENDING) {
             $pgStatus = $this->wijayaPayService->checkOrderStatus($orderNumber);
             if (!empty($pgStatus['is_paid'])) {
                 $order->update([
@@ -673,7 +721,7 @@ class CheckoutController extends Controller
                     'status' => 'paid',
                     'is_paid' => true,
                     'paid_at' => $order->paid_at ? $order->paid_at->toIso8601String() : null,
-                    'message' => 'Pembayaran QRIS terverifikasi LUNAS secara realtime!',
+                    'message' => 'Pembayaran terverifikasi LUNAS secara realtime!',
                 ]);
             }
 
@@ -783,6 +831,7 @@ class CheckoutController extends Controller
 
     /**
      * Cetak Label Pengiriman Resmi Standar Thermal A6 (100x150mm) dengan Barcode Vektor SVG
+     * Khusus Penjual dan Admin Ekop/Superadmin. Pembeli tidak diberikan akses cetak label resi.
      */
     public function shippingLabel(string $orderNumber)
     {
@@ -791,8 +840,8 @@ class CheckoutController extends Controller
             ->firstOrFail();
 
         $user = Auth::user();
-        if ($order->buyer_id !== $user->id && $order->seller_id !== $user->id && !$user->isSuperAdmin() && !$user->isAdminEkop()) {
-            abort(403, 'Anda tidak berhak mencetak label pesanan ini.');
+        if ($order->seller_id !== $user->id && !$user->isSuperAdmin() && !$user->isAdminEkop()) {
+            abort(403, 'Akses ditolak. Fitur cetak label pengiriman resmi A6 hanya dapat diakses oleh pihak penjual toko atau admin logistik.');
         }
 
         // Pastikan order memiliki waybill_id
@@ -810,6 +859,12 @@ class CheckoutController extends Controller
         $shippingAddress = is_array($order->shipping_address) ? $order->shipping_address : json_decode($order->shipping_address, true);
         $seller = $order->seller;
 
+        // Siapkan Logo Resmi Juleha Jatim dalam format Data URI Base64 untuk pencetakan thermal offline
+        $logoPath = public_path('logo-juleha.jpg');
+        $logoBase64 = file_exists($logoPath)
+            ? 'data:image/jpeg;base64,' . base64_encode(file_get_contents($logoPath))
+            : asset('logo-juleha.jpg');
+
         return view('shipping_label', [
             'order' => $order,
             'shippingAddress' => $shippingAddress,
@@ -817,6 +872,7 @@ class CheckoutController extends Controller
             'waybill' => $waybill,
             'waybillBarcode' => $waybillBarcode,
             'orderBarcode' => $orderBarcode,
+            'logoBase64' => $logoBase64,
         ]);
     }
 
@@ -843,7 +899,7 @@ class CheckoutController extends Controller
     }
 
     /**
-     * API Real-time Tracking Biteship untuk Modal/Widget Lacak Resi
+     * API Real-time Tracking Biteship untuk Modal/Widget Lacak Resi di Dalam Halaman (In-App Modal)
      */
     public function trackOrder(string $orderNumber): JsonResponse
     {
@@ -857,7 +913,29 @@ class CheckoutController extends Controller
         }
 
         $courierCode = strtolower(explode(' ', (string) $order->shipping_courier)[0] ?? 'jne');
-        $trackingResult = $this->biteshipService->getTracking($order->biteship_waybill_id, $courierCode);
+        $trackingResult = $this->biteshipService->getTracking($order->biteship_waybill_id, $courierCode, $order->biteship_order_id);
+
+        return response()->json($trackingResult);
+    }
+
+    /**
+     * API Real-time Tracking Umum via Waybill untuk TrackingWidget (In-App Dialog)
+     */
+    public function trackWaybill(Request $request): JsonResponse
+    {
+        $waybill = trim((string) $request->input('waybill', ''));
+        if (empty($waybill)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nomor resi wajib diisi.',
+            ], 422);
+        }
+
+        $order = Order::where('biteship_waybill_id', $waybill)->first();
+        $courier = $order ? ($order->shipping_courier ?? 'jne') : 'jne';
+        $orderId = $order ? $order->biteship_order_id : null;
+
+        $trackingResult = $this->biteshipService->getTracking($waybill, $courier, $orderId);
 
         return response()->json($trackingResult);
     }

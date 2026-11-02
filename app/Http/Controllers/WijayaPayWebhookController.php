@@ -126,11 +126,10 @@ class WijayaPayWebhookController extends Controller
             }
         }
 
-        // Return status sukses ke server gateway
+        // Return format boolean status: true sesuai spesifikasi resmi WijayaPay Callback API
         return response()->json([
-            'status' => 'success',
-            'message' => 'Webhook pembayaran berhasil diproses.',
-            'ref_id' => $refId,
+            'status' => true,
         ], 200);
     }
 }
+

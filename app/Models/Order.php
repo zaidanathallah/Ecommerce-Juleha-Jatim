@@ -26,6 +26,7 @@ class Order extends Model
     public const SHIPPING_CANCELLED = 'cancelled';
 
     public const PAYMENT_METHOD_QRIS = 'qris_dinamis';
+    public const PAYMENT_METHOD_VA = 'virtual_account';
     public const PAYMENT_METHOD_MANUAL = 'manual_transfer';
 
     public const SHIPPING_METHOD_BITESHIP = 'biteship';
@@ -58,6 +59,12 @@ class Order extends Model
         'qris_payment_url',
         'qris_content',
         'qris_image_url',
+        'pg_channel_code',
+        'pg_payment_name',
+        'pg_va_number',
+        'pg_trx_reference',
+        'pg_payment_image',
+        'pg_payment_instructions',
         'voucher_id',
         'voucher_code',
         'discount_amount',

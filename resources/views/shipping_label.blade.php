@@ -312,15 +312,14 @@
                 <span class="courier-badge">{{ $order->shipping_courier ?: 'JNE' }}</span>
                 <span class="courier-sub">EXPRESS ACROSS NATIONS</span>
             </div>
-            <div>
-                <div class="logistics-brand">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ee4d2d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                        <path d="m9 12 2 2 4-4"/>
-                    </svg>
-                    JULEHA LOGISTIK
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <img src="{{ $logoBase64 ?? asset('logo-juleha.jpg') }}" alt="Logo Juleha Jatim" style="height: 38px; width: 38px; object-fit: contain; border-radius: 6px; border: 1px solid #ddd;">
+                <div>
+                    <div class="logistics-brand" style="justify-content: flex-end;">
+                        JULEHA LOGISTIK
+                    </div>
+                    <span style="font-size: 8px; color: #444; display: block; text-align: right; font-weight: bold; letter-spacing: 0.5px;">STANDAR SYARIAT JATIM</span>
                 </div>
-                <span style="font-size: 8px; color: #555; display: block; text-align: right; font-weight: bold;">STANDAR SYARIAT</span>
             </div>
         </div>
 
@@ -330,7 +329,7 @@
                 {!! $waybillBarcode !!}
             </div>
             <div class="waybill-number">
-                Nomor Resi - {{ $order->biteship_waybill_id ?: ('JLH-' . rand(10000000, 99999999)) }}
+                Nomor Resi - {{ $waybill }}
             </div>
             <div class="rate-service-line">
                 <span>Ongkos Kirim: <strong>Rp. {{ number_format($order->shipping_cost, 0, ',', '.') }}</strong></span>

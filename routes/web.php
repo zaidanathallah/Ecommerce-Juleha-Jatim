@@ -93,6 +93,7 @@ Route::middleware(['auth'])->group(function () {
     // Dynamic Checkout Engine
     Route::get('/checkout/{slug}', [\App\Http\Controllers\CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout/calculate-shipping', [\App\Http\Controllers\CheckoutController::class, 'calculateShipping'])->name('checkout.calculate-shipping');
+    Route::get('/api/payment-channels', [\App\Http\Controllers\CheckoutController::class, 'paymentChannels'])->name('checkout.payment-channels');
     Route::post('/checkout/process', [\App\Http\Controllers\CheckoutController::class, 'process'])->name('checkout.process');
     Route::get('/pesanan-saya', [\App\Http\Controllers\CheckoutController::class, 'myOrders'])->name('orders.my-orders');
     Route::get('/orders/{order_number}', [\App\Http\Controllers\CheckoutController::class, 'show'])->name('orders.show');
@@ -101,6 +102,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/orders/{order_number}/simulate-qris-paid', [\App\Http\Controllers\CheckoutController::class, 'simulateQrisPaid'])->name('orders.simulate-qris-paid');
     Route::get('/api/orders/{order_number}/payment-status', [\App\Http\Controllers\CheckoutController::class, 'checkPaymentStatus'])->name('orders.payment-status');
     Route::get('/api/orders/{order_number}/tracking', [\App\Http\Controllers\CheckoutController::class, 'trackOrder'])->name('orders.track');
+    Route::get('/api/trackings/waybill', [\App\Http\Controllers\CheckoutController::class, 'trackWaybill'])->name('orders.track-waybill');
     Route::get('/orders/{order_number}/shipping-label', [\App\Http\Controllers\CheckoutController::class, 'shippingLabel'])->name('orders.shipping-label');
     Route::post('/orders/{order_number}/request-pickup', [\App\Http\Controllers\CheckoutController::class, 'requestPickup'])->name('orders.request-pickup');
     Route::post('/orders/{order_number}/upload-transfer-receipt', [\App\Http\Controllers\CheckoutController::class, 'uploadTransferReceipt'])->name('orders.upload-transfer-receipt');

@@ -37,9 +37,22 @@ interface VoucherOption {
     max_discount?: number | null;
 }
 
+export interface PaymentChannelOption {
+    code: string;
+    name: string;
+    group: 'qris' | 'va';
+    fee_flat: number;
+    fee_percent: number;
+    fee_display: string;
+    image?: string;
+    description: string;
+    is_active: boolean;
+}
+
 interface Props {
     product: BuyerProduct;
     availableVouchers?: VoucherOption[];
+    paymentChannels?: PaymentChannelOption[];
     seller: {
         id: number;
         name: string;
@@ -99,10 +112,82 @@ const DEFAULT_COURIER_OPTIONS = [
     },
 ];
 
-export default function CheckoutIndex({ product, availableVouchers = [], seller, buyer }: Props) {
+export default function CheckoutIndex({ product, availableVouchers = [], paymentChannels = [], seller, buyer }: Props) {
     const [courierOptions, setCourierOptions] = useState<any[]>(DEFAULT_COURIER_OPTIONS);
     const [isLoadingRates, setIsLoadingRates] = useState(false);
     const [ratesError, setRatesError] = useState<string | null>(null);
+
+    // Saluran pembayaran resmi dari WijayaPay
+    const channels: PaymentChannelOption[] = (paymentChannels && paymentChannels.length > 0)
+        ? paymentChannels
+        : [
+            {
+                code: 'QRIS',
+                name: 'QRIS Dinamis Otomatis',
+                group: 'qris',
+                fee_flat: 100,
+                fee_percent: 0.7,
+                fee_display: 'Gratis / Disubsidi',
+                image: 'https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg',
+                description: 'Mendukung semua e-wallet (ShopeePay, GoPay, OVO, DANA, LinkAja) & seluruh m-Banking.',
+                is_active: true,
+            },
+            {
+                code: 'BCAVA',
+                name: 'BCA Virtual Account',
+                group: 'va',
+                fee_flat: 4700,
+                fee_percent: 0,
+                fee_display: 'Rp 4.700',
+                image: 'https://upload.wikimedia.org/wikipedia/commons/5/5c/Bank_Central_Asia.svg',
+                description: 'Transfer instan otomatis via BCA Mobile, myBCA, KlikBCA & ATM BCA.',
+                is_active: true,
+            },
+            {
+                code: 'BRIVA',
+                name: 'BRI Virtual Account (BRIVA)',
+                group: 'va',
+                fee_flat: 3500,
+                fee_percent: 0,
+                fee_display: 'Rp 3.500',
+                image: 'https://upload.wikimedia.org/wikipedia/commons/2/2e/BRI_2020.svg',
+                description: 'Verifikasi instan otomatis via BRImo, Internet Banking BRI & ATM BRI.',
+                is_active: true,
+            },
+            {
+                code: 'BSIVA',
+                name: 'BSI Virtual Account (Syariah)',
+                group: 'va',
+                fee_flat: 3500,
+                fee_percent: 0,
+                fee_display: 'Rp 3.500',
+                image: 'https://upload.wikimedia.org/wikipedia/commons/a/a0/Bank_Syariah_Indonesia.svg',
+                description: 'Khusus nasabah Bank Syariah Indonesia via BSI Mobile, Net Banking & ATM BSI.',
+                is_active: true,
+            },
+            {
+                code: 'BNIVA',
+                name: 'BNI Virtual Account',
+                group: 'va',
+                fee_flat: 3500,
+                fee_percent: 0,
+                fee_display: 'Rp 3.500',
+                image: 'https://upload.wikimedia.org/wikipedia/id/5/55/BNI_logo.svg',
+                description: 'Transfer via BNI Mobile Banking, Internet Banking & ATM BNI.',
+                is_active: true,
+            },
+            {
+                code: 'MANDIRIVA',
+                name: 'Mandiri Virtual Account',
+                group: 'va',
+                fee_flat: 3500,
+                fee_percent: 0,
+                fee_display: 'Rp 3.500',
+                image: 'https://upload.wikimedia.org/wikipedia/commons/a/ad/Bank_Mandiri_logo_2016.svg',
+                description: 'Transfer via Livin\' by Mandiri, Kopra by Mandiri & ATM Mandiri.',
+                is_active: true,
+            },
+        ];
 
     // Voucher application state
     const [inputVoucherCode, setInputVoucherCode] = useState('');
@@ -123,7 +208,7 @@ export default function CheckoutIndex({ product, availableVouchers = [], seller,
         courier_company: 'J&T Express',
         courier_service: 'EZ',
         shipping_cost: 18000,
-        payment_channel: 'qris_dinamis',
+        payment_channel: 'QRIS',
         voucher_code: '',
         notes: '',
     });
@@ -466,7 +551,7 @@ export default function CheckoutIndex({ product, availableVouchers = [], seller,
                             </CardContent>
                         </Card>
 
-                        {/* 3. Metode Pembayaran: QRIS Dinamis Otomatis */}
+                        {/* 3. Metode Pembayaran Resmi */}
                         <Card className="border-neutral-200 shadow-sm">
                             <CardHeader className="bg-neutral-50 dark:bg-neutral-900 border-b py-3">
                                 <div className="flex items-center justify-between">
@@ -475,50 +560,82 @@ export default function CheckoutIndex({ product, availableVouchers = [], seller,
                                         3. Metode Pembayaran Resmi
                                     </CardTitle>
                                     <Badge className="text-[10px] bg-[#ee4d2d] text-white">
-                                        GATEWAY QRIS RESMI
+                                        VERIFIKASI REAL-TIME
                                     </Badge>
                                 </div>
                             </CardHeader>
                             <CardContent className="p-4 space-y-3">
                                 {seller.is_pg_active ? (
                                     <div className="space-y-3">
-                                        {/* QRIS Dinamis Option */}
-                                        <div
-                                            onClick={() => setData('payment_channel', 'qris_dinamis')}
-                                            className="p-4 rounded-xl border border-[#ee4d2d] bg-[#fff5f1] dark:bg-orange-950/20 shadow-xs ring-1 ring-[#ee4d2d] cursor-pointer flex items-start gap-3.5 transition-all"
-                                        >
-                                            <div className="p-2.5 rounded-xl bg-[#ee4d2d] text-white shrink-0 mt-0.5 shadow-sm">
-                                                <QrCode className="h-5 w-5" />
-                                            </div>
+                                        <div className="text-xs font-bold text-neutral-800 dark:text-neutral-200">
+                                            Pilih Saluran Pembayaran Otomatis:
+                                        </div>
 
-                                            <div className="flex-1 space-y-1">
-                                                <div className="flex items-center justify-between flex-wrap gap-2">
-                                                    <span className="font-extrabold text-neutral-900 dark:text-neutral-100 text-sm">
-                                                        QRIS Dinamis Otomatis
-                                                    </span>
-                                                    <Badge className="text-[10px] bg-green-600 text-white font-bold">
-                                                        Verifikasi Instan 24 Jam
-                                                    </Badge>
-                                                </div>
-                                                <p className="text-[11px] text-neutral-600 dark:text-neutral-300 leading-relaxed">
-                                                    Mendukung semua pembayaran e-wallet (<strong>ShopeePay, GoPay, OVO, DANA, LinkAja</strong>) dan mobile banking (<strong>BCA, Mandiri Livin, BRImo, BNI Mobile</strong>).
-                                                </p>
-                                                <div className="flex items-center gap-2 pt-1 text-[11px] font-mono text-neutral-500">
-                                                    <span>Kode QR unik dibuat otomatis sesuai nominal belanja</span>
-                                                </div>
-                                            </div>
+                                        <div className="grid grid-cols-1 gap-2.5">
+                                            {channels.map((ch) => {
+                                                const isSelected = data.payment_channel === ch.code;
+                                                const isQris = ch.group === 'qris';
 
-                                            <div className="shrink-0 pt-1">
-                                                <div className="h-4 w-4 rounded-full border border-[#ee4d2d] bg-[#ee4d2d] flex items-center justify-center">
-                                                    <div className="h-1.5 w-1.5 rounded-full bg-white" />
-                                                </div>
-                                            </div>
+                                                return (
+                                                    <div
+                                                        key={ch.code}
+                                                        onClick={() => setData('payment_channel', ch.code)}
+                                                        className={`p-3.5 rounded-xl border cursor-pointer flex items-start gap-3.5 transition-all ${
+                                                            isSelected
+                                                                ? 'border-[#ee4d2d] bg-[#fff5f1] dark:bg-orange-950/20 shadow-xs ring-1 ring-[#ee4d2d]'
+                                                                : 'border-neutral-200 hover:border-neutral-300 bg-white dark:bg-neutral-900'
+                                                        }`}
+                                                    >
+                                                        <div className={`p-2 rounded-xl shrink-0 mt-0.5 shadow-xs flex items-center justify-center ${
+                                                            isQris ? 'bg-[#ee4d2d] text-white' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 border border-neutral-200'
+                                                        }`}>
+                                                            {isQris ? (
+                                                                <QrCode className="h-5 w-5" />
+                                                            ) : (
+                                                                <Building2 className="h-5 w-5 text-[#2b3990]" />
+                                                            )}
+                                                        </div>
+
+                                                        <div className="flex-1 space-y-1">
+                                                            <div className="flex items-center justify-between flex-wrap gap-2">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="font-extrabold text-neutral-900 dark:text-neutral-100 text-xs">
+                                                                        {ch.name}
+                                                                    </span>
+                                                                    <span className="px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-[10px] font-mono font-bold text-neutral-600 dark:text-neutral-300">
+                                                                        {ch.code}
+                                                                    </span>
+                                                                </div>
+                                                                <Badge className={`text-[10px] font-bold ${
+                                                                    isSelected ? 'bg-green-600 text-white' : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300'
+                                                                }`}>
+                                                                    {isQris ? 'Verifikasi Instan 24 Jam' : 'Virtual Account Otomatis'}
+                                                                </Badge>
+                                                            </div>
+                                                            <p className="text-[11px] text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                                                                {ch.description}
+                                                            </p>
+                                                            <div className="flex items-center gap-2 pt-0.5 text-[10px] text-neutral-500">
+                                                                <span>Biaya Layanan: <strong>{ch.fee_display}</strong></span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="shrink-0 pt-1">
+                                                            <div className={`h-4 w-4 rounded-full border flex items-center justify-center ${
+                                                                isSelected ? 'border-[#ee4d2d] bg-[#ee4d2d]' : 'border-neutral-300 bg-white'
+                                                            }`}>
+                                                                {isSelected && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
 
                                         <div className="p-3 bg-neutral-50 dark:bg-neutral-800/40 rounded-xl border border-neutral-200 dark:border-neutral-700 flex items-center gap-2 text-[11px] text-neutral-500">
                                             <ShieldCheck className="h-4 w-4 text-[#ee4d2d] shrink-0" />
                                             <span>
-                                                Pembayaran QRIS aman, terenkripsi, dan terintegrasi sistem verifikasi webhook otomatis.
+                                                Sistem pembayaran resmi terintegrasi verifikasi otomatis. Nominal dan rincian transaksi diproses realtime tanpa perantara manual.
                                             </span>
                                         </div>
                                     </div>

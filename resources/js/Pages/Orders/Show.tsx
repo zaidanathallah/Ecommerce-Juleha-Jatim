@@ -64,6 +64,7 @@ export default function OrderShow({ order }: Props) {
     const isAwaitingConfirmation = order.payment_status === 'awaiting_seller_confirmation';
     const isPending = order.payment_status === 'pending';
     const isManual = order.payment_method_type === 'manual_transfer';
+    const isVa = order.payment_method_type === 'virtual_account' || !!order.pg_va_number;
     const isDelivered = order.shipping_status === 'delivered';
 
     // State for Copy Feedback
@@ -74,6 +75,37 @@ export default function OrderShow({ order }: Props) {
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
     const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
     const [justPaidAlert, setJustPaidAlert] = useState(false);
+
+    // Tracking Modal State (In-App Live Courier Tracking)
+    const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);
+    const [trackingLoading, setTrackingLoading] = useState(false);
+    const [trackingData, setTrackingData] = useState<any>(null);
+    const [trackingError, setTrackingError] = useState<string | null>(null);
+
+    const openTrackingModal = async () => {
+        setIsTrackingModalOpen(true);
+        if (!trackingData) {
+            setTrackingLoading(true);
+            setTrackingError(null);
+            try {
+                const res = await fetch(route('orders.track', order.order_number), {
+                    headers: { Accept: 'application/json' },
+                });
+                const json = await res.json();
+                if (json.success && json.data) {
+                    setTrackingData(json.data);
+                } else if (json.data) {
+                    setTrackingData(json.data);
+                } else {
+                    setTrackingError(json.message || 'Status resi belum terdaftar di kurir logistik.');
+                }
+            } catch (err) {
+                setTrackingError('Gagal memuat status pelacakan kurir.');
+            } finally {
+                setTrackingLoading(false);
+            }
+        }
+    };
 
     // 1. Countdown Timer (24-Hour / 23:59:59 timer ticking live)
     const [timeLeftFormatted, setTimeLeftFormatted] = useState<string>('23:59:59');
@@ -677,6 +709,122 @@ export default function OrderShow({ order }: Props) {
                                     </div>
                                 </CardContent>
                             </Card>
+                        ) : isVa ? (
+                            /* VIRTUAL ACCOUNT PAYMENT CARD */
+                            <Card className="border border-neutral-200 shadow-md rounded-2xl overflow-hidden">
+                                <CardHeader className="bg-[#2b3990] text-white py-3.5">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <Building2 className="h-5 w-5" />
+                                            <CardTitle className="text-sm font-bold">
+                                                Pembayaran Virtual Account Resmi
+                                            </CardTitle>
+                                        </div>
+                                        <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-white/20 font-bold flex items-center gap-1">
+                                            <ShieldCheck className="h-3 w-3" />
+                                            VA OTOMATIS
+                                        </span>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="p-5 space-y-4 text-xs">
+                                    {/* Tagihan Box */}
+                                    <div className="text-center p-4 bg-indigo-50/70 dark:bg-indigo-950/20 border border-indigo-200 rounded-xl space-y-1.5">
+                                        <span className="text-[11px] text-[#2b3990] font-extrabold uppercase tracking-wider block">
+                                            Total Tagihan Pembayaran:
+                                        </span>
+                                        <div className="flex items-center justify-center gap-3">
+                                            <span className="text-3xl font-black font-mono text-[#2b3990]">
+                                                {formatRupiah(order.grand_total)}
+                                            </span>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => copyToClipboard(String(order.grand_total), 'nominal')}
+                                                className="text-xs h-7 border-indigo-200 text-[#2b3990] hover:bg-indigo-50 font-bold rounded-lg px-2.5 gap-1"
+                                            >
+                                                {copiedText === 'nominal' ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                                                {copiedText === 'nominal' ? 'Tersalin' : 'Salin'}
+                                            </Button>
+                                        </div>
+                                        <p className="text-[10px] text-neutral-500">
+                                            Transfer tepat sesuai nominal di atas tanpa pembulatan agar terverifikasi otomatis.
+                                        </p>
+                                    </div>
+
+                                    {/* Virtual Account Number Box */}
+                                    <div className="p-4 bg-white dark:bg-neutral-900 border border-neutral-200 rounded-2xl space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs font-bold text-neutral-800 dark:text-neutral-200 flex items-center gap-1.5">
+                                                <CreditCard className="h-4 w-4 text-[#2b3990]" />
+                                                {order.pg_payment_name || 'Nomor Rekening Virtual Account:'}
+                                            </span>
+                                            <Badge className="bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-mono text-[10px]">
+                                                {order.pg_channel_code || 'VA'}
+                                            </Badge>
+                                        </div>
+
+                                        <div className="p-3.5 bg-neutral-50 dark:bg-neutral-800 rounded-xl border border-neutral-200 flex items-center justify-between gap-3">
+                                            <span className="text-xl md:text-2xl font-black font-mono tracking-wider text-neutral-900 dark:text-neutral-100">
+                                                {order.pg_va_number || '88019' + order.order_number.replace(/\D/g, '')}
+                                            </span>
+                                            <Button
+                                                type="button"
+                                                onClick={() => copyToClipboard(order.pg_va_number || '88019' + order.order_number.replace(/\D/g, ''), 'va')}
+                                                className="bg-[#2b3990] hover:bg-[#202b6d] text-white text-xs font-bold gap-1.5 h-8 px-3 rounded-lg shadow-xs shrink-0"
+                                            >
+                                                {copiedText === 'va' ? (
+                                                    <>
+                                                        <Check className="h-3.5 w-3.5" /> Tersalin!
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Copy className="h-3.5 w-3.5" /> Salin No. VA
+                                                    </>
+                                                )}
+                                            </Button>
+                                        </div>
+
+                                        {/* Panduan Pembayaran VA */}
+                                        <div className="border-t pt-3 space-y-2">
+                                            <span className="text-xs font-bold text-neutral-800 dark:text-neutral-200 block">
+                                                Petunjuk Pembayaran:
+                                            </span>
+                                            <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-xl font-sans text-[11px] leading-relaxed text-neutral-600 dark:text-neutral-300 whitespace-pre-line border border-neutral-200">
+                                                {order.pg_payment_instructions ||
+                                                    "1. Buka Mobile Banking atau ATM bank Anda.\n2. Pilih menu Transfer > Virtual Account.\n3. Masukkan nomor Virtual Account di atas.\n4. Periksa nama penerima dan nominal tagihan.\n5. Masukkan PIN Anda untuk menyelesaikan pembayaran."}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Auto verification / Realtime notification indicator */}
+                                    <div className="p-3 bg-neutral-50 dark:bg-neutral-800/40 rounded-xl border border-neutral-200 text-center space-y-2">
+                                        <div className="flex items-center justify-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-400 font-medium">
+                                            <span className="relative flex h-2 w-2">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#2b3990] opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#2b3990]"></span>
+                                            </span>
+                                            <span>
+                                                Pengecekan Otomatis Realtime Aktif: Sistem akan otomatis memverifikasi pesanan menjadi LUNAS seketika setelah pembayaran VA diterima.
+                                            </span>
+                                        </div>
+
+                                        {!isPaid && !isCancelled && !isExpired && (
+                                            <form onSubmit={submitSimulateQris} className="pt-1">
+                                                <Button
+                                                    type="submit"
+                                                    variant="outline"
+                                                    disabled={paymentConfirmForm.processing}
+                                                    className="w-full text-xs font-bold border-indigo-200 text-[#2b3990] hover:bg-indigo-50 h-8 gap-1"
+                                                >
+                                                    <Sparkles className="h-3.5 w-3.5" />
+                                                    <span>Simulasi Bayar Selesai (Verifikasi Instan LUNAS & Pickup Kurir)</span>
+                                                </Button>
+                                            </form>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
                         ) : (
                             /* QRIS DINAMIS PAYMENT CARD */
                             <Card className="border border-neutral-200 shadow-md rounded-2xl overflow-hidden">
@@ -905,56 +1053,55 @@ export default function OrderShow({ order }: Props) {
 
                                 {order.biteship_waybill_id ? (
                                     <div className="space-y-2">
-                                        <a
-                                            href={route('orders.shipping-label', order.order_number)}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="block"
-                                        >
-                                            <Button
-                                                type="button"
-                                                className="w-full text-xs font-bold bg-[#ee4d2d] hover:bg-[#d73211] text-white gap-1.5 h-9 rounded-xl shadow-xs"
-                                            >
-                                                <Printer className="h-3.5 w-3.5" />
-                                                <span>Cetak Label Pengiriman Resmi (A6)</span>
-                                                <ExternalLink className="h-3 w-3" />
-                                            </Button>
-                                        </a>
-
-                                        {order.biteship_label_url && (
-                                            <a
-                                                href={order.biteship_label_url}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="block"
-                                            >
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    className="w-full text-xs font-bold border-indigo-200 text-indigo-700 hover:bg-indigo-50 gap-1.5 h-8 rounded-xl"
+                                        {/* CETAK LABEL RESMI: KHUSUS PENJUAL DAN ADMIN (PEMBELI DILARANG/TIDAK DITAMPILKAN) */}
+                                        {(isSeller || isAdmin) && (
+                                            <>
+                                                <a
+                                                    href={route('orders.shipping-label', order.order_number)}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="block"
                                                 >
-                                                    <ExternalLink className="h-3 w-3" />
-                                                    <span>Download Dokumen Resi Pengiriman</span>
-                                                </Button>
-                                            </a>
+                                                    <Button
+                                                        type="button"
+                                                        className="w-full text-xs font-bold bg-[#ee4d2d] hover:bg-[#d73211] text-white gap-1.5 h-9 rounded-xl shadow-xs"
+                                                    >
+                                                        <Printer className="h-3.5 w-3.5" />
+                                                        <span>Cetak Label Pengiriman Resmi (A6)</span>
+                                                        <ExternalLink className="h-3 w-3" />
+                                                    </Button>
+                                                </a>
+
+                                                {order.biteship_label_url && (
+                                                    <a
+                                                        href={order.biteship_label_url}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="block"
+                                                    >
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            className="w-full text-xs font-bold border-indigo-200 text-indigo-700 hover:bg-indigo-50 gap-1.5 h-8 rounded-xl"
+                                                        >
+                                                            <ExternalLink className="h-3 w-3" />
+                                                            <span>Download Dokumen Resi Pengiriman</span>
+                                                        </Button>
+                                                    </a>
+                                                )}
+                                            </>
                                         )}
 
-                                        <a
-                                            href={`https://track.biteship.com/track/${encodeURIComponent(order.biteship_waybill_id)}`}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="block"
+                                        {/* LACAK PERGERAKAN KURIR (IN-APP MODAL: TANPA LINK KELUAR, DAPAT DIAKSES PEMBELI, PENJUAL & ADMIN) */}
+                                        <Button
+                                            type="button"
+                                            onClick={openTrackingModal}
+                                            variant="outline"
+                                            className="w-full text-xs font-bold border-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 gap-1.5 h-9 rounded-xl text-neutral-700 dark:text-neutral-200"
                                         >
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                className="w-full text-xs font-bold border-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 gap-1.5 h-8 rounded-xl text-neutral-700 dark:text-neutral-200"
-                                            >
-                                                <Truck className="h-3.5 w-3.5 text-[#ee4d2d]" />
-                                                <span>Lacak Pergerakan Kurir</span>
-                                                <ExternalLink className="h-3 w-3" />
-                                            </Button>
-                                        </a>
+                                            <Truck className="h-4 w-4 text-[#ee4d2d]" />
+                                            <span>Lacak Pergerakan Kurir</span>
+                                        </Button>
                                     </div>
                                 ) : (
                                     <div className="space-y-2.5">
@@ -964,36 +1111,39 @@ export default function OrderShow({ order }: Props) {
                                         {isPaid && (
                                             <div className="space-y-2 pt-1">
                                                 {(isSeller || isAdmin) && (
-                                                    <form onSubmit={submitRequestPickup}>
-                                                        <Button
-                                                            type="submit"
-                                                            disabled={requestPickupProcessing}
-                                                            className="w-full text-xs font-bold bg-[#2b3990] hover:bg-[#202b6d] text-white gap-1.5 h-9 rounded-xl shadow-xs"
+                                                    <>
+                                                        <form onSubmit={submitRequestPickup}>
+                                                            <Button
+                                                                type="submit"
+                                                                disabled={requestPickupProcessing}
+                                                                className="w-full text-xs font-bold bg-[#2b3990] hover:bg-[#202b6d] text-white gap-1.5 h-9 rounded-xl shadow-xs"
+                                                            >
+                                                                <Truck className="h-3.5 w-3.5" />
+                                                                <span>
+                                                                    {requestPickupProcessing
+                                                                        ? 'Meminta Pickup...'
+                                                                        : 'Request Pickup Kurir Pengiriman'}
+                                                                </span>
+                                                            </Button>
+                                                        </form>
+
+                                                        <a
+                                                            href={route('orders.shipping-label', order.order_number)}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="block"
                                                         >
-                                                            <Truck className="h-3.5 w-3.5" />
-                                                            <span>
-                                                                {requestPickupProcessing
-                                                                    ? 'Meminta Pickup...'
-                                                                    : 'Request Pickup Kurir Pengiriman'}
-                                                            </span>
-                                                        </Button>
-                                                    </form>
+                                                            <Button
+                                                                type="button"
+                                                                variant="outline"
+                                                                className="w-full text-xs font-bold border-orange-200 text-[#ee4d2d] hover:bg-orange-50 gap-1.5 h-8 rounded-xl"
+                                                            >
+                                                                <Printer className="h-3.5 w-3.5" />
+                                                                <span>Preview & Cetak Label Thermal (A6)</span>
+                                                            </Button>
+                                                        </a>
+                                                    </>
                                                 )}
-                                                <a
-                                                    href={route('orders.shipping-label', order.order_number)}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    className="block"
-                                                >
-                                                    <Button
-                                                        type="button"
-                                                        variant="outline"
-                                                        className="w-full text-xs font-bold border-orange-200 text-[#ee4d2d] hover:bg-orange-50 gap-1.5 h-8 rounded-xl"
-                                                    >
-                                                        <Printer className="h-3.5 w-3.5" />
-                                                        <span>Preview & Cetak Label Thermal (A6)</span>
-                                                    </Button>
-                                                </a>
                                             </div>
                                         )}
                                     </div>
@@ -1353,6 +1503,113 @@ export default function OrderShow({ order }: Props) {
                             </Button>
                         </DialogFooter>
                     </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* MODAL 4: LACAK PERGERAKAN KURIR (IN-APP DIALOG) */}
+            <Dialog open={isTrackingModalOpen} onOpenChange={setIsTrackingModalOpen}>
+                <DialogContent onClose={() => setIsTrackingModalOpen(false)}>
+                    <DialogHeader className="bg-[#ee4d2d] -m-6 mb-4 p-5 text-white rounded-t-2xl">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Truck className="h-5 w-5 text-white" />
+                                <DialogTitle className="text-white text-base font-bold">
+                                    Lacak Pergerakan Kurir
+                                </DialogTitle>
+                            </div>
+                            <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-white font-mono text-xs font-bold uppercase">
+                                {order.shipping_courier || 'Kurir'}
+                            </span>
+                        </div>
+                        <DialogDescription className="text-white/80 text-xs mt-1">
+                            Nomor Resi: <strong className="font-mono text-white font-bold">{order.biteship_waybill_id}</strong>
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+                        {trackingLoading ? (
+                            <div className="py-12 text-center space-y-2">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ee4d2d] mx-auto" />
+                                <p className="text-xs text-neutral-500 font-medium">Menghubungkan ke sistem lacak kurir...</p>
+                            </div>
+                        ) : trackingError ? (
+                            <div className="p-4 bg-orange-50 border border-orange-200 rounded-xl text-center space-y-2">
+                                <AlertTriangle className="h-6 w-6 text-[#ee4d2d] mx-auto" />
+                                <p className="text-xs font-bold text-neutral-800">{trackingError}</p>
+                                <p className="text-[11px] text-neutral-500">
+                                    Resi telah aktif. Kurir sedang dalam proses penjemputan barang di lokasi pengirim.
+                                </p>
+                            </div>
+                        ) : trackingData ? (
+                            <div className="space-y-4">
+                                {/* Status Card */}
+                                <div className="p-3.5 bg-neutral-50 dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+                                    <div>
+                                        <span className="text-[10px] text-neutral-500 uppercase font-bold block">Status Terkini:</span>
+                                        <span className="text-xs font-extrabold text-[#ee4d2d]">
+                                            {trackingData.status_label || trackingData.status || 'Sedang Diproses'}
+                                        </span>
+                                    </div>
+                                    <div className="text-right">
+                                        <span className="text-[10px] text-neutral-500 uppercase font-bold block">Layanan:</span>
+                                        <span className="text-xs font-mono font-bold text-neutral-800 dark:text-neutral-200">
+                                            {trackingData.service_type || order.shipping_service || 'REGULER'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Timeline */}
+                                <div className="space-y-1">
+                                    <h4 className="text-xs font-bold text-neutral-900 dark:text-neutral-100 mb-3 flex items-center gap-1.5">
+                                        <Clock className="h-3.5 w-3.5 text-[#ee4d2d]" />
+                                        Riwayat Perjalanan Paket:
+                                    </h4>
+
+                                    <div className="relative pl-6 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-neutral-200 dark:before:bg-neutral-700">
+                                        {trackingData.history && trackingData.history.length > 0 ? (
+                                            trackingData.history.map((event: any, idx: number) => {
+                                                const isLatest = idx === 0;
+                                                return (
+                                                    <div key={idx} className="relative">
+                                                        <div
+                                                            className={`absolute -left-[23px] top-1.5 h-3 w-3 rounded-full border-2 ${
+                                                                isLatest
+                                                                    ? 'bg-[#ee4d2d] border-white ring-2 ring-orange-200'
+                                                                    : 'bg-neutral-400 border-white'
+                                                            }`}
+                                                        />
+                                                        <div className="space-y-0.5">
+                                                            <div className="text-xs font-bold text-neutral-900 dark:text-neutral-100">
+                                                                {event.note}
+                                                            </div>
+                                                            <div className="text-[10px] font-mono text-neutral-500">
+                                                                {event.updated_at ? new Date(event.updated_at).toLocaleString('id-ID') : '-'}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })
+                                        ) : (
+                                            <div className="text-xs text-neutral-500 italic">
+                                                Resi terdaftar. Paket sedang menunggu kurir melakukan penjemputan awal di alamat pengirim.
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : null}
+                    </div>
+
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setIsTrackingModalOpen(false)}
+                            className="text-xs font-bold rounded-xl"
+                        >
+                            Tutup
+                        </Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         </MarketplaceLayout>
