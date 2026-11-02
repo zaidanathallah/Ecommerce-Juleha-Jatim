@@ -35,6 +35,7 @@ import {
     Edit3,
     Navigation,
     ShieldCheck,
+    Printer,
 } from 'lucide-react';
 
 interface Props {
@@ -326,6 +327,16 @@ export default function OrderShow({ order }: Props) {
                 preserveScroll: true,
             });
         }
+    };
+
+    const [requestPickupProcessing, setRequestPickupProcessing] = useState(false);
+    const submitRequestPickup = (e: React.FormEvent) => {
+        e.preventDefault();
+        setRequestPickupProcessing(true);
+        router.post(route('orders.request-pickup', order.order_number), {}, {
+            preserveScroll: true,
+            onFinish: () => setRequestPickupProcessing(false),
+        });
     };
 
     const copyToClipboard = (text: string, label: string = 'teks') => {
@@ -910,25 +921,99 @@ export default function OrderShow({ order }: Props) {
                                 </div>
 
                                 {order.biteship_waybill_id ? (
-                                    <a
-                                        href={`https://track.biteship.com/track/${encodeURIComponent(order.biteship_waybill_id)}`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="block"
-                                    >
-                                        <Button
-                                            type="button"
-                                            className="w-full text-xs font-bold bg-[#ee4d2d] hover:bg-[#d73211] text-white gap-1.5 h-9 rounded-xl"
+                                    <div className="space-y-2">
+                                        <a
+                                            href={route('orders.shipping-label', order.order_number)}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="block"
                                         >
-                                            <Truck className="h-3.5 w-3.5" />
-                                            <span>Lacak Pergerakan Kurir</span>
-                                            <ExternalLink className="h-3 w-3" />
-                                        </Button>
-                                    </a>
+                                            <Button
+                                                type="button"
+                                                className="w-full text-xs font-bold bg-[#ee4d2d] hover:bg-[#d73211] text-white gap-1.5 h-9 rounded-xl shadow-xs"
+                                            >
+                                                <Printer className="h-3.5 w-3.5" />
+                                                <span>Cetak Label Pengiriman Resmi (A6)</span>
+                                                <ExternalLink className="h-3 w-3" />
+                                            </Button>
+                                        </a>
+
+                                        {order.biteship_label_url && (
+                                            <a
+                                                href={order.biteship_label_url}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="block"
+                                            >
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    className="w-full text-xs font-bold border-indigo-200 text-indigo-700 hover:bg-indigo-50 gap-1.5 h-8 rounded-xl"
+                                                >
+                                                    <ExternalLink className="h-3 w-3" />
+                                                    <span>Download PDF Resmi Biteship</span>
+                                                </Button>
+                                            </a>
+                                        )}
+
+                                        <a
+                                            href={`https://track.biteship.com/track/${encodeURIComponent(order.biteship_waybill_id)}`}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="block"
+                                        >
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                className="w-full text-xs font-bold border-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 gap-1.5 h-8 rounded-xl text-neutral-700 dark:text-neutral-200"
+                                            >
+                                                <Truck className="h-3.5 w-3.5 text-[#ee4d2d]" />
+                                                <span>Lacak Pergerakan Kurir</span>
+                                                <ExternalLink className="h-3 w-3" />
+                                            </Button>
+                                        </a>
+                                    </div>
                                 ) : (
-                                    <p className="text-[10px] text-neutral-500">
-                                        Resi akan otomatis terbit saat penjual melakukan request pickup atau konfirmasi pengiriman kurir.
-                                    </p>
+                                    <div className="space-y-2.5">
+                                        <p className="text-[10px] text-neutral-500 leading-normal">
+                                            Resi akan otomatis terbit saat penjual melakukan request pickup atau konfirmasi pengiriman kurir.
+                                        </p>
+                                        {isPaid && (
+                                            <div className="space-y-2 pt-1">
+                                                {(isSeller || isAdmin) && (
+                                                    <form onSubmit={submitRequestPickup}>
+                                                        <Button
+                                                            type="submit"
+                                                            disabled={requestPickupProcessing}
+                                                            className="w-full text-xs font-bold bg-[#2b3990] hover:bg-[#202b6d] text-white gap-1.5 h-9 rounded-xl shadow-xs"
+                                                        >
+                                                            <Truck className="h-3.5 w-3.5" />
+                                                            <span>
+                                                                {requestPickupProcessing
+                                                                    ? 'Meminta Pickup...'
+                                                                    : 'Request Pickup Kurir Biteship'}
+                                                            </span>
+                                                        </Button>
+                                                    </form>
+                                                )}
+                                                <a
+                                                    href={route('orders.shipping-label', order.order_number)}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="block"
+                                                >
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        className="w-full text-xs font-bold border-orange-200 text-[#ee4d2d] hover:bg-orange-50 gap-1.5 h-8 rounded-xl"
+                                                    >
+                                                        <Printer className="h-3.5 w-3.5" />
+                                                        <span>Preview & Cetak Label Thermal (A6)</span>
+                                                    </Button>
+                                                </a>
+                                            </div>
+                                        )}
+                                    </div>
                                 )}
                             </CardContent>
                         </Card>

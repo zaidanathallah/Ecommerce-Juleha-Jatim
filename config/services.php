@@ -49,6 +49,8 @@ return [
     'biteship' => [
         'base_url' => env('BITESHIP_BASE_URL', 'https://api.biteship.com'),
         'api_key' => env('BITESHIP_API_KEY'),
+        'webhook_secret' => env('BITESHIP_WEBHOOK_SECRET'),
+        'mode' => env('BITESHIP_MODE', 'draft'), // 'draft' (aman untuk testing/lokal, order masuk ke dashboard tanpa memanggil kurir fisik), 'live' (memanggil kurir penjemputan fisik langsung)
     ],
 
 ];

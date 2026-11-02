@@ -101,6 +101,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/orders/{order_number}/simulate-qris-paid', [\App\Http\Controllers\CheckoutController::class, 'simulateQrisPaid'])->name('orders.simulate-qris-paid');
     Route::get('/api/orders/{order_number}/payment-status', [\App\Http\Controllers\CheckoutController::class, 'checkPaymentStatus'])->name('orders.payment-status');
     Route::get('/api/orders/{order_number}/tracking', [\App\Http\Controllers\CheckoutController::class, 'trackOrder'])->name('orders.track');
+    Route::get('/orders/{order_number}/shipping-label', [\App\Http\Controllers\CheckoutController::class, 'shippingLabel'])->name('orders.shipping-label');
+    Route::post('/orders/{order_number}/request-pickup', [\App\Http\Controllers\CheckoutController::class, 'requestPickup'])->name('orders.request-pickup');
     Route::post('/orders/{order_number}/upload-transfer-receipt', [\App\Http\Controllers\CheckoutController::class, 'uploadTransferReceipt'])->name('orders.upload-transfer-receipt');
     Route::post('/orders/{order_number}/confirm-delivery', [\App\Http\Controllers\CheckoutController::class, 'confirmDelivery'])->name('orders.confirm-delivery');
     Route::post('/orders/{order_number}/confirm-payment', [\App\Http\Controllers\CheckoutController::class, 'confirmPaymentReceived'])->name('orders.confirm-payment');
@@ -139,6 +141,10 @@ Route::match(['get', 'post'], '/api/biteship-simulate-rates', [\App\Http\Control
 // 6. TemanQRIS Webhook Notification Endpoint (CSRF-exempted)
 Route::post('/webhook/temanqris', [\App\Http\Controllers\TemanQrisWebhookController::class, 'handle'])
     ->name('webhook.temanqris');
+
+// 7. Biteship Webhook Notification Endpoint (CSRF-exempted)
+Route::post('/webhook/biteship', [\App\Http\Controllers\BiteshipWebhookController::class, 'handle'])
+    ->name('webhook.biteship');
 
 // 7. Al-Qur'an Digital (Quran Foundation API v4)
 Route::get('/quran', [\App\Http\Controllers\QuranController::class, 'index'])->name('quran.index');

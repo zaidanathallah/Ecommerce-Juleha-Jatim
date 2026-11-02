@@ -53,6 +53,7 @@ class Order extends Model
         'biteship_order_id',
         'biteship_waybill_id',
         'biteship_tracking_status',
+        'biteship_label_url',
         'qris_invoice_number',
         'qris_payment_url',
         'qris_content',

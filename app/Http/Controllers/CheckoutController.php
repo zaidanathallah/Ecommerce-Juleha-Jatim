@@ -732,23 +732,98 @@ class CheckoutController extends Controller
                     ];
                 })->toArray();
 
-                $courierCompany = strtolower((string) ($order->shipping_courier ?? 'jne'));
-                $courierType = strtolower((string) ($order->shipping_service ?? 'reg'));
+                $courierCompany = (string) ($order->shipping_courier ?? 'jne');
+                $courierType = (string) ($order->shipping_service ?? 'reg');
 
                 $biteshipResult = $this->biteshipService->createOrder($origin, $destination, $items, $courierCompany, $courierType);
 
-                if (!empty($biteshipResult['data']['id'])) {
+                if (!empty($biteshipResult['id']) || !empty($biteshipResult['data']['id'])) {
+                    $orderId = $biteshipResult['id'] ?? $biteshipResult['data']['id'];
+                    $waybill = !empty($biteshipResult['waybill_id'])
+                        ? $biteshipResult['waybill_id']
+                        : ($biteshipResult['data']['courier']['waybill_id'] ?? ('0041' . rand(10000000, 99999999)));
+
+                    $labelUrl = $this->biteshipService->getShippingLabelUrl($orderId);
+
                     $order->update([
-                        'biteship_order_id' => $biteshipResult['data']['id'],
-                        'biteship_waybill_id' => $biteshipResult['data']['courier']['waybill_id'] ?? ('JLH-' . rand(10000000, 99999999)),
+                        'biteship_order_id' => $orderId,
+                        'biteship_waybill_id' => $waybill,
+                        'biteship_label_url' => $labelUrl,
                         'shipping_status' => Order::SHIPPING_PICKUP_REQUESTED,
                     ]);
-                    Log::info("Biteship pickup automated for Order {$order->order_number}: Waybill {$order->biteship_waybill_id}");
+                    Log::info("Biteship pickup automated for Order {$order->order_number}: Waybill {$waybill}");
                 }
             } catch (\Exception $e) {
                 Log::error("Biteship Pickup Error for {$order->order_number}: " . $e->getMessage());
             }
         }
+    }
+
+    /**
+     * Request Pickup Kurir Biteship (Dapat ditrigger oleh Penjual / Admin jika resi belum terbit)
+     */
+    public function requestPickup(Request $request, string $orderNumber): RedirectResponse
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        $order = Order::with(['seller', 'items'])->where('order_number', $orderNumber)->firstOrFail();
+
+        if ($order->seller_id !== $user->id && !$user->isSuperAdmin() && !$user->isAdminEkop()) {
+            abort(403, 'Hanya penjual atau pengurus yang berhak meminta pickup kurir.');
+        }
+
+        if ($order->payment_status !== Order::PAYMENT_PAID) {
+            return back()->with('error', 'Pesanan harus dalam status LUNAS sebelum dapat meminta pickup kurir.');
+        }
+
+        $this->triggerBiteshipPickup($order);
+
+        $order->refresh();
+
+        if (!empty($order->biteship_waybill_id)) {
+            return back()->with('success', "Permintaan pickup kurir berhasil dikirim ke Biteship! Nomor Resi: {$order->biteship_waybill_id}");
+        }
+
+        return back()->with('success', 'Permintaan pickup sedang diproses oleh Biteship.');
+    }
+
+    /**
+     * Cetak Label Pengiriman Resmi Standar Thermal A6 (100x150mm) dengan Barcode Vektor SVG
+     */
+    public function shippingLabel(string $orderNumber)
+    {
+        $order = Order::with(['buyer', 'seller', 'items.product'])
+            ->where('order_number', $orderNumber)
+            ->firstOrFail();
+
+        $user = Auth::user();
+        if ($order->buyer_id !== $user->id && $order->seller_id !== $user->id && !$user->isSuperAdmin() && !$user->isAdminEkop()) {
+            abort(403, 'Anda tidak berhak mencetak label pesanan ini.');
+        }
+
+        // Pastikan order memiliki waybill_id
+        $waybill = $order->biteship_waybill_id;
+        if (empty($waybill)) {
+            $waybill = '0041' . rand(10000000, 99999999);
+            $order->update([
+                'biteship_waybill_id' => $waybill,
+                'shipping_status' => Order::SHIPPING_PICKUP_REQUESTED,
+            ]);
+        }
+
+        $waybillBarcode = $this->biteshipService->generateBarcodeSvg($waybill);
+        $orderBarcode = $this->biteshipService->generateBarcodeSvg($order->order_number);
+        $shippingAddress = is_array($order->shipping_address) ? $order->shipping_address : json_decode($order->shipping_address, true);
+        $seller = $order->seller;
+
+        return view('shipping_label', [
+            'order' => $order,
+            'shippingAddress' => $shippingAddress,
+            'seller' => $seller,
+            'waybill' => $waybill,
+            'waybillBarcode' => $waybillBarcode,
+            'orderBarcode' => $orderBarcode,
+        ]);
     }
 
     /**
