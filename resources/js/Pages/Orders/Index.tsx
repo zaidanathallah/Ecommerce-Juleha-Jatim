@@ -41,6 +41,9 @@ interface OrderData {
     shipping_courier: string;
     shipping_service: string;
     biteship_waybill_id?: string | null;
+    payment_expires_at?: string | null;
+    cancellation_reason?: string | null;
+    cancelled_at?: string | null;
     created_at: string;
     seller: {
         id: number;
@@ -107,6 +110,22 @@ export default function OrdersIndex({ orders, activeTab, counts }: Props) {
                 color: 'text-[#ee4d2d]',
                 badge: 'bg-orange-50 text-[#ee4d2d] border-[#ee4d2d]',
                 icon: Clock,
+            };
+        }
+        if (order.payment_status === 'cancelled' || order.shipping_status === 'cancelled') {
+            return {
+                text: 'DIBATALKAN',
+                color: 'text-red-500',
+                badge: 'bg-red-50 text-red-600 border-red-200',
+                icon: XCircle,
+            };
+        }
+        if (order.payment_status === 'expired') {
+            return {
+                text: 'KEDALUWARSA',
+                color: 'text-neutral-500',
+                badge: 'bg-neutral-100 text-neutral-600 border-neutral-200',
+                icon: XCircle,
             };
         }
         if (order.shipping_status === 'delivered') {
@@ -305,6 +324,11 @@ export default function OrdersIndex({ orders, activeTab, counts }: Props) {
                                                     <div className="text-[10px] text-blue-600 font-mono font-bold flex items-center gap-1">
                                                         <Truck className="h-3 w-3" />
                                                         Resi {order.shipping_courier}: {order.biteship_waybill_id}
+                                                    </div>
+                                                )}
+                                                {order.cancellation_reason && (order.payment_status === 'cancelled' || order.shipping_status === 'cancelled') && (
+                                                    <div className="text-[10px] text-red-600 font-medium">
+                                                        Alasan Dibatalkan: {order.cancellation_reason}
                                                     </div>
                                                 )}
                                             </div>

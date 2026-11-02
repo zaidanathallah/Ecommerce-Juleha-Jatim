@@ -43,3 +43,4 @@ echo.
 echo.
 echo Server telah dimatikan.
 pause
+

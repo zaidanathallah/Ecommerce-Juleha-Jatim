@@ -16,6 +16,7 @@ class Order extends Model
     public const PAYMENT_PAID = 'paid';
     public const PAYMENT_EXPIRED = 'expired';
     public const PAYMENT_FAILED = 'failed';
+    public const PAYMENT_CANCELLED = 'cancelled';
 
     public const SHIPPING_PENDING = 'pending';
     public const SHIPPING_CONFIRMED = 'confirmed';
@@ -70,6 +71,9 @@ class Order extends Model
         'shipping_status',
         'paid_at',
         'delivered_at',
+        'payment_expires_at',
+        'cancellation_reason',
+        'cancelled_at',
     ];
 
     protected function casts(): array
@@ -87,6 +91,8 @@ class Order extends Model
             'received_quantity' => 'integer',
             'paid_at' => 'datetime',
             'delivered_at' => 'datetime',
+            'payment_expires_at' => 'datetime',
+            'cancelled_at' => 'datetime',
         ];
     }
 

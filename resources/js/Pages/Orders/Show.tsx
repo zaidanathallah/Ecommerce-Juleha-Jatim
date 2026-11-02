@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import MarketplaceLayout from '@/Layouts/MarketplaceLayout';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/Components/ui/card';
@@ -26,16 +26,28 @@ import {
     UploadCloud,
     PackageCheck,
     ExternalLink,
-    Image as ImageIcon,
     AlertCircle,
     QrCode,
     Check,
     Sparkles,
+    XCircle,
+    AlertTriangle,
+    Edit3,
+    Navigation,
+    ShieldCheck,
 } from 'lucide-react';
 
 interface Props {
     order: any;
 }
+
+const CANCEL_REASONS = [
+    'Ingin mengubah alamat pengiriman',
+    'Ingin mengubah rincian pesanan (produk/jumlah)',
+    'Menemukan harga yang lebih murah di tempat lain',
+    'Ingin mengganti metode pembayaran',
+    'Lainnya / Tidak jadi membeli saat ini',
+];
 
 export default function OrderShow({ order }: Props) {
     const { auth } = usePage<PageProps>().props;
@@ -46,17 +58,116 @@ export default function OrderShow({ order }: Props) {
     const isAdmin = currentUser?.role === 'super_admin' || currentUser?.role === 'admin_ekop';
 
     const isPaid = order.payment_status === 'paid';
+    const isCancelled = order.payment_status === 'cancelled';
+    const isExpired = order.payment_status === 'expired';
     const isAwaitingConfirmation = order.payment_status === 'awaiting_seller_confirmation';
+    const isPending = order.payment_status === 'pending';
     const isManual = order.payment_method_type === 'manual_transfer';
     const isDelivered = order.shipping_status === 'delivered';
 
     // State for Copy Feedback
     const [copiedText, setCopiedText] = useState<string | null>(null);
 
-    // State for Delivery Confirmation Modal
+    // Modal States
     const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
+    const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+    const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+    const [justPaidAlert, setJustPaidAlert] = useState(false);
 
-    // Form for Upload Transfer Receipt
+    // 1. Countdown Timer (24-Hour / 23:59:59 timer ticking live)
+    const [timeLeftFormatted, setTimeLeftFormatted] = useState<string>('23:59:59');
+    const [isTimerEnded, setIsTimerEnded] = useState(false);
+
+    useEffect(() => {
+        if (!isPending && !isAwaitingConfirmation) return;
+
+        // Target expiration timestamp
+        const expiryTime = order.payment_expires_at
+            ? new Date(order.payment_expires_at).getTime()
+            : new Date(order.created_at).getTime() + 24 * 60 * 60 * 1000;
+
+        const updateCountdown = () => {
+            const now = new Date().getTime();
+            const distance = expiryTime - now;
+
+            if (distance <= 0) {
+                setTimeLeftFormatted('00:00:00');
+                setIsTimerEnded(true);
+                return;
+            }
+
+            const hours = Math.floor(distance / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            const pad = (n: number) => n.toString().padStart(2, '0');
+            setTimeLeftFormatted(`${pad(hours)}:${pad(minutes)}:${pad(seconds)}`);
+        };
+
+        updateCountdown();
+        const interval = setInterval(updateCountdown, 1000);
+        return () => clearInterval(interval);
+    }, [order.payment_expires_at, order.created_at, isPending, isAwaitingConfirmation]);
+
+    // 2. Real-Time Auto-Callback Polling (Every 3 seconds while pending)
+    const audioPlayedRef = useRef(false);
+
+    const playCelebrationSound = () => {
+        if (audioPlayedRef.current) return;
+        audioPlayedRef.current = true;
+        try {
+            const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+            if (!AudioCtx) return;
+            const ctx = new AudioCtx();
+            const now = ctx.currentTime;
+            // Melodic celebration arpeggio: C5 -> E5 -> G5 -> C6
+            const chord = [523.25, 659.25, 783.99, 1046.5];
+            chord.forEach((freq, idx) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+                gain.gain.setValueAtTime(0.2, now + idx * 0.12);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.35);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now + idx * 0.12);
+                osc.stop(now + idx * 0.12 + 0.35);
+            });
+        } catch (err) {
+            console.log('Audio autoplay blocked or unavailable', err);
+        }
+    };
+
+    useEffect(() => {
+        if (!isPending) return;
+
+        const pollInterval = setInterval(async () => {
+            try {
+                const res = await fetch(route('orders.payment-status', order.order_number), {
+                    headers: { Accept: 'application/json' },
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.is_paid) {
+                        clearInterval(pollInterval);
+                        playCelebrationSound();
+                        setJustPaidAlert(true);
+                        router.reload();
+                    } else if (data.status === 'cancelled' || data.status === 'expired') {
+                        clearInterval(pollInterval);
+                        router.reload();
+                    }
+                }
+            } catch (err) {
+                // Ignore transient network hiccups
+            }
+        }, 3000);
+
+        return () => clearInterval(pollInterval);
+    }, [isPending, order.order_number]);
+
+    // 3. Form for Upload Transfer Receipt
     const transferForm = useForm<{ receipt: File | null }>({
         receipt: null,
     });
@@ -88,7 +199,74 @@ export default function OrderShow({ order }: Props) {
         });
     };
 
-    // Form for Confirm Delivery Modal
+    // 4. Form for Cancel Order
+    const cancelForm = useForm({
+        reason: CANCEL_REASONS[0],
+        custom_reason: '',
+    });
+
+    const submitCancelOrder = (e: React.FormEvent) => {
+        e.preventDefault();
+        const finalReason =
+            cancelForm.data.reason === 'Lainnya / Tidak jadi membeli saat ini' && cancelForm.data.custom_reason.trim()
+                ? cancelForm.data.custom_reason.trim()
+                : cancelForm.data.reason;
+
+        cancelForm.transform(() => ({ reason: finalReason }));
+        cancelForm.post(route('orders.cancel', order.order_number), {
+            preserveScroll: true,
+            onSuccess: () => {
+                setIsCancelModalOpen(false);
+            },
+        });
+    };
+
+    // 5. Form for Change Address
+    const currentAddr = order.shipping_address || {};
+    const addressForm = useForm({
+        recipient_name: currentAddr.recipient_name || '',
+        recipient_phone: currentAddr.recipient_phone || currentAddr.phone || '',
+        address: currentAddr.address || currentAddr.address_line || '',
+        notes: currentAddr.notes || '',
+        lat: currentAddr.lat || -7.2825,
+        lng: currentAddr.lng || 112.7638,
+    });
+
+    const [isDetectingGps, setIsDetectingGps] = useState(false);
+    const handleDetectGps = () => {
+        if (!navigator.geolocation) {
+            alert('Geolocation tidak didukung oleh browser Anda.');
+            return;
+        }
+        setIsDetectingGps(true);
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                addressForm.setData((prev) => ({
+                    ...prev,
+                    lat: parseFloat(pos.coords.latitude.toFixed(6)),
+                    lng: parseFloat(pos.coords.longitude.toFixed(6)),
+                }));
+                setIsDetectingGps(false);
+            },
+            () => {
+                alert('Gagal mendeteksi koordinat GPS otomatis. Izin lokasi mungkin ditolak.');
+                setIsDetectingGps(false);
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    };
+
+    const submitUpdateAddress = (e: React.FormEvent) => {
+        e.preventDefault();
+        addressForm.post(route('orders.update-address', order.order_number), {
+            preserveScroll: true,
+            onSuccess: () => {
+                setIsAddressModalOpen(false);
+            },
+        });
+    };
+
+    // 6. Form for Confirm Delivery Modal
     const deliveryForm = useForm<{
         received_quantity: number;
         delivery_proof: File | null;
@@ -125,7 +303,7 @@ export default function OrderShow({ order }: Props) {
         });
     };
 
-    // Confirm Payment
+    // Confirm Payment for Seller
     const paymentConfirmForm = useForm({});
     const submitConfirmPayment = (e: React.FormEvent) => {
         e.preventDefault();
@@ -136,9 +314,14 @@ export default function OrderShow({ order }: Props) {
         }
     };
 
+    // Sandbox Simulation Form
     const submitSimulateQris = (e: React.FormEvent) => {
         e.preventDefault();
-        if (confirm('Simulasikan pembayaran QRIS berhasil lunas? Status pesanan akan otomatis terverifikasi LUNAS dan penjemputan kurir Biteship akan diproses.')) {
+        if (
+            confirm(
+                'Simulasikan pembayaran QRIS berhasil lunas? Status pesanan akan otomatis terverifikasi LUNAS dan penjemputan kurir Biteship akan diproses.'
+            )
+        ) {
             paymentConfirmForm.post(route('orders.simulate-qris-paid', order.order_number), {
                 preserveScroll: true,
             });
@@ -159,15 +342,18 @@ export default function OrderShow({ order }: Props) {
 
             <div className="max-w-4xl mx-auto space-y-6">
                 <nav className="flex items-center gap-2 text-xs text-neutral-500">
-                    <Link href={route('orders.my-orders')} className="hover:text-[#ee4d2d] flex items-center gap-1 font-semibold">
+                    <Link
+                        href={route('orders.my-orders')}
+                        className="hover:text-[#ee4d2d] flex items-center gap-1 font-semibold"
+                    >
                         <ArrowLeft className="h-3.5 w-3.5" />
                         Kembali ke Pesanan Saya
                     </Link>
                 </nav>
 
-                {/* Shopee Payment Success Banner */}
+                {/* SHOPEE PAYMENT SUCCESS BANNER */}
                 {isPaid && (
-                    <div className="bg-gradient-to-r from-[#ee4d2d] to-orange-500 text-white rounded-3xl p-6 sm:p-8 text-center shadow-xl space-y-4">
+                    <div className="bg-gradient-to-r from-[#ee4d2d] to-orange-500 text-white rounded-3xl p-6 sm:p-8 text-center shadow-xl space-y-4 animate-in fade-in duration-500">
                         <div className="h-16 w-16 bg-white/20 backdrop-blur-xs rounded-full flex items-center justify-center mx-auto border-2 border-white/40">
                             <CheckCircle2 className="h-9 w-9 text-white" />
                         </div>
@@ -176,7 +362,7 @@ export default function OrderShow({ order }: Props) {
                                 Hore, Pesananmu berhasil!
                             </h2>
                             <p className="text-xs sm:text-sm text-orange-100 max-w-md mx-auto font-medium">
-                                Silakan cek notifikasi untuk mengetahui status pesananmu.
+                                Pembayaran telah terverifikasi lunas. Penjual dan kurir sedang mempersiapkan pesananmu.
                             </p>
                         </div>
                         <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
@@ -189,13 +375,95 @@ export default function OrderShow({ order }: Props) {
                                 </Button>
                             </Link>
                             <Link href={route('orders.my-orders')}>
-                                <Button
-                                    className="bg-white text-[#ee4d2d] hover:bg-orange-50 rounded-xl px-6 text-xs font-extrabold shadow-md"
-                                >
+                                <Button className="bg-white text-[#ee4d2d] hover:bg-orange-50 rounded-xl px-6 text-xs font-extrabold shadow-md">
                                     Pesanan Saya
                                 </Button>
                             </Link>
                         </div>
+                    </div>
+                )}
+
+                {/* CANCELLED BANNER */}
+                {isCancelled && (
+                    <div className="bg-neutral-100 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-800 rounded-3xl p-6 text-neutral-800 dark:text-neutral-200 shadow-sm space-y-3">
+                        <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-full bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center text-neutral-600">
+                                <XCircle className="h-6 w-6 text-red-500" />
+                            </div>
+                            <div>
+                                <h3 className="font-black text-base text-neutral-900 dark:text-white">
+                                    Pesanan Ini Telah Dibatalkan
+                                </h3>
+                                <p className="text-xs text-neutral-500">
+                                    Alasan: <strong>{order.cancellation_reason || 'Dibatalkan oleh pembeli'}</strong>
+                                </p>
+                            </div>
+                        </div>
+                        {order.cancelled_at && (
+                            <p className="text-[11px] text-neutral-500">
+                                Waktu Pembatalan: {new Date(order.cancelled_at).toLocaleString('id-ID')} &bull; Stok produk telah dikembalikan otomatis.
+                            </p>
+                        )}
+                    </div>
+                )}
+
+                {/* EXPIRED BANNER */}
+                {isExpired && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-3xl p-6 text-amber-900 shadow-sm space-y-2">
+                        <div className="flex items-center gap-3">
+                            <AlertTriangle className="h-6 w-6 text-amber-600" />
+                            <div>
+                                <h3 className="font-black text-base">Batas Waktu Pembayaran Habis (Kedaluwarsa)</h3>
+                                <p className="text-xs text-amber-700">
+                                    Pesanan ini telah kedaluwarsa karena tidak diselesaikan dalam 24 jam. Stok produk telah dirilis kembali.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* SHOPEE NOTICE COUNTDOWN BAR (When Pending Payment) */}
+                {(isPending || isAwaitingConfirmation) && (
+                    <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+                        <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-full bg-[#ee4d2d]/10 flex items-center justify-center text-[#ee4d2d] shrink-0">
+                                <Clock className="h-5 w-5 animate-pulse" />
+                            </div>
+                            <div>
+                                <div className="text-xs sm:text-sm font-black text-neutral-900">
+                                    Bayar dalam {timeLeftFormatted} dengan {isManual ? 'Transfer Manual' : 'QRIS Dinamis Otomatis'}
+                                </div>
+                                <div className="text-[11px] text-neutral-600">
+                                    Pesanan akan otomatis dibatalkan jika tidak diselesaikan sebelum batas waktu 24 jam.
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Shopee Action Buttons: Ubah Alamat & Batalkan Pesanan */}
+                        {isBuyer && (
+                            <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setIsAddressModalOpen(true)}
+                                    className="text-xs font-bold rounded-xl border-orange-200 text-[#ee4d2d] hover:bg-orange-100/50 h-8 gap-1"
+                                >
+                                    <Edit3 className="h-3 w-3" />
+                                    Ubah Alamat
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setIsCancelModalOpen(true)}
+                                    className="text-xs font-bold rounded-xl border-neutral-300 text-neutral-700 hover:text-red-600 hover:border-red-300 hover:bg-red-50 h-8 gap-1"
+                                >
+                                    <XCircle className="h-3 w-3" />
+                                    Batalkan Pesanan
+                                </Button>
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -223,6 +491,16 @@ export default function OrderShow({ order }: Props) {
                             <Badge className="text-xs gap-1 py-1 px-3 bg-neutral-900 text-white font-bold">
                                 <CheckCircle2 className="h-3.5 w-3.5" />
                                 LUNAS (PAID)
+                            </Badge>
+                        ) : isCancelled ? (
+                            <Badge variant="destructive" className="text-xs gap-1 py-1 px-3 font-bold">
+                                <XCircle className="h-3.5 w-3.5" />
+                                DIBATALKAN
+                            </Badge>
+                        ) : isExpired ? (
+                            <Badge className="text-xs gap-1 py-1 px-3 bg-neutral-600 text-white font-bold">
+                                <AlertTriangle className="h-3.5 w-3.5" />
+                                KEDALUWARSA
                             </Badge>
                         ) : isAwaitingConfirmation ? (
                             <Badge variant="warning" className="text-xs gap-1 py-1 px-3">
@@ -345,43 +623,45 @@ export default function OrderShow({ order }: Props) {
                                                                 disabled={paymentConfirmForm.processing}
                                                                 className="w-full text-xs font-bold bg-[#ee4d2d] hover:bg-[#d73211] text-white rounded-xl py-5"
                                                             >
-                                                                {paymentConfirmForm.processing ? 'Memproses...' : 'Konfirmasi Dana Masuk (Set Status LUNAS)'}
+                                                                {paymentConfirmForm.processing
+                                                                    ? 'Memproses...'
+                                                                    : 'Konfirmasi Dana Masuk (Set Status LUNAS)'}
                                                             </Button>
                                                         </form>
                                                     </div>
                                                 )}
                                             </div>
-                                        ) : (
-                                            /* Upload Form for Buyer */
-                                            isBuyer ? (
-                                                <form onSubmit={submitTransferReceipt} className="space-y-3 p-4 bg-neutral-50 dark:bg-neutral-800/50 border rounded-xl">
-                                                    <p className="text-[11px] text-neutral-600 dark:text-neutral-400">
-                                                        Unggah foto bukti transfer bank Anda. Gambar akan otomatis dioptimasi HD untuk arsip pesanan.
-                                                    </p>
-                                                    <input
-                                                        type="file"
-                                                        accept="image/*"
-                                                        onChange={handleReceiptChange}
-                                                        className="block w-full text-xs text-neutral-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-neutral-200 file:text-neutral-800 hover:file:bg-neutral-300 cursor-pointer"
-                                                    />
-                                                    {receiptPreview && (
-                                                        <div className="mt-2 w-32 h-24 border rounded-xl overflow-hidden">
-                                                            <img src={receiptPreview} alt="Preview" className="w-full h-full object-cover" />
-                                                        </div>
-                                                    )}
-                                                    <Button
-                                                        type="submit"
-                                                        disabled={transferForm.processing}
-                                                        className="w-full text-xs font-bold bg-[#ee4d2d] hover:bg-[#d73211] text-white rounded-xl py-5"
-                                                    >
-                                                        {transferForm.processing ? 'Mengunggah...' : 'Unggah Bukti Transfer'}
-                                                    </Button>
-                                                </form>
-                                            ) : (
-                                                <p className="text-[11px] text-neutral-500 italic">
-                                                    Pembeli belum mengunggah bukti transfer.
+                                        ) : isBuyer ? (
+                                            <form
+                                                onSubmit={submitTransferReceipt}
+                                                className="space-y-3 p-4 bg-neutral-50 dark:bg-neutral-800/50 border rounded-xl"
+                                            >
+                                                <p className="text-[11px] text-neutral-600 dark:text-neutral-400">
+                                                    Unggah foto bukti transfer bank Anda. Gambar akan otomatis dioptimasi HD untuk arsip pesanan.
                                                 </p>
-                                            )
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handleReceiptChange}
+                                                    className="block w-full text-xs text-neutral-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-neutral-200 file:text-neutral-800 hover:file:bg-neutral-300 cursor-pointer"
+                                                />
+                                                {receiptPreview && (
+                                                    <div className="mt-2 w-32 h-24 border rounded-xl overflow-hidden">
+                                                        <img src={receiptPreview} alt="Preview" className="w-full h-full object-cover" />
+                                                    </div>
+                                                )}
+                                                <Button
+                                                    type="submit"
+                                                    disabled={transferForm.processing}
+                                                    className="w-full text-xs font-bold bg-[#ee4d2d] hover:bg-[#d73211] text-white rounded-xl py-5"
+                                                >
+                                                    {transferForm.processing ? 'Mengunggah...' : 'Unggah Bukti Transfer'}
+                                                </Button>
+                                            </form>
+                                        ) : (
+                                            <p className="text-[11px] text-neutral-500 italic">
+                                                Pembeli belum mengunggah bukti transfer.
+                                            </p>
                                         )}
                                     </div>
                                 </CardContent>
@@ -397,7 +677,8 @@ export default function OrderShow({ order }: Props) {
                                                 Pembayaran Resmi QRIS Dinamis
                                             </CardTitle>
                                         </div>
-                                        <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-white/20 font-bold">
+                                        <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-white/20 font-bold flex items-center gap-1">
+                                            <ShieldCheck className="h-3 w-3" />
                                             QRIS OTOMATIS
                                         </span>
                                     </div>
@@ -490,13 +771,19 @@ export default function OrderShow({ order }: Props) {
                                         </div>
                                     </div>
 
-                                    {/* Auto verification / Testing simulator */}
+                                    {/* Auto verification / Realtime notification indicator */}
                                     <div className="p-3 bg-neutral-50 dark:bg-neutral-800/40 rounded-xl border border-neutral-200 text-center space-y-2">
-                                        <p className="text-[11px] text-neutral-600 dark:text-neutral-400">
-                                            Status verifikasi: <strong>Menunggu respons pembayaran gateway</strong>. Webhook TemanQRIS akan otomatis mengupdate pesanan menjadi LUNAS begitu pembayaran diselesaikan.
-                                        </p>
+                                        <div className="flex items-center justify-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-400 font-medium">
+                                            <span className="relative flex h-2 w-2">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ee4d2d] opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#ee4d2d]"></span>
+                                            </span>
+                                            <span>
+                                                Pengecekan Otomatis Realtime Aktif: Webhook TemanQRIS akan otomatis memverifikasi pesanan menjadi LUNAS seketika setelah pembayaran berhasil.
+                                            </span>
+                                        </div>
 
-                                        {!isPaid && (
+                                        {!isPaid && !isCancelled && !isExpired && (
                                             <form onSubmit={submitSimulateQris} className="pt-1">
                                                 <Button
                                                     type="submit"
@@ -564,7 +851,7 @@ export default function OrderShow({ order }: Props) {
                                             Saat pesanan sampai, pembeli wajib mengonfirmasi penerimaan dengan menginput jumlah unit yang diterima serta mengunggah foto barang/paket sebagai bukti transparansi syariat.
                                         </p>
 
-                                        {isBuyer ? (
+                                        {isBuyer && isPaid ? (
                                             <Button
                                                 type="button"
                                                 onClick={() => setIsDeliveryModalOpen(true)}
@@ -575,7 +862,9 @@ export default function OrderShow({ order }: Props) {
                                             </Button>
                                         ) : (
                                             <div className="p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl text-neutral-500 italic text-[11px]">
-                                                Menunggu pembeli melakukan konfirmasi dan mengunggah foto bukti penerimaan fisik.
+                                                {isPaid
+                                                    ? 'Menunggu pembeli melakukan konfirmasi dan mengunggah foto bukti penerimaan fisik.'
+                                                    : 'Konfirmasi penerimaan dibuka setelah pesanan selesai dibayar dan barang dikirimkan.'}
                                             </div>
                                         )}
                                     </div>
@@ -690,10 +979,22 @@ export default function OrderShow({ order }: Props) {
                                 </div>
 
                                 {/* Shipping Address Box */}
-                                <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-xl border border-neutral-200 text-[11px] space-y-1">
-                                    <div className="flex items-center gap-1 font-bold text-neutral-800 dark:text-neutral-200">
-                                        <MapPin className="h-3.5 w-3.5 text-[#ee4d2d]" />
-                                        Alamat Pengiriman
+                                <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-xl border border-neutral-200 text-[11px] space-y-1.5">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-1 font-bold text-neutral-800 dark:text-neutral-200">
+                                            <MapPin className="h-3.5 w-3.5 text-[#ee4d2d]" />
+                                            Alamat Pengiriman
+                                        </div>
+                                        {isBuyer && (isPending || isAwaitingConfirmation) && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsAddressModalOpen(true)}
+                                                className="text-[10px] text-[#ee4d2d] font-bold hover:underline flex items-center gap-0.5"
+                                            >
+                                                <Edit3 className="h-3 w-3" />
+                                                Ubah
+                                            </button>
+                                        )}
                                     </div>
                                     <p className="text-neutral-700 dark:text-neutral-300">
                                         <strong>{order.shipping_address?.recipient_name}</strong> ({order.shipping_address?.recipient_phone})
@@ -701,6 +1002,11 @@ export default function OrderShow({ order }: Props) {
                                     <p className="text-neutral-500">
                                         {order.shipping_address?.address}
                                     </p>
+                                    {order.shipping_address?.notes && (
+                                        <p className="text-[10px] text-amber-700 bg-amber-50 p-1.5 rounded-lg border border-amber-200">
+                                            Catatan: {order.shipping_address.notes}
+                                        </p>
+                                    )}
                                     <span className="text-[10px] font-mono text-neutral-400 block">
                                         Koordinat: {order.shipping_address?.lat}, {order.shipping_address?.lng}
                                     </span>
@@ -711,7 +1017,210 @@ export default function OrderShow({ order }: Props) {
                 </div>
             </div>
 
-            {/* Modal Konfirmasi Terima Barang (Shadcn Dialog) */}
+            {/* MODAL 1: BATALKAN PESANAN (Shopee Cancel Flow) */}
+            <Dialog open={isCancelModalOpen} onOpenChange={setIsCancelModalOpen}>
+                <DialogContent onClose={() => setIsCancelModalOpen(false)}>
+                    <DialogHeader>
+                        <DialogTitle className="text-base font-black text-neutral-900 flex items-center gap-2">
+                            <XCircle className="h-5 w-5 text-red-500" />
+                            Batalkan Pesanan
+                        </DialogTitle>
+                        <DialogDescription className="text-xs">
+                            Pilih alasan pembatalan Anda. Setelah dibatalkan, tagihan akan ditutup dan stok produk akan dikembalikan ke toko.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <form onSubmit={submitCancelOrder} className="space-y-4 pt-2">
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-neutral-800 block">
+                                Alasan Pembatalan:
+                            </label>
+                            <div className="space-y-2">
+                                {CANCEL_REASONS.map((reason) => (
+                                    <label
+                                        key={reason}
+                                        className={`flex items-center gap-3 p-3 rounded-xl border text-xs cursor-pointer transition ${
+                                            cancelForm.data.reason === reason
+                                                ? 'border-[#ee4d2d] bg-orange-50/50 font-bold text-[#ee4d2d]'
+                                                : 'border-neutral-200 hover:bg-neutral-50 text-neutral-700'
+                                        }`}
+                                    >
+                                        <input
+                                            type="radio"
+                                            name="cancellation_reason"
+                                            value={reason}
+                                            checked={cancelForm.data.reason === reason}
+                                            onChange={(e) => cancelForm.setData('reason', e.target.value)}
+                                            className="text-[#ee4d2d] focus:ring-[#ee4d2d]"
+                                        />
+                                        <span>{reason}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+
+                        {cancelForm.data.reason === 'Lainnya / Tidak jadi membeli saat ini' && (
+                            <div>
+                                <label className="block text-xs font-bold text-neutral-800 mb-1">
+                                    Tuliskan Alasan Anda (Opsional):
+                                </label>
+                                <textarea
+                                    rows={2}
+                                    value={cancelForm.data.custom_reason}
+                                    onChange={(e) => cancelForm.setData('custom_reason', e.target.value)}
+                                    placeholder="Contoh: Ingin mengubah variasi atau memesan kembali nanti..."
+                                    className="w-full text-xs p-2.5 rounded-xl border border-neutral-300 focus:border-[#ee4d2d] focus:ring-[#ee4d2d]"
+                                />
+                            </div>
+                        )}
+
+                        <DialogFooter className="gap-2 sm:gap-0 pt-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setIsCancelModalOpen(false)}
+                                className="text-xs rounded-xl"
+                            >
+                                Kembali
+                            </Button>
+                            <Button
+                                type="submit"
+                                disabled={cancelForm.processing}
+                                className="text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-xl"
+                            >
+                                {cancelForm.processing ? 'Membatalkan...' : 'Konfirmasi Batalkan Pesanan'}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* MODAL 2: UBAH ALAMAT PENGIRIMAN (Shopee Change Address Flow) */}
+            <Dialog open={isAddressModalOpen} onOpenChange={setIsAddressModalOpen}>
+                <DialogContent onClose={() => setIsAddressModalOpen(false)}>
+                    <DialogHeader>
+                        <DialogTitle className="text-base font-black text-neutral-900 flex items-center gap-2">
+                            <MapPin className="h-5 w-5 text-[#ee4d2d]" />
+                            Ubah Alamat Pengiriman
+                        </DialogTitle>
+                        <DialogDescription className="text-xs">
+                            Perbarui detail penerima dan alamat pengiriman sebelum pembayaran dilakukan.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <form onSubmit={submitUpdateAddress} className="space-y-3.5 pt-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-xs font-bold text-neutral-800 mb-1">
+                                    Nama Penerima:
+                                </label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={addressForm.data.recipient_name}
+                                    onChange={(e) => addressForm.setData('recipient_name', e.target.value)}
+                                    className="w-full text-xs p-2.5 rounded-xl border border-neutral-300 focus:border-[#ee4d2d] focus:ring-[#ee4d2d]"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-neutral-800 mb-1">
+                                    Nomor Telepon / WhatsApp:
+                                </label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={addressForm.data.recipient_phone}
+                                    onChange={(e) => addressForm.setData('recipient_phone', e.target.value)}
+                                    className="w-full text-xs p-2.5 rounded-xl border border-neutral-300 focus:border-[#ee4d2d] focus:ring-[#ee4d2d]"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold text-neutral-800 mb-1">
+                                Alamat Lengkap (Jalan, No Rumah, RT/RW, Kecamatan, Kota/Kab):
+                            </label>
+                            <textarea
+                                rows={2}
+                                required
+                                value={addressForm.data.address}
+                                onChange={(e) => addressForm.setData('address', e.target.value)}
+                                className="w-full text-xs p-2.5 rounded-xl border border-neutral-300 focus:border-[#ee4d2d] focus:ring-[#ee4d2d]"
+                            />
+                        </div>
+
+                        <div>
+                            <div className="flex items-center justify-between mb-1">
+                                <label className="text-xs font-bold text-neutral-800">
+                                    Titik Koordinat Pengiriman (Lat / Lng):
+                                </label>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={isDetectingGps}
+                                    onClick={handleDetectGps}
+                                    className="h-6 text-[10px] px-2 border-orange-200 text-[#ee4d2d] hover:bg-orange-50 gap-1 rounded-lg"
+                                >
+                                    <Navigation className="h-2.5 w-2.5" />
+                                    {isDetectingGps ? 'Mendeteksi...' : 'Deteksi GPS Saya'}
+                                </Button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <input
+                                    type="number"
+                                    step="any"
+                                    value={addressForm.data.lat}
+                                    onChange={(e) => addressForm.setData('lat', parseFloat(e.target.value) || 0)}
+                                    placeholder="Latitude"
+                                    className="w-full text-xs p-2 rounded-xl border border-neutral-300 font-mono"
+                                />
+                                <input
+                                    type="number"
+                                    step="any"
+                                    value={addressForm.data.lng}
+                                    onChange={(e) => addressForm.setData('lng', parseFloat(e.target.value) || 0)}
+                                    placeholder="Longitude"
+                                    className="w-full text-xs p-2 rounded-xl border border-neutral-300 font-mono"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold text-neutral-800 mb-1">
+                                Catatan Pengiriman (Opsional):
+                            </label>
+                            <input
+                                type="text"
+                                value={addressForm.data.notes}
+                                onChange={(e) => addressForm.setData('notes', e.target.value)}
+                                placeholder="Contoh: Rumah pagar hitam samping masjid"
+                                className="w-full text-xs p-2.5 rounded-xl border border-neutral-300 focus:border-[#ee4d2d] focus:ring-[#ee4d2d]"
+                            />
+                        </div>
+
+                        <DialogFooter className="gap-2 sm:gap-0 pt-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setIsAddressModalOpen(false)}
+                                className="text-xs rounded-xl"
+                            >
+                                Batal
+                            </Button>
+                            <Button
+                                type="submit"
+                                disabled={addressForm.processing}
+                                className="text-xs font-bold bg-[#ee4d2d] hover:bg-[#d73211] text-white rounded-xl"
+                            >
+                                {addressForm.processing ? 'Menyimpan...' : 'Simpan Alamat Baru'}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* MODAL 3: KONFIRMASI TERIMA BARANG */}
             <Dialog open={isDeliveryModalOpen} onOpenChange={setIsDeliveryModalOpen}>
                 <DialogContent onClose={() => setIsDeliveryModalOpen(false)}>
                     <DialogHeader>

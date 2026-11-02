@@ -32,9 +32,18 @@ return [
     ],
 
     'temanqris' => [
+        'mode' => env('TEMANQRIS_MODE', 'sandbox'),
         'base_url' => env('TEMANQRIS_BASE_URL', 'https://temanqris.com'),
         'api_key' => env('TEMANQRIS_API_KEY'),
         'webhook_secret' => env('TEMANQRIS_WEBHOOK_SECRET'),
+        'sandbox' => [
+            'api_key' => env('TEMANQRIS_SANDBOX_API_KEY'),
+            'webhook_secret' => env('TEMANQRIS_SANDBOX_WEBHOOK_SECRET'),
+        ],
+        'live' => [
+            'api_key' => env('TEMANQRIS_LIVE_API_KEY'),
+            'webhook_secret' => env('TEMANQRIS_LIVE_WEBHOOK_SECRET'),
+        ],
     ],
 
     'biteship' => [

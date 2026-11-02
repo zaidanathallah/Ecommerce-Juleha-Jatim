@@ -96,7 +96,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/checkout/process', [\App\Http\Controllers\CheckoutController::class, 'process'])->name('checkout.process');
     Route::get('/pesanan-saya', [\App\Http\Controllers\CheckoutController::class, 'myOrders'])->name('orders.my-orders');
     Route::get('/orders/{order_number}', [\App\Http\Controllers\CheckoutController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{order_number}/cancel', [\App\Http\Controllers\CheckoutController::class, 'cancelOrder'])->name('orders.cancel');
+    Route::post('/orders/{order_number}/update-address', [\App\Http\Controllers\CheckoutController::class, 'updateAddress'])->name('orders.update-address');
     Route::post('/orders/{order_number}/simulate-qris-paid', [\App\Http\Controllers\CheckoutController::class, 'simulateQrisPaid'])->name('orders.simulate-qris-paid');
+    Route::get('/api/orders/{order_number}/payment-status', [\App\Http\Controllers\CheckoutController::class, 'checkPaymentStatus'])->name('orders.payment-status');
     Route::get('/api/orders/{order_number}/tracking', [\App\Http\Controllers\CheckoutController::class, 'trackOrder'])->name('orders.track');
     Route::post('/orders/{order_number}/upload-transfer-receipt', [\App\Http\Controllers\CheckoutController::class, 'uploadTransferReceipt'])->name('orders.upload-transfer-receipt');
     Route::post('/orders/{order_number}/confirm-delivery', [\App\Http\Controllers\CheckoutController::class, 'confirmDelivery'])->name('orders.confirm-delivery');
