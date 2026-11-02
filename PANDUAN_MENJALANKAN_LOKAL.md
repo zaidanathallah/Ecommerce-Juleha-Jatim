@@ -4,7 +4,22 @@ Panduan lengkap instalasi, konfigurasi, dan pengoperasian lokal untuk platform e
 
 ---
 
+## 🚀 CARA CEPAT: MENJALANKAN SERVER (1-KLIK)
+
+Jika Anda sudah menginstal proyek ini sebelumnya dan hanya ingin menjalankan server di laptop:
+
+1. **Buka Laragon** lalu klik **"Start All"** (pastikan Apache/Nginx & MySQL berwarna hijau).
+2. Buka folder proyek: `D:\Ecommerce Juleha Jatim`.
+3. **Klik ganda (double-click) file:**
+   👉 **`JALANKAN_SERVER.bat`**
+4. Website akan otomatis terbuka di browser Anda pada alamat:
+   **`http://localhost:8000`** atau **`http://127.0.0.1:8000`**.
+5. *Untuk mematikan server:* Cukup tutup jendela terminal hitam atau tekan tombol `Ctrl + C` lalu ketik `Y`.
+
+---
+
 ## DAFTAR ISI
+0. [Cara Cepat Menjalankan Server (1-Klik)](#-cara-cepat-menjalankan-server-1-klik)
 1. [Prasyarat Sistem (Prerequisites)](#1-prasyarat-sistem-prerequisites)
 2. [Langkah Instalasi Awal](#2-langkah-instalasi-awal)
 3. [Konfigurasi Database](#3-konfigurasi-database)
