@@ -132,6 +132,11 @@ Route::prefix('superadmin')->name('superadmin.')->middleware(['auth', 'role:supe
     Route::post('/admin-ekop', [SuperAdminController::class, 'storeAdminEkop'])->name('admin-ekop.store');
     Route::put('/admin-ekop/{user}', [SuperAdminController::class, 'updateAdminEkop'])->name('admin-ekop.update');
     Route::delete('/admin-ekop/{user}', [SuperAdminController::class, 'deleteAdminEkop'])->name('admin-ekop.delete');
+
+    // Global User Management CRUD (Seluruh Pengguna, Anggota, Penjual, Admin)
+    Route::post('/users', [SuperAdminController::class, 'storeUser'])->name('users.store');
+    Route::put('/users/{user}', [SuperAdminController::class, 'updateUser'])->name('users.update');
+    Route::delete('/users/{user}', [SuperAdminController::class, 'deleteUser'])->name('users.delete');
 });
 
 // 5. Biteship Sandbox Activation Simulator (UI & API)

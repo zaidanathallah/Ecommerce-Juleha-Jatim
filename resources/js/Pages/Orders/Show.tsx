@@ -1111,7 +1111,7 @@ export default function OrderShow({ order }: Props) {
                                             type="button"
                                             onClick={openTrackingModal}
                                             variant="outline"
-                                            className="w-full text-xs font-bold border-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 gap-1.5 h-9 rounded-xl text-neutral-700 dark:text-neutral-200"
+                                            className="w-full text-xs font-bold border-orange-300 bg-orange-50/50 hover:bg-orange-100 dark:hover:bg-neutral-800 gap-1.5 h-9 rounded-xl text-neutral-800 dark:text-neutral-200"
                                         >
                                             <Truck className="h-4 w-4 text-[#ee4d2d]" />
                                             <span>Lacak Pergerakan Kurir</span>
@@ -1120,8 +1120,22 @@ export default function OrderShow({ order }: Props) {
                                 ) : (
                                     <div className="space-y-2.5">
                                         <p className="text-[10px] text-neutral-500 leading-normal">
-                                            Resi akan otomatis terbit saat penjual melakukan request pickup atau konfirmasi pengiriman kurir.
+                                            {isPaid 
+                                                ? 'Pembayaran telah lunas. Penjual sedang memproses paket & meminta kurir logistik untuk pickup.' 
+                                                : 'Resi akan otomatis terbit saat penjual melakukan request pickup atau konfirmasi pengiriman kurir.'}
                                         </p>
+                                        
+                                        {/* Lacak Pergerakan Kurir selalu dapat diakses untuk melihat status proses */}
+                                        <Button
+                                            type="button"
+                                            onClick={openTrackingModal}
+                                            variant="outline"
+                                            className="w-full text-xs font-bold border-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 gap-1.5 h-9 rounded-xl text-neutral-700 dark:text-neutral-200"
+                                        >
+                                            <Truck className="h-4 w-4 text-[#ee4d2d]" />
+                                            <span>Lacak Status & Pergerakan Kurir</span>
+                                        </Button>
+
                                         {isPaid && (
                                             <div className="space-y-2 pt-1">
                                                 {(isSeller || isAdmin) && (
@@ -1150,10 +1164,10 @@ export default function OrderShow({ order }: Props) {
                                                             <Button
                                                                 type="button"
                                                                 variant="outline"
-                                                                className="w-full text-xs font-bold border-orange-200 text-[#ee4d2d] hover:bg-orange-50 gap-1.5 h-8 rounded-xl"
+                                                                className="w-full text-xs font-bold border-neutral-300 hover:bg-neutral-50 gap-1.5 h-8 rounded-xl"
                                                             >
-                                                                <Printer className="h-3.5 w-3.5" />
-                                                                <span>Preview & Cetak Label Thermal (A6)</span>
+                                                                <Printer className="h-3.5 w-3.5 text-neutral-600" />
+                                                                <span>Cetak Label Pengiriman Sementara</span>
                                                             </Button>
                                                         </a>
                                                     </>
@@ -1536,7 +1550,7 @@ export default function OrderShow({ order }: Props) {
                             </span>
                         </div>
                         <DialogDescription className="text-white/80 text-xs mt-1">
-                            Nomor Resi: <strong className="font-mono text-white font-bold">{order.biteship_waybill_id}</strong>
+                            Nomor Resi / Ref: <strong className="font-mono text-white font-bold">{trackingData?.waybill_id || order.biteship_waybill_id || order.order_number}</strong>
                         </DialogDescription>
                     </DialogHeader>
 

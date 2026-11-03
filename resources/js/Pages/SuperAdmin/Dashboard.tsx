@@ -33,10 +33,12 @@ import {
     MapPin,
     AlertCircle,
     Check,
+    Store,
 } from 'lucide-react';
 import CategoryManageModal from '@/Components/CategoryManageModal';
 import VoucherManageModal from '@/Components/VoucherManageModal';
 import AdminEkopManageModal, { AdminEkopData, RegionOption } from '@/Components/AdminEkopManageModal';
+import UserManageModal, { UserManageData } from '@/Components/UserManageModal';
 
 interface Props {
     stats: {
@@ -78,6 +80,7 @@ interface Props {
     }>;
     allRegionsList?: RegionOption[];
     adminEkopList?: any[];
+    allUsers?: any[];
 }
 
 export default function SuperAdminDashboard({
@@ -89,6 +92,7 @@ export default function SuperAdminDashboard({
     ekopRegions = [],
     allRegionsList = [],
     adminEkopList = [],
+    allUsers = [],
 }: Props) {
     const [selectedProduct, setSelectedProduct] = useState<ManagementProduct | null>(null);
     const [actionType, setActionType] = useState<'publish' | 'reject' | null>(null);
@@ -146,6 +150,68 @@ export default function SuperAdminDashboard({
     const handleDeleteAdminEkop = (admin: any) => {
         if (confirm(`Apakah Anda yakin ingin menghapus akun Admin Ekop "${admin.name}" (${admin.region_name || admin.region_code})? Tindakan ini akan menghapus akses pengurus daerah tersebut.`)) {
             router.delete(route('superadmin.admin-ekop.delete', admin.id), {
+                preserveScroll: true,
+            });
+        }
+    };
+
+    // State Manajemen Seluruh Pengguna & Anggota (CRUD Global)
+    const [showUserModal, setShowUserModal] = useState(false);
+    const [userToEdit, setUserToEdit] = useState<UserManageData | null>(null);
+    const [userSearch, setUserSearch] = useState('');
+    const [userRoleFilter, setUserRoleFilter] = useState<'all' | 'member' | 'buyer' | 'seller' | 'admin_ekop' | 'super_admin'>('all');
+
+    const filteredUsers = useMemo(() => {
+        return allUsers.filter((u: any) => {
+            if (userRoleFilter === 'member' && !u.is_member) return false;
+            if (userRoleFilter === 'buyer' && (u.is_member || u.user_type === 'seller' || u.role !== 'user')) return false;
+            if (userRoleFilter === 'seller' && u.user_type !== 'seller' && (!u.shop_name || u.shop_name === '-')) return false;
+            if (userRoleFilter === 'admin_ekop' && u.role !== 'admin_ekop') return false;
+            if (userRoleFilter === 'super_admin' && u.role !== 'super_admin') return false;
+
+            if (userSearch.trim()) {
+                const s = userSearch.toLowerCase();
+                return (
+                    u.name?.toLowerCase().includes(s) ||
+                    u.email?.toLowerCase().includes(s) ||
+                    u.phone?.toLowerCase().includes(s) ||
+                    u.juleha_id?.toLowerCase().includes(s) ||
+                    u.shop_name?.toLowerCase().includes(s) ||
+                    u.region_name?.toLowerCase().includes(s) ||
+                    u.region_code?.toLowerCase().includes(s)
+                );
+            }
+            return true;
+        });
+    }, [allUsers, userRoleFilter, userSearch]);
+
+    const handleOpenCreateUser = () => {
+        setUserToEdit(null);
+        setShowUserModal(true);
+    };
+
+    const handleOpenEditUser = (u: any) => {
+        setUserToEdit({
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            phone: u.phone === '-' ? '' : u.phone,
+            role: u.role,
+            user_type: u.user_type || 'buyer',
+            is_member: Boolean(u.is_member),
+            is_verified: Boolean(u.is_verified),
+            juleha_id: u.juleha_id === '-' ? '' : u.juleha_id,
+            region_code: u.region_code === '-' ? '' : u.region_code,
+            region_name: u.region_name === '-' ? '' : u.region_name,
+            shop_name: u.shop_name === '-' ? '' : u.shop_name,
+            address: u.address === '-' ? '' : u.address,
+        });
+        setShowUserModal(true);
+    };
+
+    const handleDeleteUser = (u: any) => {
+        if (confirm(`Apakah Anda yakin ingin menghapus akun pengguna "${u.name}" (${u.email})? Tindakan ini akan menghapus permanen data akun dari sistem database.`)) {
+            router.delete(route('superadmin.users.delete', u.id), {
                 preserveScroll: true,
             });
         }
@@ -233,6 +299,13 @@ export default function SuperAdminDashboard({
                 allRegions={allRegionsList}
             />
 
+            <UserManageModal
+                isOpen={showUserModal}
+                onClose={() => setShowUserModal(false)}
+                userToEdit={userToEdit}
+                allRegions={allRegionsList}
+            />
+
             <div className="space-y-6">
                 {/* Header Banner */}
                 <div className="border border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-lg p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
@@ -255,6 +328,15 @@ export default function SuperAdminDashboard({
 
                     <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3">
                         <div className="flex flex-wrap items-center gap-2">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={handleOpenCreateUser}
+                                className="text-xs font-bold border-teal-300 text-teal-800 hover:bg-teal-50 dark:hover:bg-teal-950 rounded-xl gap-1.5 shadow-xs"
+                            >
+                                <UserPlus className="h-4 w-4 text-teal-600" />
+                                + Tambah Pengguna
+                            </Button>
                             <Button
                                 size="sm"
                                 variant="outline"
@@ -694,6 +776,234 @@ export default function SuperAdminDashboard({
                                                                 <span>+ Daftarkan</span>
                                                             </Button>
                                                         )}
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* MANAJEMEN SELURUH PENGGUNA & ANGGOTA (CRUD GLOBAL SUPER ADMIN) */}
+                <Card className="border-2 border-teal-300 dark:border-teal-900 shadow-sm">
+                    <CardHeader className="bg-teal-50/70 dark:bg-teal-950/20 border-b border-teal-100 dark:border-teal-900/50">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-9 h-9 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-xs">
+                                    <Users className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <CardTitle className="text-base font-black text-teal-950 dark:text-teal-200">
+                                            Manajemen Seluruh Pengguna & Anggota (CRUD Global)
+                                        </CardTitle>
+                                        <Badge className="bg-teal-600 text-white font-mono text-[10px]">
+                                            {allUsers.length} Terdaftar
+                                        </Badge>
+                                    </div>
+                                    <CardDescription className="text-xs text-neutral-600 dark:text-neutral-400 mt-0.5">
+                                        Super Admin berwenang menambah, mengedit profil/password/daerah, serta menghapus seluruh akun pembeli umum, anggota Juleha, penjual toko, dan pengurus daerah.
+                                    </CardDescription>
+                                </div>
+                            </div>
+
+                            <Button
+                                size="sm"
+                                onClick={handleOpenCreateUser}
+                                className="bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold gap-1.5 rounded-xl shadow-xs shrink-0 self-start md:self-auto"
+                            >
+                                <UserPlus className="h-4 w-4" />
+                                <span>+ Tambah Pengguna Baru</span>
+                            </Button>
+                        </div>
+
+                        {/* Search & Role Filters Bar */}
+                        <div className="pt-3 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                            <div className="relative flex-1 max-w-md">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400" />
+                                <input
+                                    type="text"
+                                    value={userSearch}
+                                    onChange={(e) => setUserSearch(e.target.value)}
+                                    placeholder="Cari nama, email, no HP, ID Juleha, toko, atau daerah..."
+                                    className="w-full pl-9 pr-3 py-1.5 text-xs bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded-xl focus:ring-teal-500 focus:border-teal-500 font-sans"
+                                />
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-1.5">
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant={userRoleFilter === 'all' ? 'default' : 'outline'}
+                                    onClick={() => setUserRoleFilter('all')}
+                                    className={`h-7 px-2.5 text-[11px] font-bold rounded-lg ${userRoleFilter === 'all' ? 'bg-teal-700 text-white' : 'text-neutral-700'}`}
+                                >
+                                    Semua ({allUsers.length})
+                                </Button>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant={userRoleFilter === 'member' ? 'default' : 'outline'}
+                                    onClick={() => setUserRoleFilter('member')}
+                                    className={`h-7 px-2.5 text-[11px] font-bold rounded-lg ${userRoleFilter === 'member' ? 'bg-teal-700 text-white' : 'text-neutral-700'}`}
+                                >
+                                    Anggota Jatim ({allUsers.filter((u: any) => u.is_member).length})
+                                </Button>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant={userRoleFilter === 'buyer' ? 'default' : 'outline'}
+                                    onClick={() => setUserRoleFilter('buyer')}
+                                    className={`h-7 px-2.5 text-[11px] font-bold rounded-lg ${userRoleFilter === 'buyer' ? 'bg-teal-700 text-white' : 'text-neutral-700'}`}
+                                >
+                                    Pembeli Umum ({allUsers.filter((u: any) => !u.is_member && u.role === 'user').length})
+                                </Button>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant={userRoleFilter === 'seller' ? 'default' : 'outline'}
+                                    onClick={() => setUserRoleFilter('seller')}
+                                    className={`h-7 px-2.5 text-[11px] font-bold rounded-lg ${userRoleFilter === 'seller' ? 'bg-teal-700 text-white' : 'text-neutral-700'}`}
+                                >
+                                    Penjual Toko ({allUsers.filter((u: any) => u.user_type === 'seller' || (u.shop_name && u.shop_name !== '-')).length})
+                                </Button>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant={userRoleFilter === 'admin_ekop' ? 'default' : 'outline'}
+                                    onClick={() => setUserRoleFilter('admin_ekop')}
+                                    className={`h-7 px-2.5 text-[11px] font-bold rounded-lg ${userRoleFilter === 'admin_ekop' ? 'bg-teal-700 text-white' : 'text-neutral-700'}`}
+                                >
+                                    Admin Ekop ({allUsers.filter((u: any) => u.role === 'admin_ekop').length})
+                                </Button>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant={userRoleFilter === 'super_admin' ? 'default' : 'outline'}
+                                    onClick={() => setUserRoleFilter('super_admin')}
+                                    className={`h-7 px-2.5 text-[11px] font-bold rounded-lg ${userRoleFilter === 'super_admin' ? 'bg-teal-700 text-white' : 'text-neutral-700'}`}
+                                >
+                                    Super Admin ({allUsers.filter((u: any) => u.role === 'super_admin').length})
+                                </Button>
+                            </div>
+                        </div>
+                    </CardHeader>
+
+                    <CardContent className="p-0">
+                        {filteredUsers.length === 0 ? (
+                            <div className="text-center py-8 text-xs text-neutral-500">
+                                Tidak ada data pengguna yang sesuai dengan filter atau kata kunci pencarian.
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow className="bg-neutral-50/50 dark:bg-neutral-900/50 text-[11px]">
+                                            <TableHead className="w-12 text-center">No</TableHead>
+                                            <TableHead>Nama Pengguna & Kontak</TableHead>
+                                            <TableHead>Peran & Status</TableHead>
+                                            <TableHead>ID Anggota</TableHead>
+                                            <TableHead>Wilayah DPD</TableHead>
+                                            <TableHead>Toko / Usaha</TableHead>
+                                            <TableHead>Terdaftar</TableHead>
+                                            <TableHead className="text-right pr-6">Aksi</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredUsers.map((user: any, idx: number) => (
+                                            <TableRow key={user.id} className="text-xs hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition">
+                                                <TableCell className="text-center font-mono text-neutral-400">
+                                                    {idx + 1}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="font-bold text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
+                                                        <span>{user.name}</span>
+                                                        {user.is_verified && (
+                                                            <span title="Terverifikasi">
+                                                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-[11px] text-neutral-500">
+                                                        {user.email} &bull; <span className="font-mono">{user.phone}</span>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="flex flex-wrap items-center gap-1">
+                                                        {user.role === 'super_admin' ? (
+                                                            <Badge className="bg-red-700 text-white text-[10px]">Super Admin</Badge>
+                                                        ) : user.role === 'admin_ekop' ? (
+                                                            <Badge className="bg-indigo-700 text-white text-[10px]">Admin Ekop</Badge>
+                                                        ) : user.is_member ? (
+                                                            <Badge className="bg-emerald-700 text-white text-[10px]">Anggota Juleha</Badge>
+                                                        ) : (
+                                                            <Badge variant="outline" className="text-neutral-600 text-[10px]">Pembeli Umum</Badge>
+                                                        )}
+
+                                                        {user.user_type === 'seller' && (
+                                                            <Badge variant="secondary" className="text-[9px] bg-orange-100 text-[#ee4d2d]">
+                                                                Penjual
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="font-mono text-xs font-bold text-neutral-800 dark:text-neutral-200">
+                                                    {user.juleha_id !== '-' ? (
+                                                        <span className="px-2 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
+                                                            {user.juleha_id}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-neutral-400 italic text-[11px]">-</span>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="text-xs font-semibold text-neutral-800 dark:text-neutral-200">
+                                                        {user.region_name !== '-' ? user.region_name : 'Umum / Pusat'}
+                                                    </div>
+                                                    {user.region_code !== '-' && (
+                                                        <span className="font-mono text-[10px] text-neutral-500 font-bold">
+                                                            ({user.region_code})
+                                                        </span>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell className="text-xs">
+                                                    {user.shop_name && user.shop_name !== '-' ? (
+                                                        <div className="flex items-center gap-1 font-semibold text-[#ee4d2d]">
+                                                            <Store className="h-3 w-3 shrink-0" />
+                                                            <span>{user.shop_name}</span>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-neutral-400 italic text-[11px]">-</span>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell className="text-[11px] text-neutral-500 font-mono">
+                                                    {user.created_at}
+                                                </TableCell>
+                                                <TableCell className="text-right pr-6">
+                                                    <div className="flex items-center justify-end gap-1.5">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={() => handleOpenEditUser(user)}
+                                                            className="h-7 px-2 text-[11px] font-bold border-neutral-300 hover:bg-neutral-100 rounded-lg gap-1"
+                                                            title="Edit Pengguna"
+                                                        >
+                                                            <Edit2 className="h-3 w-3" />
+                                                            <span>Edit</span>
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={() => handleDeleteUser(user)}
+                                                            className="h-7 px-2 text-[11px] font-bold border-red-200 text-red-600 hover:bg-red-50 rounded-lg gap-1"
+                                                            title="Hapus Pengguna"
+                                                        >
+                                                            <Trash2 className="h-3 w-3" />
+                                                            <span>Hapus</span>
+                                                        </Button>
                                                     </div>
                                                 </TableCell>
                                             </TableRow>

@@ -1,11 +1,11 @@
 import React from 'react';
-import { Head, Link, useForm, router } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import MarketplaceLayout from '@/Layouts/MarketplaceLayout';
 import { Category } from '@/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
-import { ArrowLeft, Upload, ShieldCheck, Scale, Package, Tags } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, Scale, Tags, Flame, Zap } from 'lucide-react';
 import CategoryManageModal from '@/Components/CategoryManageModal';
 
 interface Props {
@@ -20,13 +20,44 @@ export default function Create({ categories }: Props) {
         title: '',
         description: '',
         base_price: '',
-        stock: 1,
-        weight_gram: 500,
-        length_cm: 20,
-        width_cm: 10,
-        height_cm: 5,
+        stock: '1',
+        weight_gram: '500',
+        length_cm: '20',
+        width_cm: '10',
+        height_cm: '5',
         image: null as File | null,
+        is_flash_sale: false,
+        flash_sale_price: '',
+        flash_sale_discount_percent: '',
+        flash_sale_stock: '',
+        flash_sale_end: '',
     });
+
+    // Helper untuk input angka: mengizinkan backspace sampai kosong dan menghapus angka 0 di depan (misal 02222 -> 2222)
+    const handleNumberChange = (field: any, rawVal: string) => {
+        if (rawVal === '') {
+            setData(field, '');
+            return;
+        }
+        // Hapus angka 0 di depan jika diikuti angka lain (misal 02222 -> 2222, 021 -> 21)
+        const cleaned = rawVal.replace(/^0+(?=\d)/, '');
+        setData(field, cleaned);
+    };
+
+    // Auto-kalkulasi persentase diskon saat harga flash sale diubah
+    const handleFlashPriceChange = (val: string) => {
+        handleNumberChange('flash_sale_price', val);
+        const base = parseFloat(data.base_price);
+        const flash = parseFloat(val);
+        if (base > 0 && flash > 0 && flash < base) {
+            const disc = Math.round(((base - flash) / base) * 100);
+            setData((prev) => ({
+                ...prev,
+                flash_sale_price: val.replace(/^0+(?=\d)/, ''),
+                flash_sale_discount_percent: String(disc),
+            }));
+        }
+    };
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -124,7 +155,7 @@ export default function Create({ categories }: Props) {
                                         step="1000"
                                         placeholder="750000"
                                         value={data.base_price}
-                                        onChange={(e) => setData('base_price', e.target.value)}
+                                        onChange={(e) => handleNumberChange('base_price', e.target.value)}
                                         required
                                         className="w-full text-sm font-mono font-bold rounded border-neutral-300 focus:ring-orange-500"
                                     />
@@ -141,8 +172,9 @@ export default function Create({ categories }: Props) {
                                     <input
                                         type="number"
                                         min="1"
+                                        placeholder="1"
                                         value={data.stock}
-                                        onChange={(e) => setData('stock', Number(e.target.value))}
+                                        onChange={(e) => handleNumberChange('stock', e.target.value)}
                                         required
                                         className="w-full text-xs font-mono rounded border-neutral-300 focus:ring-orange-500"
                                     />
@@ -150,51 +182,145 @@ export default function Create({ categories }: Props) {
                                 </div>
                             </div>
 
+                            {/* PENGATURAN PROMO FLASH SALE (CRUD FLASH SALE) */}
+                            <div className="p-4 bg-orange-50/70 dark:bg-neutral-800/80 border border-orange-200 dark:border-neutral-700 rounded-xl space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Flame className="h-4 w-4 text-[#ee4d2d] fill-[#ee4d2d]" />
+                                        <span className="text-xs font-bold text-neutral-900 dark:text-white">
+                                            Pengaturan Promo Flash Sale
+                                        </span>
+                                    </div>
+                                    <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-neutral-700 dark:text-neutral-200">
+                                        <input
+                                            type="checkbox"
+                                            checked={data.is_flash_sale}
+                                            onChange={(e) => setData('is_flash_sale', e.target.checked)}
+                                            className="h-4 w-4 text-[#ee4d2d] focus:ring-[#ee4d2d] rounded"
+                                        />
+                                        <span>Aktifkan Flash Sale</span>
+                                    </label>
+                                </div>
+
+                                {data.is_flash_sale && (
+                                    <div className="pt-2 border-t border-orange-200 dark:border-neutral-700 space-y-3 animate-in fade-in duration-200">
+                                        <p className="text-[11px] text-neutral-600 dark:text-neutral-400">
+                                            Produk ini akan tampil di bagian <strong>FLASH SALE</strong> halaman utama marketplace secara realtime dengan tag kepemilikan toko Anda.
+                                        </p>
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                            <div>
+                                                <label className="block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                                                    Harga Flash Sale (Rp)
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    min="1000"
+                                                    step="1000"
+                                                    placeholder="Contoh: 650000"
+                                                    value={data.flash_sale_price}
+                                                    onChange={(e) => handleFlashPriceChange(e.target.value)}
+                                                    required={data.is_flash_sale}
+                                                    className="w-full text-xs font-mono font-bold rounded border-neutral-300"
+                                                />
+                                                {errors.flash_sale_price && (
+                                                    <p className="text-xs text-red-600 mt-1">{errors.flash_sale_price}</p>
+                                                )}
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                                                    Diskon Promo (%)
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    max="99"
+                                                    placeholder="15"
+                                                    value={data.flash_sale_discount_percent}
+                                                    onChange={(e) => handleNumberChange('flash_sale_discount_percent', e.target.value)}
+                                                    className="w-full text-xs font-mono rounded border-neutral-300"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                                                    Kuota Stok Promo
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    placeholder="10"
+                                                    value={data.flash_sale_stock}
+                                                    onChange={(e) => handleNumberChange('flash_sale_stock', e.target.value)}
+                                                    className="w-full text-xs font-mono rounded border-neutral-300"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                                                Batas Waktu Berakhir Promo (Opsional)
+                                            </label>
+                                            <input
+                                                type="datetime-local"
+                                                value={data.flash_sale_end}
+                                                onChange={(e) => setData('flash_sale_end', e.target.value)}
+                                                className="w-full text-xs rounded border-neutral-300"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
                             {/* Spesifikasi Biteship Kurir */}
                             <div className="p-3 bg-neutral-50 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded space-y-2">
                                 <div className="flex items-center gap-1.5 text-xs font-bold text-neutral-900 dark:text-neutral-100">
                                     <Scale className="h-4 w-4 text-[#ee4d2d]" />
-                                    <span>Spesifikasi Dimensi Paket Pengiriman</span>
+                                    <span>Spesifikasi Dimensi Paket Pengiriman (Kurir Logistik)</span>
                                 </div>
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                     <div>
-                                        <label className="block text-[11px] font-semibold text-neutral-600">Berat (gram)</label>
+                                        <label className="block text-[11px] font-semibold text-neutral-600 dark:text-neutral-400">Berat (gram)</label>
                                         <input
                                             type="number"
                                             min="50"
+                                            placeholder="500"
                                             value={data.weight_gram}
-                                            onChange={(e) => setData('weight_gram', Number(e.target.value))}
+                                            onChange={(e) => handleNumberChange('weight_gram', e.target.value)}
                                             required
                                             className="w-full text-xs font-mono rounded border-neutral-300"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-[11px] font-semibold text-neutral-600">Panjang (cm)</label>
+                                        <label className="block text-[11px] font-semibold text-neutral-600 dark:text-neutral-400">Panjang (cm)</label>
                                         <input
                                             type="number"
                                             min="1"
+                                            placeholder="20"
                                             value={data.length_cm}
-                                            onChange={(e) => setData('length_cm', Number(e.target.value))}
+                                            onChange={(e) => handleNumberChange('length_cm', e.target.value)}
                                             className="w-full text-xs font-mono rounded border-neutral-300"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-[11px] font-semibold text-neutral-600">Lebar (cm)</label>
+                                        <label className="block text-[11px] font-semibold text-neutral-600 dark:text-neutral-400">Lebar (cm)</label>
                                         <input
                                             type="number"
                                             min="1"
+                                            placeholder="10"
                                             value={data.width_cm}
-                                            onChange={(e) => setData('width_cm', Number(e.target.value))}
+                                            onChange={(e) => handleNumberChange('width_cm', e.target.value)}
                                             className="w-full text-xs font-mono rounded border-neutral-300"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-[11px] font-semibold text-neutral-600">Tinggi (cm)</label>
+                                        <label className="block text-[11px] font-semibold text-neutral-600 dark:text-neutral-400">Tinggi (cm)</label>
                                         <input
                                             type="number"
                                             min="1"
+                                            placeholder="5"
                                             value={data.height_cm}
-                                            onChange={(e) => setData('height_cm', Number(e.target.value))}
+                                            onChange={(e) => handleNumberChange('height_cm', e.target.value)}
                                             className="w-full text-xs font-mono rounded border-neutral-300"
                                         />
                                     </div>

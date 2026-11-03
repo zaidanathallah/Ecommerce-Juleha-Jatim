@@ -87,14 +87,14 @@ export default function TrackingWidget({ className = '', compact = false }: Trac
                         </h4>
                     </div>
                     <p className="text-[11px] text-neutral-500 mb-3">
-                        Masukkan nomor resi kurir partner (JNE, J&T Express, SiCepat, Anteraja) untuk memantau pergerakan paket secara real-time.
+                        Masukkan nomor resi kurir partner (JNE, J&T Express, SiCepat, Anteraja, Grab, GoSend) atau nomor pesanan Anda untuk memantau pergerakan paket secara real-time.
                     </p>
                     <form onSubmit={handleTrack} className="flex gap-2">
                         <input
                             type="text"
                             value={waybill}
                             onChange={(e) => setWaybill(e.target.value)}
-                            placeholder="Contoh: 004128569183"
+                            placeholder="Contoh: 004128569183 atau JLH-20261102-..."
                             className="flex-1 px-3 py-2 text-xs bg-neutral-50 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-[#ee4d2d] font-mono"
                         />
                         <Button

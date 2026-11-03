@@ -75,6 +75,10 @@ export interface BuyerProduct {
     seller: {
         id: number;
         name: string;
+        shop_name?: string | null;
+        juleha_id?: string | null;
+        role?: string;
+        region_code?: string;
         region_name: string;
         is_verified: boolean;
         lat?: number | null;

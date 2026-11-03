@@ -61,6 +61,10 @@ class PricingService
             'seller' => [
                 'id' => $product->user_id,
                 'name' => $product->user->name ?? 'Penjual Terverifikasi Juleha',
+                'shop_name' => $product->user->shop_name ?? null,
+                'juleha_id' => $product->user->juleha_id ?? null,
+                'role' => $product->user->role ?? 'user',
+                'region_code' => $product->user->region_code ?? $product->region_code,
                 'region_name' => $product->user->region_name ?? $product->region_name,
                 'is_verified' => (bool) ($product->user->is_verified ?? true),
                 'lat' => $product->user->lat ?? null,

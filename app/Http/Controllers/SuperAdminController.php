@@ -64,6 +64,24 @@ class SuperAdminController extends Controller
         $adminEkopUsers = User::where('role', User::ROLE_ADMIN_EKOP)->latest()->get();
         $adminEkopByRegion = $adminEkopUsers->groupBy(fn($u) => strtoupper(trim((string) $u->region_code)));
 
+        // Seluruh Pengguna & Anggota (Umum, Anggota Jatim, Penjual, Admin Ekop, Super Admin)
+        $allUsers = User::latest()->get()->map(fn($u) => [
+            'id' => $u->id,
+            'name' => $u->name,
+            'email' => $u->email,
+            'phone' => $u->phone ?? '-',
+            'role' => $u->role,
+            'user_type' => $u->user_type ?? 'buyer',
+            'is_member' => (bool) $u->is_member,
+            'is_verified' => (bool) $u->is_verified,
+            'juleha_id' => $u->juleha_id ?? '-',
+            'shop_name' => $u->shop_name ?? '-',
+            'region_code' => $u->region_code ?? '-',
+            'region_name' => $u->region_name ?? ($u->region_code ? CentralRegion::findRegionName($u->region_code) : '-'),
+            'address' => $u->address ?? '-',
+            'created_at' => $u->created_at ? $u->created_at->format('d/m/Y H:i') : '-',
+        ]);
+
         $ekopRegions = $allRegions->map(function ($reg) use ($adminEkopByRegion) {
             $code = strtoupper($reg['initial']);
             $admins = $adminEkopByRegion->get($code, collect());
@@ -133,6 +151,7 @@ class SuperAdminController extends Controller
                 'region_name' => $a->region_name ?? CentralRegion::findRegionName($a->region_code),
                 'created_at' => $a->created_at ? $a->created_at->format('d/m/Y H:i') : '-',
             ]),
+            'allUsers' => $allUsers,
         ]);
     }
 
@@ -246,6 +265,127 @@ class SuperAdminController extends Controller
         $user->delete();
 
         return back()->with('success', "Akun Admin Ekop {$adminName} untuk wilayah {$regionName} berhasil dihapus dari sistem.");
+    }
+
+    /**
+     * Buat Akun Pengguna / Anggota / Penjual Baru (CRUD Global Super Admin)
+     */
+    public function storeUser(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'phone' => ['required', 'string', 'max:30'],
+            'password' => ['required', 'string', 'min:6'],
+            'role' => ['required', 'string', Rule::in([User::ROLE_USER, User::ROLE_ADMIN_EKOP, User::ROLE_SUPER_ADMIN])],
+            'user_type' => ['required', 'string', Rule::in(['buyer', 'seller'])],
+            'is_member' => ['required', 'boolean'],
+            'is_verified' => ['required', 'boolean'],
+            'juleha_id' => ['nullable', 'string', 'max:50'],
+            'region_code' => ['nullable', 'string', 'max:10'],
+            'region_name' => ['nullable', 'string', 'max:100'],
+            'shop_name' => ['nullable', 'string', 'max:100'],
+            'address' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $regionCode = !empty($validated['region_code']) ? strtoupper(trim($validated['region_code'])) : null;
+        $regionName = !empty($validated['region_name'])
+            ? trim($validated['region_name'])
+            : ($regionCode ? CentralRegion::findRegionName($regionCode) : null);
+
+        $julehaId = !empty($validated['juleha_id']) ? trim($validated['juleha_id']) : null;
+        if (empty($julehaId) && $validated['is_member'] && $regionCode) {
+            $julehaId = $regionCode . date('y') . rand(1000, 9999);
+        }
+
+        User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'],
+            'password' => Hash::make($validated['password']),
+            'role' => $validated['role'],
+            'user_type' => $validated['user_type'],
+            'is_member' => $validated['is_member'],
+            'is_verified' => $validated['is_verified'],
+            'juleha_id' => $julehaId,
+            'region_code' => $regionCode,
+            'region_name' => $regionName,
+            'shop_name' => $validated['shop_name'] ?? null,
+            'address' => $validated['address'] ?? null,
+            'is_pg_active' => true,
+            'is_shipping_api_active' => true,
+        ]);
+
+        return back()->with('success', "Akun pengguna/anggota {$validated['name']} berhasil ditambahkan ke database.");
+    }
+
+    /**
+     * Perbarui Data Akun Pengguna / Anggota / Penjual (CRUD Global Super Admin)
+     */
+    public function updateUser(Request $request, User $user): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'phone' => ['required', 'string', 'max:30'],
+            'password' => ['nullable', 'string', 'min:6'],
+            'role' => ['required', 'string', Rule::in([User::ROLE_USER, User::ROLE_ADMIN_EKOP, User::ROLE_SUPER_ADMIN])],
+            'user_type' => ['required', 'string', Rule::in(['buyer', 'seller'])],
+            'is_member' => ['required', 'boolean'],
+            'is_verified' => ['required', 'boolean'],
+            'juleha_id' => ['nullable', 'string', 'max:50'],
+            'region_code' => ['nullable', 'string', 'max:10'],
+            'region_name' => ['nullable', 'string', 'max:100'],
+            'shop_name' => ['nullable', 'string', 'max:100'],
+            'address' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $regionCode = !empty($validated['region_code']) ? strtoupper(trim($validated['region_code'])) : null;
+        $regionName = !empty($validated['region_name'])
+            ? trim($validated['region_name'])
+            : ($regionCode ? CentralRegion::findRegionName($regionCode) : null);
+
+        $updateData = [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'],
+            'role' => $validated['role'],
+            'user_type' => $validated['user_type'],
+            'is_member' => $validated['is_member'],
+            'is_verified' => $validated['is_verified'],
+            'juleha_id' => $validated['juleha_id'] ?? null,
+            'region_code' => $regionCode,
+            'region_name' => $regionName,
+            'shop_name' => $validated['shop_name'] ?? null,
+            'address' => $validated['address'] ?? null,
+        ];
+
+        if (!empty($validated['password'])) {
+            $updateData['password'] = Hash::make($validated['password']);
+        }
+
+        $user->update($updateData);
+
+        return back()->with('success', "Data akun {$user->name} berhasil diperbarui.");
+    }
+
+    /**
+     * Hapus Akun Pengguna / Anggota / Penjual (CRUD Global Super Admin)
+     */
+    public function deleteUser(User $user): RedirectResponse
+    {
+        /** @var User $currentUser */
+        $currentUser = Auth::user();
+        if ($user->id === $currentUser->id) {
+            return back()->with('error', 'Anda tidak dapat menghapus akun Anda sendiri yang sedang aktif digunakan.');
+        }
+
+        $userName = $user->name;
+        $userRole = $user->role;
+
+        $user->delete();
+
+        return back()->with('success', "Akun {$userName} ({$userRole}) berhasil dihapus dari sistem.");
     }
 
     /**

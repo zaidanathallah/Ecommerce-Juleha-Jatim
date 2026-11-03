@@ -26,6 +26,7 @@ import {
     BookOpen,
     Copy,
     Check,
+    Store,
 } from 'lucide-react';
 
 interface Props {
@@ -342,6 +343,20 @@ export default function Index({ products, flashSaleProducts = [], vouchers = [],
                                             </div>
 
                                             <div className="p-3.5 space-y-2">
+                                                {/* Tag Kepemilikan Flash Sale Toko / Penjual */}
+                                                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800 text-[#ee4d2d] text-[10px] font-bold truncate max-w-full">
+                                                    <Store className="h-3 w-3 shrink-0" />
+                                                    <span className="truncate">
+                                                        {product.seller?.shop_name 
+                                                            ? `Toko: ${product.seller.shop_name}` 
+                                                            : product.seller?.role === 'super_admin'
+                                                            ? 'DPW Juleha Jatim'
+                                                            : product.seller?.role === 'admin_ekop'
+                                                            ? `Ekop ${product.region_name || product.seller?.region_name}`
+                                                            : `Penjual: ${product.seller?.name || 'Anggota Juleha'}`}
+                                                    </span>
+                                                </div>
+
                                                 <Link href={route('products.show', product.slug)}>
                                                     <h3 className="text-xs font-bold text-neutral-900 dark:text-neutral-100 line-clamp-2 hover:text-[#ee4d2d] transition leading-snug">
                                                         {product.title}

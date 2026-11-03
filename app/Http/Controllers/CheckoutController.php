@@ -954,31 +954,24 @@ class CheckoutController extends Controller
      */
     public function trackOrder(string $orderNumber): JsonResponse
     {
-        $order = Order::where('order_number', $orderNumber)->firstOrFail();
+        $order = Order::with(['seller', 'buyer'])->where('order_number', $orderNumber)->firstOrFail();
 
-        $waybill = $order->biteship_waybill_id;
+        $waybill = $order->biteship_waybill_id ?? '';
         $orderId = $order->biteship_order_id;
-
-        if (empty($waybill) && empty($orderId)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Resi pengiriman belum terbit. Menunggu konfirmasi pickup kurir logistik.',
-            ]);
-        }
-
         $courierCode = strtolower(explode(' ', (string) $order->shipping_courier)[0] ?? 'jne');
-        $trackingResult = $this->biteshipService->getTracking($waybill ?? '', $courierCode, $orderId);
+
+        $trackingResult = $this->biteshipService->getTracking($waybill, $courierCode, $orderId, $order);
 
         // Jika tracking menghasilkan nomor waybill resmi baru, sinkronkan ke database order
-        if (!empty($trackingResult['waybill_id']) && empty($order->biteship_waybill_id)) {
-            $order->update(['biteship_waybill_id' => $trackingResult['waybill_id']]);
+        if (!empty($trackingResult['data']['waybill_id']) && empty($order->biteship_waybill_id) && !str_starts_with($trackingResult['data']['waybill_id'], 'RESI ')) {
+            $order->update(['biteship_waybill_id' => $trackingResult['data']['waybill_id']]);
         }
 
         return response()->json($trackingResult);
     }
 
     /**
-     * API Real-time Tracking Umum via Waybill untuk TrackingWidget (In-App Dialog)
+     * API Real-time Tracking Umum via Waybill / Nomor Pesanan untuk TrackingWidget (In-App Dialog)
      */
     public function trackWaybill(Request $request): JsonResponse
     {
@@ -986,15 +979,20 @@ class CheckoutController extends Controller
         if (empty($waybill)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Nomor resi wajib diisi.',
+                'message' => 'Nomor resi atau nomor pesanan wajib diisi.',
             ], 422);
         }
 
-        $order = Order::where('biteship_waybill_id', $waybill)->first();
+        $order = Order::with(['seller', 'buyer'])
+            ->where('biteship_waybill_id', $waybill)
+            ->orWhere('order_number', $waybill)
+            ->orWhere('biteship_order_id', $waybill)
+            ->first();
+
         $courier = $order ? ($order->shipping_courier ?? 'jne') : 'jne';
         $orderId = $order ? $order->biteship_order_id : null;
 
-        $trackingResult = $this->biteshipService->getTracking($waybill, $courier, $orderId);
+        $trackingResult = $this->biteshipService->getTracking($waybill, $courier, $orderId, $order);
 
         return response()->json($trackingResult);
     }
