@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Head, useForm, Link, usePage } from '@inertiajs/react';
+import React, { useState, useMemo } from 'react';
+import { Head, useForm, Link, usePage, router } from '@inertiajs/react';
 import MarketplaceLayout from '@/Layouts/MarketplaceLayout';
 import { ManagementProduct, PageProps } from '@/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/Components/ui/card';
@@ -26,9 +26,17 @@ import {
     Plus,
     Package,
     Ticket,
+    Edit2,
+    Trash2,
+    Search,
+    UserPlus,
+    MapPin,
+    AlertCircle,
+    Check,
 } from 'lucide-react';
 import CategoryManageModal from '@/Components/CategoryManageModal';
 import VoucherManageModal from '@/Components/VoucherManageModal';
+import AdminEkopManageModal, { AdminEkopData, RegionOption } from '@/Components/AdminEkopManageModal';
 
 interface Props {
     stats: {
@@ -39,6 +47,8 @@ interface Props {
         totalEkopAdmins: number;
         totalKasProvinsi: number;
         totalKasDaerah: number;
+        totalRegisteredRegions?: number;
+        totalAllRegions?: number;
     };
     approvalQueue: ManagementProduct[];
     allProducts: {
@@ -47,6 +57,27 @@ interface Props {
     };
     recentOrders?: any[];
     categories?: any[];
+    ekopRegions?: Array<{
+        initial: string;
+        name: string;
+        is_registered: boolean;
+        admins_count: number;
+        members_count: number;
+        total_kas_ekop: number;
+        admins: Array<{
+            id: number;
+            name: string;
+            email: string;
+            phone: string;
+            juleha_id: string;
+            shop_name: string;
+            region_code: string;
+            region_name: string;
+            created_at: string;
+        }>;
+    }>;
+    allRegionsList?: RegionOption[];
+    adminEkopList?: any[];
 }
 
 export default function SuperAdminDashboard({
@@ -55,11 +86,70 @@ export default function SuperAdminDashboard({
     allProducts,
     recentOrders = [],
     categories = [],
+    ekopRegions = [],
+    allRegionsList = [],
+    adminEkopList = [],
 }: Props) {
     const [selectedProduct, setSelectedProduct] = useState<ManagementProduct | null>(null);
     const [actionType, setActionType] = useState<'publish' | 'reject' | null>(null);
     const [showCategoryModal, setShowCategoryModal] = useState(false);
     const [showVoucherModal, setShowVoucherModal] = useState(false);
+
+    // State Manajemen Akun Admin Ekop Daerah
+    const [showAdminEkopModal, setShowAdminEkopModal] = useState(false);
+    const [adminToEdit, setAdminToEdit] = useState<AdminEkopData | null>(null);
+    const [selectedRegionForNewAdmin, setSelectedRegionForNewAdmin] = useState<string | null>(null);
+    const [ekopFilter, setEkopFilter] = useState<'all' | 'registered' | 'unregistered'>('all');
+    const [ekopSearch, setEkopSearch] = useState('');
+
+    const filteredEkopRegions = useMemo(() => {
+        return ekopRegions.filter((r) => {
+            if (ekopFilter === 'registered' && !r.is_registered) return false;
+            if (ekopFilter === 'unregistered' && r.is_registered) return false;
+
+            if (ekopSearch.trim()) {
+                const s = ekopSearch.toLowerCase();
+                const matchRegion = r.name.toLowerCase().includes(s) || r.initial.toLowerCase().includes(s);
+                const matchAdmin = r.admins.some((a) =>
+                    a.name.toLowerCase().includes(s) ||
+                    a.email.toLowerCase().includes(s) ||
+                    a.phone.toLowerCase().includes(s) ||
+                    a.juleha_id.toLowerCase().includes(s)
+                );
+                return matchRegion || matchAdmin;
+            }
+            return true;
+        });
+    }, [ekopRegions, ekopFilter, ekopSearch]);
+
+    const handleOpenCreateAdminEkop = (preferredRegionCode?: string) => {
+        setAdminToEdit(null);
+        setSelectedRegionForNewAdmin(preferredRegionCode || null);
+        setShowAdminEkopModal(true);
+    };
+
+    const handleOpenEditAdminEkop = (admin: any) => {
+        setAdminToEdit({
+            id: admin.id,
+            name: admin.name,
+            email: admin.email,
+            phone: admin.phone,
+            region_code: admin.region_code,
+            region_name: admin.region_name,
+            juleha_id: admin.juleha_id,
+            shop_name: admin.shop_name,
+        });
+        setSelectedRegionForNewAdmin(admin.region_code);
+        setShowAdminEkopModal(true);
+    };
+
+    const handleDeleteAdminEkop = (admin: any) => {
+        if (confirm(`Apakah Anda yakin ingin menghapus akun Admin Ekop "${admin.name}" (${admin.region_name || admin.region_code})? Tindakan ini akan menghapus akses pengurus daerah tersebut.`)) {
+            router.delete(route('superadmin.admin-ekop.delete', admin.id), {
+                preserveScroll: true,
+            });
+        }
+    };
 
     const { site_settings } = usePage<PageProps>().props;
 
@@ -135,6 +225,14 @@ export default function SuperAdminDashboard({
                 onClose={() => setShowVoucherModal(false)}
             />
 
+            <AdminEkopManageModal
+                isOpen={showAdminEkopModal}
+                onClose={() => setShowAdminEkopModal(false)}
+                adminToEdit={adminToEdit}
+                initialRegionCode={selectedRegionForNewAdmin}
+                allRegions={allRegionsList}
+            />
+
             <div className="space-y-6">
                 {/* Header Banner */}
                 <div className="border border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-lg p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
@@ -157,6 +255,15 @@ export default function SuperAdminDashboard({
 
                     <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3">
                         <div className="flex flex-wrap items-center gap-2">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleOpenCreateAdminEkop()}
+                                className="text-xs font-bold border-indigo-300 text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-950 rounded-xl gap-1.5 shadow-xs"
+                            >
+                                <Building2 className="h-4 w-4" />
+                                + Tambah Admin Ekop
+                            </Button>
                             <Link href={route('seller.products.create')}>
                                 <Button
                                     size="sm"
@@ -215,7 +322,7 @@ export default function SuperAdminDashboard({
                 </div>
 
                 {/* KPI Metrics */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                     <Card className="border-l-4 border-l-red-600">
                         <CardContent className="p-4 flex items-center justify-between">
                             <div>
@@ -269,6 +376,23 @@ export default function SuperAdminDashboard({
                                 </span>
                             </div>
                             <Users className="h-7 w-7 text-sky-500" />
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-l-4 border-l-indigo-600">
+                        <CardContent className="p-4 flex items-center justify-between">
+                            <div>
+                                <span className="text-[10px] font-bold text-neutral-500 uppercase block">
+                                    Cakupan Daerah Ekop
+                                </span>
+                                <span className="text-xl font-black text-indigo-700">
+                                    {stats.totalRegisteredRegions ?? 0} / {stats.totalAllRegions ?? 31}
+                                </span>
+                                <span className="text-[9px] text-neutral-500 font-mono block mt-0.5">
+                                    {stats.totalEkopAdmins} Akun Admin Terdaftar
+                                </span>
+                            </div>
+                            <Building2 className="h-7 w-7 text-indigo-500" />
                         </CardContent>
                     </Card>
                 </div>
@@ -370,6 +494,214 @@ export default function SuperAdminDashboard({
                                 </div>
                             </div>
                         </form>
+                    </CardContent>
+                </Card>
+
+                {/* Manajemen Akun Admin Ekop Kabupaten & Kota (Jawa Timur) */}
+                <Card className="border-2 border-indigo-300 dark:border-indigo-900 shadow-sm">
+                    <CardHeader className="bg-indigo-50/70 dark:bg-indigo-950/20 border-b border-indigo-100 dark:border-indigo-900/50">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                            <div className="flex items-center gap-2.5">
+                                <div className="p-2 bg-indigo-600 text-white rounded-xl shadow-xs">
+                                    <Building2 className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <CardTitle className="text-base font-black text-indigo-950 dark:text-indigo-200">
+                                            Manajemen Akun Admin Ekop Daerah (31 Kab/Kota Jawa Timur)
+                                        </CardTitle>
+                                        <Badge variant="outline" className="text-indigo-700 border-indigo-300 font-mono text-[10px]">
+                                            CRUD KHUSUS SUPER ADMIN
+                                        </Badge>
+                                    </div>
+                                    <CardDescription className="text-xs text-neutral-600 dark:text-neutral-400 mt-0.5">
+                                        Pantau status registrasi pengurus Ekop tiap kabupaten/kota, buat akun baru, ubah data wilayah, atau hapus akses akun.
+                                    </CardDescription>
+                                </div>
+                            </div>
+
+                            <Button
+                                size="sm"
+                                onClick={() => handleOpenCreateAdminEkop()}
+                                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl gap-1.5 shadow-sm shrink-0"
+                            >
+                                <UserPlus className="h-4 w-4" />
+                                <span>+ Daftarkan Akun Ekop Baru</span>
+                            </Button>
+                        </div>
+
+                        {/* Search & Filter Toolbar */}
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 mt-2 border-t border-indigo-200/60 dark:border-indigo-900/40">
+                            <div className="flex items-center gap-1.5">
+                                <Button
+                                    size="sm"
+                                    variant={ekopFilter === 'all' ? 'default' : 'outline'}
+                                    onClick={() => setEkopFilter('all')}
+                                    className={`text-[11px] h-7 rounded-lg ${ekopFilter === 'all' ? 'bg-indigo-600 text-white' : 'border-indigo-200 text-indigo-800'}`}
+                                >
+                                    Semua Daerah ({ekopRegions.length})
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant={ekopFilter === 'registered' ? 'default' : 'outline'}
+                                    onClick={() => setEkopFilter('registered')}
+                                    className={`text-[11px] h-7 rounded-lg ${ekopFilter === 'registered' ? 'bg-emerald-600 text-white' : 'border-emerald-200 text-emerald-800'}`}
+                                >
+                                    Terdaftar ({ekopRegions.filter(r => r.is_registered).length})
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant={ekopFilter === 'unregistered' ? 'default' : 'outline'}
+                                    onClick={() => setEkopFilter('unregistered')}
+                                    className={`text-[11px] h-7 rounded-lg ${ekopFilter === 'unregistered' ? 'bg-amber-600 text-white' : 'border-amber-200 text-amber-800'}`}
+                                >
+                                    Belum Terdaftar ({ekopRegions.filter(r => !r.is_registered).length})
+                                </Button>
+                            </div>
+
+                            <div className="relative w-full sm:w-72">
+                                <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-neutral-400" />
+                                <input
+                                    type="text"
+                                    value={ekopSearch}
+                                    onChange={(e) => setEkopSearch(e.target.value)}
+                                    placeholder="Cari daerah, kode, admin, email..."
+                                    className="w-full text-xs pl-8 pr-3 py-1 rounded-xl border border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 focus:ring-1 focus:ring-indigo-500"
+                                />
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        {filteredEkopRegions.length === 0 ? (
+                            <div className="text-center py-8 text-xs text-neutral-500">
+                                Tidak ada daerah atau akun Admin Ekop yang sesuai dengan pencarian Anda.
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-16">Kode</TableHead>
+                                            <TableHead>Nama Daerah (Kab/Kota)</TableHead>
+                                            <TableHead>Status Registrasi</TableHead>
+                                            <TableHead>Akun Admin Ekop Terdaftar</TableHead>
+                                            <TableHead>Kas Ekop Daerah</TableHead>
+                                            <TableHead>Anggota Terdata</TableHead>
+                                            <TableHead className="text-right">Aksi Kelola</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredEkopRegions.map((region) => (
+                                            <TableRow key={region.initial} className="hover:bg-neutral-50/80 dark:hover:bg-neutral-800/40">
+                                                <TableCell>
+                                                    <span className="font-mono font-black text-xs px-2 py-1 bg-neutral-100 dark:bg-neutral-800 rounded-md border text-neutral-800 dark:text-neutral-200">
+                                                        {region.initial}
+                                                    </span>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="font-bold text-xs text-neutral-900 dark:text-neutral-100">
+                                                        {region.name}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    {region.is_registered ? (
+                                                        <Badge variant="success" className="text-[10px] gap-1">
+                                                            <Check className="h-3 w-3" />
+                                                            <span>Terdaftar ({region.admins_count} Akun)</span>
+                                                        </Badge>
+                                                    ) : (
+                                                        <Badge variant="outline" className="text-[10px] border-amber-300 text-amber-700 bg-amber-50 dark:bg-amber-950/20">
+                                                            Belum Ada Akun
+                                                        </Badge>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {region.is_registered && region.admins.length > 0 ? (
+                                                        <div className="space-y-1.5">
+                                                            {region.admins.map((adm) => (
+                                                                <div key={adm.id} className="p-2 bg-neutral-50 dark:bg-neutral-800/60 rounded-lg border border-neutral-200 dark:border-neutral-700 text-xs">
+                                                                    <div className="flex items-center justify-between gap-2">
+                                                                        <strong className="text-neutral-900 dark:text-neutral-100">
+                                                                            {adm.name}
+                                                                        </strong>
+                                                                        <span className="font-mono text-[10px] text-neutral-500 font-bold">
+                                                                            {adm.juleha_id}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="text-[10px] text-neutral-500 flex flex-wrap gap-x-2 mt-0.5">
+                                                                        <span>✉ {adm.email}</span>
+                                                                        <span>📱 {adm.phone}</span>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-[11px] text-neutral-400 italic">
+                                                            Belum ada penugasan admin daerah
+                                                        </span>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell className="font-mono font-bold text-xs text-amber-700">
+                                                    {formatRupiah(region.total_kas_ekop)}
+                                                </TableCell>
+                                                <TableCell className="text-xs">
+                                                    <span className="font-semibold text-neutral-800 dark:text-neutral-200">
+                                                        {region.members_count}
+                                                    </span>{' '}
+                                                    <span className="text-[10px] text-neutral-500">Anggota</span>
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <div className="flex items-center justify-end gap-1.5">
+                                                        {region.is_registered && region.admins.length > 0 ? (
+                                                            <>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    onClick={() => handleOpenEditAdminEkop(region.admins[0])}
+                                                                    className="h-7 text-[11px] border-neutral-300 gap-1 rounded-lg"
+                                                                    title="Edit Akun Admin Ekop"
+                                                                >
+                                                                    <Edit2 className="h-3 w-3" />
+                                                                    <span>Edit</span>
+                                                                </Button>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="destructive"
+                                                                    onClick={() => handleDeleteAdminEkop(region.admins[0])}
+                                                                    className="h-7 text-[11px] gap-1 rounded-lg px-2"
+                                                                    title="Hapus Akun Admin Ekop"
+                                                                >
+                                                                    <Trash2 className="h-3 w-3" />
+                                                                </Button>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    onClick={() => handleOpenCreateAdminEkop(region.initial)}
+                                                                    className="h-7 text-[11px] border-indigo-200 text-indigo-700 hover:bg-indigo-50 gap-1 rounded-lg"
+                                                                    title="Tambah Akun Ekop Lainnya di Daerah Ini"
+                                                                >
+                                                                    <Plus className="h-3 w-3" />
+                                                                </Button>
+                                                            </>
+                                                        ) : (
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() => handleOpenCreateAdminEkop(region.initial)}
+                                                                className="h-7 text-[11px] font-bold border-indigo-300 text-indigo-700 hover:bg-indigo-50 rounded-lg gap-1"
+                                                            >
+                                                                <UserPlus className="h-3 w-3" />
+                                                                <span>+ Daftarkan</span>
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 

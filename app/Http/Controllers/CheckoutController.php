@@ -804,9 +804,9 @@ class CheckoutController extends Controller
                     $orderId = $biteshipResult['id'] ?? $biteshipResult['data']['id'];
                     $waybill = !empty($biteshipResult['waybill_id'])
                         ? $biteshipResult['waybill_id']
-                        : ($biteshipResult['data']['courier']['waybill_id'] ?? ('0041' . rand(10000000, 99999999)));
+                        : ($biteshipResult['data']['courier']['waybill_id'] ?? null);
 
-                    $labelUrl = $this->biteshipService->getShippingLabelUrl($orderId);
+                    $labelUrl = $orderId ? $this->biteshipService->getShippingLabelUrl($orderId) : null;
 
                     $order->update([
                         'biteship_order_id' => $orderId,
@@ -814,7 +814,7 @@ class CheckoutController extends Controller
                         'biteship_label_url' => $labelUrl,
                         'shipping_status' => Order::SHIPPING_PICKUP_REQUESTED,
                     ]);
-                    Log::info("Biteship pickup automated for Order {$order->order_number}: Waybill {$waybill}");
+                    Log::info("Biteship pickup automated for Order {$order->order_number}: Order ID {$orderId}, Waybill: " . ($waybill ?? 'Pending Confirmation'));
                 }
             } catch (\Exception $e) {
                 Log::error("Biteship Pickup Error for {$order->order_number}: " . $e->getMessage());
@@ -839,15 +839,36 @@ class CheckoutController extends Controller
             return back()->with('error', 'Pesanan harus dalam status LUNAS sebelum dapat meminta pickup kurir.');
         }
 
-        $this->triggerBiteshipPickup($order);
+        if (!empty($order->biteship_order_id) && empty($order->biteship_waybill_id)) {
+            // Coba konfirmasi draft order ke kurir Biteship
+            $confirmResult = $this->biteshipService->confirmDraftOrder($order->biteship_order_id);
+            if (!empty($confirmResult['success']) && !empty($confirmResult['waybill_id'])) {
+                $order->update([
+                    'biteship_waybill_id' => $confirmResult['waybill_id'],
+                    'shipping_status' => Order::SHIPPING_PICKUP_REQUESTED,
+                ]);
+            } else {
+                $details = $this->biteshipService->getOrderDetails($order->biteship_order_id);
+                if (!empty($details['waybill_id'])) {
+                    $order->update([
+                        'biteship_waybill_id' => $details['waybill_id'],
+                        'shipping_status' => Order::SHIPPING_PICKUP_REQUESTED,
+                    ]);
+                } else {
+                    $this->triggerBiteshipPickup($order);
+                }
+            }
+        } else {
+            $this->triggerBiteshipPickup($order);
+        }
 
         $order->refresh();
 
         if (!empty($order->biteship_waybill_id)) {
-            return back()->with('success', "Permintaan pickup kurir berhasil dikirim! Nomor Resi: {$order->biteship_waybill_id}");
+            return back()->with('success', "Permintaan pickup kurir berhasil dikirim! Nomor Resi Resmi: {$order->biteship_waybill_id}");
         }
 
-        return back()->with('success', 'Permintaan pickup sedang diproses oleh kurir logistik.');
+        return back()->with('success', 'Permintaan pickup pesanan telah dikirim ke kurir logistik Biteship. Nomor resi resmi akan otomatis tampil setelah kurir mengonfirmasi.');
     }
 
     /**
@@ -865,17 +886,20 @@ class CheckoutController extends Controller
             abort(403, 'Akses ditolak. Fitur cetak label pengiriman resmi A6 hanya dapat diakses oleh pihak penjual toko atau admin logistik.');
         }
 
-        // Pastikan order memiliki waybill_id
+        // Ambil waybill resmi atau coba sinkronisasi jika ada biteship_order_id
         $waybill = $order->biteship_waybill_id;
-        if (empty($waybill)) {
-            $waybill = '0041' . rand(10000000, 99999999);
-            $order->update([
-                'biteship_waybill_id' => $waybill,
-                'shipping_status' => Order::SHIPPING_PICKUP_REQUESTED,
-            ]);
+        if (empty($waybill) && !empty($order->biteship_order_id)) {
+            $details = $this->biteshipService->getOrderDetails($order->biteship_order_id);
+            if (!empty($details['waybill_id'])) {
+                $waybill = $details['waybill_id'];
+                $order->update(['biteship_waybill_id' => $waybill]);
+            }
         }
 
-        $waybillBarcode = $this->biteshipService->generateBarcodeSvg($waybill);
+        $waybillBarcode = !empty($waybill)
+            ? $this->biteshipService->generateBarcodeSvg($waybill)
+            : $this->biteshipService->generateBarcodeSvg($order->order_number);
+
         $orderBarcode = $this->biteshipService->generateBarcodeSvg($order->order_number);
         $shippingAddress = is_array($order->shipping_address) ? $order->shipping_address : json_decode($order->shipping_address, true);
         $seller = $order->seller;
@@ -932,15 +956,23 @@ class CheckoutController extends Controller
     {
         $order = Order::where('order_number', $orderNumber)->firstOrFail();
 
-        if (empty($order->biteship_waybill_id)) {
+        $waybill = $order->biteship_waybill_id;
+        $orderId = $order->biteship_order_id;
+
+        if (empty($waybill) && empty($orderId)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Resi pengiriman belum terbit. Menunggu konfirmasi pickup kurir.',
+                'message' => 'Resi pengiriman belum terbit. Menunggu konfirmasi pickup kurir logistik.',
             ]);
         }
 
         $courierCode = strtolower(explode(' ', (string) $order->shipping_courier)[0] ?? 'jne');
-        $trackingResult = $this->biteshipService->getTracking($order->biteship_waybill_id, $courierCode, $order->biteship_order_id);
+        $trackingResult = $this->biteshipService->getTracking($waybill ?? '', $courierCode, $orderId);
+
+        // Jika tracking menghasilkan nomor waybill resmi baru, sinkronkan ke database order
+        if (!empty($trackingResult['waybill_id']) && empty($order->biteship_waybill_id)) {
+            $order->update(['biteship_waybill_id' => $trackingResult['waybill_id']]);
+        }
 
         return response()->json($trackingResult);
     }

@@ -129,6 +129,9 @@ Route::prefix('superadmin')->name('superadmin.')->middleware(['auth', 'role:supe
     Route::post('/products/{product}/publish', [SuperAdminController::class, 'publish'])->name('products.publish');
     Route::post('/products/{product}/reject', [SuperAdminController::class, 'reject'])->name('products.reject');
     Route::put('/settings', [SuperAdminController::class, 'updateSettings'])->name('settings.update');
+    Route::post('/admin-ekop', [SuperAdminController::class, 'storeAdminEkop'])->name('admin-ekop.store');
+    Route::put('/admin-ekop/{user}', [SuperAdminController::class, 'updateAdminEkop'])->name('admin-ekop.update');
+    Route::delete('/admin-ekop/{user}', [SuperAdminController::class, 'deleteAdminEkop'])->name('admin-ekop.delete');
 });
 
 // 5. Biteship Sandbox Activation Simulator (UI & API)

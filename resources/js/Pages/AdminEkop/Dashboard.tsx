@@ -19,6 +19,14 @@ import {
     Plus,
     Package,
     Ticket,
+    Coins,
+    Store,
+    PhoneCall,
+    ExternalLink,
+    Receipt,
+    Check,
+    Search,
+    Truck,
 } from 'lucide-react';
 import CategoryManageModal from '@/Components/CategoryManageModal';
 import VoucherManageModal from '@/Components/VoucherManageModal';
@@ -31,6 +39,8 @@ interface Props {
         waitingSuperAdmin: number;
         liveProducts: number;
         totalMembers: number;
+        totalKasEkopDaerah?: number;
+        totalRegisteredSellers?: number;
         unsettledDebtOrdersCount?: number;
         totalUnsettledEkopDebt?: number;
         totalUnsettledSuperDebt?: number;
@@ -41,6 +51,38 @@ interface Props {
         links: any[];
     };
     unsettledDebts?: any[];
+    registeredSellers?: Array<{
+        id: number;
+        name: string;
+        juleha_id: string;
+        shop_name: string;
+        phone: string;
+        email: string;
+        address: string;
+        is_verified: boolean;
+        live_products_count: number;
+        total_products_count: number;
+        total_orders_count: number;
+        total_ekop_margin: number;
+    }>;
+    regionalOrders?: Array<{
+        id: number;
+        order_number: string;
+        created_at: string;
+        seller_name: string;
+        seller_juleha_id: string;
+        shop_name: string;
+        buyer_name: string;
+        items_summary: string;
+        grand_total: number;
+        total_ekop_margin: number;
+        total_super_margin: number;
+        payment_status: string;
+        payment_method_type: string;
+        shipping_status: string;
+        shipping_courier: string;
+        waybill?: string;
+    }>;
     categories?: any[];
 }
 
@@ -51,12 +93,16 @@ export default function AdminEkopDashboard({
     reviewQueue,
     allProducts,
     unsettledDebts = [],
+    registeredSellers = [],
+    regionalOrders = [],
     categories = [],
 }: Props) {
     const [selectedProduct, setSelectedProduct] = useState<ManagementProduct | null>(null);
     const [actionType, setActionType] = useState<'approve' | 'reject' | null>(null);
     const [showCategoryModal, setShowCategoryModal] = useState(false);
     const [showVoucherModal, setShowVoucherModal] = useState(false);
+    const [sellerSearch, setSellerSearch] = useState('');
+    const [orderSearch, setOrderSearch] = useState('');
 
     const approveForm = useForm({
         ekop_margin: 25000,
@@ -182,6 +228,14 @@ export default function AdminEkopDashboard({
                         >
                             <span>📦</span> Simulator Biteship
                         </a>
+                        <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-300 dark:border-emerald-800 text-right">
+                            <span className="text-[10px] text-emerald-700 dark:text-emerald-300 uppercase font-bold block">
+                                Kas Daerah ({regionCode})
+                            </span>
+                            <span className="text-lg font-mono font-black text-emerald-700 dark:text-emerald-300">
+                                {formatRupiah(stats.totalKasEkopDaerah ?? 0)}
+                            </span>
+                        </div>
                         <div className="p-2.5 bg-neutral-100 dark:bg-neutral-800 rounded-xl border border-neutral-300 dark:border-neutral-700 text-right">
                             <span className="text-[10px] text-neutral-500 uppercase font-bold block">
                                 Anggota Wilayah
@@ -194,60 +248,86 @@ export default function AdminEkopDashboard({
                 </div>
 
                 {/* KPI Metrics */}
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <Card className="border-l-4 border-l-emerald-600 bg-emerald-50/20">
+                        <CardContent className="p-4 flex items-center justify-between">
+                            <div>
+                                <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider block">
+                                    Kas Ekop Terkumpul
+                                </span>
+                                <span className="text-xl font-black text-emerald-700 dark:text-emerald-300 font-mono">
+                                    {formatRupiah(stats.totalKasEkopDaerah ?? 0)}
+                                </span>
+                                <span className="text-[9px] text-neutral-500 block mt-0.5">
+                                    Dari pesanan lunas penjual {regionCode}
+                                </span>
+                            </div>
+                            <Coins className="h-7 w-7 text-emerald-600" />
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-l-4 border-l-sky-600">
+                        <CardContent className="p-4 flex items-center justify-between">
+                            <div>
+                                <span className="text-[10px] font-bold text-sky-800 dark:text-sky-400 uppercase tracking-wider block">
+                                    Penjual Terdaftar
+                                </span>
+                                <span className="text-xl font-black text-sky-700 dark:text-sky-300">
+                                    {stats.totalRegisteredSellers ?? 0} Toko
+                                </span>
+                                <span className="text-[9px] text-neutral-500 block mt-0.5">
+                                    Anggota Juleha {regionName}
+                                </span>
+                            </div>
+                            <Store className="h-7 w-7 text-sky-600" />
+                        </CardContent>
+                    </Card>
+
                     <Card className="border-l-4 border-l-amber-500">
                         <CardContent className="p-4 flex items-center justify-between">
                             <div>
-                                <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider block">
+                                <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider block">
                                     Butuh ACC Ekop
                                 </span>
-                                <span className="text-2xl font-black text-amber-700">
+                                <span className="text-xl font-black text-amber-700">
                                     {stats.pendingReview} Produk
+                                </span>
+                                <span className="text-[9px] text-neutral-500 block mt-0.5">
+                                    Menunggu verifikasi Anda
                                 </span>
                             </div>
                             <Clock className="h-7 w-7 text-amber-500" />
                         </CardContent>
                     </Card>
 
-                    <Card className="border-l-4 border-l-sky-500">
+                    <Card className="border-l-4 border-l-indigo-500">
                         <CardContent className="p-4 flex items-center justify-between">
                             <div>
-                                <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider block">
+                                <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider block">
                                     Menunggu SuperAdmin
                                 </span>
-                                <span className="text-2xl font-black text-sky-700">
+                                <span className="text-xl font-black text-indigo-700">
                                     {stats.waitingSuperAdmin} Produk
                                 </span>
-                            </div>
-                            <Shield className="h-7 w-7 text-sky-500" />
-                        </CardContent>
-                    </Card>
-
-                    <Card className="border-l-4 border-l-[#ee4d2d]">
-                        <CardContent className="p-4 flex items-center justify-between">
-                            <div>
-                                <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider block">
-                                    Live Marketplace
-                                </span>
-                                <span className="text-2xl font-black text-[#ee4d2d]">
-                                    {stats.liveProducts} Produk
+                                <span className="text-[9px] text-neutral-500 block mt-0.5">
+                                    ACC Ekop selesai
                                 </span>
                             </div>
-                            <CheckCircle2 className="h-7 w-7 text-orange-500" />
+                            <Shield className="h-7 w-7 text-indigo-500" />
                         </CardContent>
                     </Card>
 
                     <Card className="border-l-4 border-l-rose-500">
                         <CardContent className="p-4 flex items-center justify-between">
                             <div>
-                                <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider block">
+                                <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider block">
                                     Hutang Margin Penjual
                                 </span>
                                 <span className="text-xl font-black text-rose-700">
                                     {stats.unsettledDebtOrdersCount ?? 0} Pesanan
                                 </span>
                                 <span className="text-[10px] text-neutral-500 font-mono block mt-0.5">
-                                    Kas Daerah: {formatRupiah(stats.totalUnsettledEkopDebt ?? 0)}
+                                    Tagihan: {formatRupiah(stats.totalUnsettledEkopDebt ?? 0)}
                                 </span>
                             </div>
                             <AlertCircle className="h-7 w-7 text-rose-500" />
@@ -618,6 +698,269 @@ export default function AdminEkopDashboard({
                                     ))}
                                 </TableBody>
                             </Table>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* 1. DAFTAR ANGGOTA & PENJUAL TERDAFTAR DI DAERAH (SINKRONISASI ID DAERAH: SBY, LMG, SDA, DLL) */}
+                <Card className="border-2 border-sky-300 dark:border-sky-900 shadow-sm">
+                    <CardHeader className="bg-sky-50/70 dark:bg-sky-950/20 border-b border-sky-100 dark:border-sky-900/40">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                            <div className="flex items-center gap-2.5">
+                                <div className="p-2 bg-sky-600 text-white rounded-xl shadow-xs">
+                                    <Store className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <CardTitle className="text-base font-black text-sky-950 dark:text-sky-200">
+                                            Anggota Juleha Terdaftar Sebagai Penjual di Wilayah {regionName}
+                                        </CardTitle>
+                                        <Badge variant="outline" className="text-sky-700 border-sky-300 font-mono text-[10px]">
+                                            KODE: {regionCode}
+                                        </Badge>
+                                    </div>
+                                    <CardDescription className="text-xs text-neutral-600 dark:text-neutral-400 mt-0.5">
+                                        Anggota disinkronkan otomatis berdasarkan inisial ID (contoh: <code>SBY...</code> &rarr; Surabaya, <code>LMG...</code> &rarr; Lamongan, <code>SDA...</code> &rarr; Sidoarjo).
+                                    </CardDescription>
+                                </div>
+                            </div>
+
+                            <div className="relative w-full md:w-64">
+                                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-neutral-400" />
+                                <input
+                                    type="text"
+                                    value={sellerSearch}
+                                    onChange={(e) => setSellerSearch(e.target.value)}
+                                    placeholder="Cari penjual, ID, toko..."
+                                    className="w-full text-xs pl-8 pr-3 py-1.5 rounded-xl border border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 focus:ring-1 focus:ring-sky-500"
+                                />
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        {registeredSellers.length === 0 ? (
+                            <div className="text-center py-8 text-xs text-neutral-500">
+                                Belum ada anggota yang terdaftar sebagai penjual dengan kode wilayah {regionCode} di sistem ini.
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>No. Anggota (Juleha ID)</TableHead>
+                                            <TableHead>Nama Anggota & Toko</TableHead>
+                                            <TableHead>Kontak & Alamat</TableHead>
+                                            <TableHead>Produk</TableHead>
+                                            <TableHead>Pesanan Lunas</TableHead>
+                                            <TableHead>Total Kontribusi Kas ({regionCode})</TableHead>
+                                            <TableHead className="text-right">Status</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {registeredSellers
+                                            .filter((s) => {
+                                                if (!sellerSearch.trim()) return true;
+                                                const q = sellerSearch.toLowerCase();
+                                                return (
+                                                    s.name.toLowerCase().includes(q) ||
+                                                    s.juleha_id.toLowerCase().includes(q) ||
+                                                    s.shop_name.toLowerCase().includes(q) ||
+                                                    s.phone.toLowerCase().includes(q)
+                                                );
+                                            })
+                                            .map((seller) => (
+                                                <TableRow key={seller.id} className="hover:bg-neutral-50/80 dark:hover:bg-neutral-800/40">
+                                                    <TableCell>
+                                                        <span className="font-mono font-black text-xs px-2.5 py-1 bg-sky-50 dark:bg-sky-950/40 text-sky-800 dark:text-sky-300 rounded-lg border border-sky-200 dark:border-sky-800 inline-block">
+                                                            {seller.juleha_id}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="font-bold text-xs text-neutral-900 dark:text-neutral-100">
+                                                            {seller.name}
+                                                        </div>
+                                                        <span className="text-[11px] text-neutral-500 flex items-center gap-1 mt-0.5 font-medium">
+                                                            <Store className="h-3 w-3 text-sky-600" />
+                                                            {seller.shop_name}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="text-xs font-semibold text-neutral-800 dark:text-neutral-200">
+                                                            📱 {seller.phone}
+                                                        </div>
+                                                        <span className="text-[10px] text-neutral-500 line-clamp-1 mt-0.5">
+                                                            📍 {seller.address}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell className="text-xs">
+                                                        <span className="font-bold text-emerald-700">
+                                                            {seller.live_products_count} Live
+                                                        </span>
+                                                        <span className="text-[10px] text-neutral-400 font-mono block">
+                                                            Total: {seller.total_products_count}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell className="font-mono font-bold text-xs">
+                                                        {seller.total_orders_count} Trx
+                                                    </TableCell>
+                                                    <TableCell className="font-mono font-black text-xs text-emerald-700 dark:text-emerald-400">
+                                                        {formatRupiah(seller.total_ekop_margin)}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <Badge variant="success" className="text-[10px] gap-1">
+                                                            <Check className="h-3 w-3" />
+                                                            <span>Aktif</span>
+                                                        </Badge>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* 2. PANTAU TRANSAKSI & PESANAN MASUK PENJUAL DAERAH INI */}
+                <Card className="border-2 border-emerald-300 dark:border-emerald-900 shadow-sm">
+                    <CardHeader className="bg-emerald-50/70 dark:bg-emerald-950/20 border-b border-emerald-100 dark:border-emerald-900/40">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                            <div className="flex items-center gap-2.5">
+                                <div className="p-2 bg-emerald-600 text-white rounded-xl shadow-xs">
+                                    <Receipt className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <CardTitle className="text-base font-black text-emerald-950 dark:text-emerald-200">
+                                            Pantau Transaksi & Pesanan Masuk Penjual Wilayah {regionName}
+                                        </CardTitle>
+                                        <Badge variant="outline" className="text-emerald-700 border-emerald-300 font-mono text-[10px]">
+                                            MONITORING REALTIME
+                                        </Badge>
+                                    </div>
+                                    <CardDescription className="text-xs text-neutral-600 dark:text-neutral-400 mt-0.5">
+                                        Pantau arus transaksi penjual, pergerakan nomor resi pengiriman kurir, dan akumulasi kas daerah yang dihasilkan.
+                                    </CardDescription>
+                                </div>
+                            </div>
+
+                            <div className="relative w-full md:w-64">
+                                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-neutral-400" />
+                                <input
+                                    type="text"
+                                    value={orderSearch}
+                                    onChange={(e) => setOrderSearch(e.target.value)}
+                                    placeholder="Cari no. pesanan, toko, pembeli..."
+                                    className="w-full text-xs pl-8 pr-3 py-1.5 rounded-xl border border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 focus:ring-1 focus:ring-emerald-500"
+                                />
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        {regionalOrders.length === 0 ? (
+                            <div className="text-center py-8 text-xs text-neutral-500">
+                                Belum ada transaksi atau pesanan masuk dari toko/penjual di wilayah {regionName}.
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>No. Pesanan & Waktu</TableHead>
+                                            <TableHead>Penjual / Toko Anggota</TableHead>
+                                            <TableHead>Pembeli</TableHead>
+                                            <TableHead>Rincian Barang</TableHead>
+                                            <TableHead>Total Tagihan</TableHead>
+                                            <TableHead>Kas Daerah ({regionCode})</TableHead>
+                                            <TableHead>Status Pembayaran</TableHead>
+                                            <TableHead>Resi Kurir</TableHead>
+                                            <TableHead className="text-right">Aksi</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {regionalOrders
+                                            .filter((o) => {
+                                                if (!orderSearch.trim()) return true;
+                                                const q = orderSearch.toLowerCase();
+                                                return (
+                                                    o.order_number.toLowerCase().includes(q) ||
+                                                    o.seller_name.toLowerCase().includes(q) ||
+                                                    o.seller_juleha_id.toLowerCase().includes(q) ||
+                                                    o.shop_name.toLowerCase().includes(q) ||
+                                                    o.buyer_name.toLowerCase().includes(q)
+                                                );
+                                            })
+                                            .map((order) => (
+                                                <TableRow key={order.id} className="hover:bg-neutral-50/80 dark:hover:bg-neutral-800/40">
+                                                    <TableCell>
+                                                        <Link
+                                                            href={route('orders.show', order.order_number)}
+                                                            className="font-mono font-bold text-xs text-[#ee4d2d] hover:underline block"
+                                                        >
+                                                            {order.order_number}
+                                                        </Link>
+                                                        <span className="text-[10px] text-neutral-500 font-mono">
+                                                            {order.created_at}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="text-xs font-bold text-neutral-900 dark:text-neutral-100">
+                                                            {order.seller_name}
+                                                        </div>
+                                                        <span className="font-mono text-[10px] text-sky-700 dark:text-sky-400 font-semibold block">
+                                                            {order.seller_juleha_id} &bull; {order.shop_name}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell className="text-xs font-medium">
+                                                        {order.buyer_name}
+                                                    </TableCell>
+                                                    <TableCell className="text-xs max-w-xs truncate text-neutral-700 dark:text-neutral-300">
+                                                        {order.items_summary}
+                                                    </TableCell>
+                                                    <TableCell className="font-mono font-bold text-xs">
+                                                        {formatRupiah(order.grand_total)}
+                                                    </TableCell>
+                                                    <TableCell className="font-mono font-black text-xs text-emerald-700 dark:text-emerald-400">
+                                                        + {formatRupiah(order.total_ekop_margin)}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Badge
+                                                            variant={order.payment_status === 'paid' ? 'success' : 'warning'}
+                                                            className="text-[10px]"
+                                                        >
+                                                            {order.payment_status === 'paid' ? 'LUNAS' : order.payment_status.toUpperCase()}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="text-xs">
+                                                        {order.waybill ? (
+                                                            <div>
+                                                                <span className="font-mono font-bold text-neutral-900 dark:text-neutral-100 block">
+                                                                    {order.waybill}
+                                                                </span>
+                                                                <span className="text-[10px] text-neutral-500 uppercase">
+                                                                    {order.shipping_courier}
+                                                                </span>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-[10px] text-neutral-400 italic">
+                                                                Menunggu Resi
+                                                            </span>
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <Link
+                                                            href={route('orders.show', order.order_number)}
+                                                            className="inline-flex items-center gap-1 text-xs font-bold text-[#ee4d2d] hover:underline"
+                                                        >
+                                                            <span>Detail</span>
+                                                            <ExternalLink className="h-3 w-3" />
+                                                        </Link>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
                         )}
                     </CardContent>
                 </Card>

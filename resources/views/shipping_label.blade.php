@@ -329,7 +329,14 @@
                 {!! $waybillBarcode !!}
             </div>
             <div class="waybill-number">
-                Nomor Resi - {{ $waybill }}
+                @if(!empty($waybill))
+                    Nomor Resi - {{ $waybill }}
+                @else
+                    <span style="color: #c2410c;">[RESI MENUNGGU KONFIRMASI KURIR]</span>
+                    <span style="font-size: 9px; display: block; font-weight: normal; color: #666; margin-top: 2px;">
+                        Order Ref: {{ $order->biteship_order_id ?: $order->order_number }} &bull; Barcode Referensi Logistik
+                    </span>
+                @endif
             </div>
             <div class="rate-service-line">
                 <span>Ongkos Kirim: <strong>Rp. {{ number_format($order->shipping_cost, 0, ',', '.') }}</strong></span>

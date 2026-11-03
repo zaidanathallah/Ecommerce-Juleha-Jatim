@@ -69,8 +69,8 @@ class BiteshipWebhookController extends Controller
             ], 200);
         }
 
-        // Tangani pembaruan Waybill / Resi
-        if ($waybillId && empty($order->biteship_waybill_id)) {
+        // Tangani pembaruan Waybill / Resi resmi dari kurir
+        if ($waybillId && (empty($order->biteship_waybill_id) || str_starts_with($order->biteship_waybill_id, 'JLH-DFT-'))) {
             $order->biteship_waybill_id = $waybillId;
             Log::info("Order {$order->order_number}: Waybill ID updated to {$waybillId} via Webhook");
         }

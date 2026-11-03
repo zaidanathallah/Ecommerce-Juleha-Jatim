@@ -57,6 +57,23 @@ class User extends Authenticatable
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::saving(function (User $user) {
+            // Otomatis sinkronisasi region_code dan region_name dari awalan Juleha ID anggota
+            // Contoh: SBY22008 -> SBY (Kota Surabaya), LMG220030 -> LMG (Kabupaten Lamongan)
+            if (!empty($user->juleha_id)) {
+                $extractedCode = CentralRegion::extractRegionCodeFromJulehaId($user->juleha_id);
+                if ($extractedCode && (empty($user->region_code) || $user->isDirty('juleha_id'))) {
+                    $user->region_code = $extractedCode;
+                    if (empty($user->region_name) || $user->isDirty('juleha_id')) {
+                        $user->region_name = CentralRegion::findRegionName($extractedCode);
+                    }
+                }
+            }
+        });
+    }
+
     public function isSuperAdmin(): bool
     {
         return $this->role === self::ROLE_SUPER_ADMIN;

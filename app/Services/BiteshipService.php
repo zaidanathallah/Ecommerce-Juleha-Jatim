@@ -198,7 +198,7 @@ class BiteshipService
             if ($response->successful()) {
                 $json = $response->json();
                 $draftId = $json['id'] ?? null;
-                $waybill = $json['courier']['waybill_id'] ?? ('JLH-DFT-' . rand(10000000, 99999999));
+                $waybill = $json['courier']['waybill_id'] ?? null;
 
                 return [
                     'success' => true,
@@ -290,7 +290,7 @@ class BiteshipService
                     'is_draft' => false,
                     'data' => $response->json(),
                     'id' => $response->json('id'),
-                    'waybill_id' => $response->json('courier.waybill_id') ?? ('JLH-' . rand(10000000, 99999999)),
+                    'waybill_id' => $response->json('courier.waybill_id') ?? $response->json('waybill_id') ?? null,
                 ];
             }
 
@@ -440,6 +440,73 @@ class BiteshipService
                 'message' => $e->getMessage(),
             ];
         }
+    }
+
+    /**
+     * Konfirmasi Draft Order menjadi Order Aktif di Biteship (POST /v1/draft_orders/{id}/confirm)
+     * Ini otomatis memotong saldo Biteship dan menerbitkan nomor resi kurir real-time.
+     */
+    public function confirmDraftOrder(string $draftId): array
+    {
+        try {
+            $response = Http::timeout(20)
+                ->withHeaders([
+                    'Authorization' => "Bearer {$this->apiKey}",
+                    'Content-Type' => 'application/json',
+                ])
+                ->post("{$this->baseUrl}/v1/draft_orders/{$draftId}/confirm");
+
+            if ($response->successful()) {
+                $json = $response->json();
+                return [
+                    'success' => true,
+                    'data' => $json,
+                    'order_id' => $json['id'] ?? $draftId,
+                    'waybill_id' => $json['courier']['waybill_id'] ?? $json['waybill_id'] ?? null,
+                ];
+            }
+
+            return [
+                'success' => false,
+                'status' => $response->status(),
+                'message' => $response->json('error') ?? 'Gagal mengonfirmasi draft order ke kurir Biteship',
+                'raw' => $response->json(),
+            ];
+        } catch (Exception $e) {
+            Log::error('Biteship Confirm Draft Order Exception: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Ambil rincian pesanan dari Biteship untuk mengecek apakah resi sudah terbit (GET /v1/orders/{id})
+     */
+    public function getOrderDetails(string $orderId): array
+    {
+        try {
+            $response = Http::timeout(15)
+                ->withHeaders([
+                    'Authorization' => "Bearer {$this->apiKey}",
+                ])
+                ->get("{$this->baseUrl}/v1/orders/{$orderId}");
+
+            if ($response->successful()) {
+                $json = $response->json();
+                return [
+                    'success' => true,
+                    'data' => $json,
+                    'waybill_id' => $json['courier']['waybill_id'] ?? $json['waybill_id'] ?? null,
+                    'status' => $json['status'] ?? null,
+                ];
+            }
+        } catch (Exception $e) {
+            Log::warning("Biteship getOrderDetails exception for {$orderId}: " . $e->getMessage());
+        }
+
+        return ['success' => false];
     }
 
     /**
