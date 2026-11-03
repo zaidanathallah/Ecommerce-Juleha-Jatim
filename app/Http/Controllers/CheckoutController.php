@@ -445,8 +445,14 @@ class CheckoutController extends Controller
         // Kurangi stok
         $product->decrement('stock');
 
-        return redirect()->route('orders.show', $order->order_number)
+        $redirect = redirect()->route('orders.show', $order->order_number)
             ->with('success', "Pesanan {$orderNumber} berhasil dibuat!");
+
+        if (!empty($pgResult['warning'])) {
+            $redirect->with('warning', $pgResult['warning']);
+        }
+
+        return $redirect;
     }
 
     /**

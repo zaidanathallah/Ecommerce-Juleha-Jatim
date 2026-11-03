@@ -36,7 +36,7 @@ class WijayaPayWebhookController extends Controller
 
         // 2. Ambil parameter transaksi
         $refId = $payload['ref_id'] ?? $payload['data']['ref_id'] ?? $payload['order_id'] ?? null;
-        $status = strtolower((string) ($payload['status'] ?? $payload['data']['status'] ?? ''));
+        $status = strtolower((string) ($payload['status_pembayaran'] ?? $payload['status'] ?? $payload['data']['status_pembayaran'] ?? $payload['data']['status'] ?? ''));
 
         if (!$refId) {
             Log::warning('Payment Gateway Webhook Missing ref_id parameter', $payload);

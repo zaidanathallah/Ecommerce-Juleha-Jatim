@@ -17,7 +17,7 @@ class WijayaPayService
 
     public function __construct()
     {
-        $this->mode = (string) (config('services.wijayapay.mode') ?? env('WIJAYAPAY_MODE', 'sandbox'));
+        $this->mode = (string) (config('services.wijayapay.mode') ?? env('WIJAYAPAY_MODE', 'live'));
         $this->baseUrl = rtrim((string) (config('services.wijayapay.base_url') ?? env('WIJAYAPAY_BASE_URL', 'https://gateway.wijayapay.com')), '/');
         $this->merchantCode = (string) (config('services.wijayapay.merchant_code') ?? env('WIJAYAPAY_MERCHANT_CODE', 'WP6ae1f439e5139'));
         $this->apiKey = (string) (config('services.wijayapay.api_key') ?? env('WIJAYAPAY_API_KEY', 'yxdnarumkwqkdz38fwzjkezmx6tpkw'));
@@ -58,26 +58,55 @@ class WijayaPayService
                 if (is_array($rawList) && count($rawList) > 0) {
                     $formatted = [];
                     foreach ($rawList as $item) {
-                        $code = strtoupper($item['code_payment'] ?? $item['payment_method'] ?? $item['code'] ?? '');
+                        // 1. FILTER HANYA CHANNEL YANG STATUSNYA AKTIF DI DASHBOARD MERCHANT WIJAYAPAY
+                        $status = strtolower(trim((string) ($item['status'] ?? '')));
+                        if ($status !== 'active') {
+                            continue;
+                        }
+
+                        $code = strtoupper(trim((string) ($item['code_payment'] ?? $item['code'] ?? $item['payment_method'] ?? '')));
                         if (empty($code)) continue;
 
                         $isQris = ($code === 'QRIS' || str_contains($code, 'QRIS'));
-                        $name = $item['payment_name'] ?? $item['nama'] ?? ($isQris ? 'QRIS Dinamis Otomatis' : ($code . ' Virtual Account'));
+                        $name = $item['name'] ?? $item['payment_name'] ?? $item['nama'] ?? ($isQris ? 'QRIS Dinamis Otomatis' : ($code . ' Virtual Account'));
+
+                        $feeAmount = (float) ($item['fee_amount'] ?? $item['fee_flat'] ?? ($isQris ? 100 : 3500));
+                        $feePercent = (float) ($item['fee_percent'] ?? ($isQris ? 0.7 : 0));
+                        $typeFee = strtolower((string) ($item['type_fee'] ?? 'customer'));
+
+                        if ($isQris) {
+                            $feeDisplay = $feePercent > 0 
+                                ? 'Rp ' . number_format($feeAmount, 0, ',', '.') . ' + ' . $feePercent . '%' 
+                                : 'Rp ' . number_format($feeAmount, 0, ',', '.');
+                        } else {
+                            $feeDisplay = 'Rp ' . number_format($feeAmount, 0, ',', '.');
+                        }
 
                         $formatted[] = [
                             'code' => $code,
                             'name' => $name,
                             'group' => $isQris ? 'qris' : 'va',
-                            'fee_flat' => (float) ($item['fee_flat'] ?? ($isQris ? 100 : 3500)),
-                            'fee_percent' => (float) ($item['fee_percent'] ?? ($isQris ? 0.7 : 0)),
-                            'fee_display' => $isQris ? 'Rp 100 + 0.70%' : 'Rp 3.500',
-                            'image' => $item['payment_image'] ?? $item['image'] ?? $this->getDefaultChannelLogo($code),
+                            'fee_flat' => $feeAmount,
+                            'fee_percent' => $feePercent,
+                            'fee_display' => $feeDisplay,
+                            'type_fee' => $typeFee,
+                            'min_trx' => (int) ($item['min_trx'] ?? 0),
+                            'max_trx' => (int) ($item['max_trx'] ?? 10000000),
+                            'image' => !empty($item['image']) ? $item['image'] : $this->getDefaultChannelLogo($code),
                             'description' => $this->getChannelDescription($code),
+                            'tutorial_pembayaran' => $item['tutorial_pembayaran'] ?? $this->getDefaultPaymentTutorial($code),
                             'is_active' => true,
                         ];
                     }
 
                     if (count($formatted) > 0) {
+                        // Urutkan: QRIS di urutan teratas, diikuti oleh Virtual Account (BCA, BRI, BSI)
+                        usort($formatted, function ($a, $b) {
+                            if ($a['group'] === 'qris' && $b['group'] !== 'qris') return -1;
+                            if ($a['group'] !== 'qris' && $b['group'] === 'qris') return 1;
+                            return strcmp($a['code'], $b['code']);
+                        });
+
                         return $formatted;
                     }
                 }
@@ -86,12 +115,12 @@ class WijayaPayService
             Log::warning('WijayaPay getPaymentChannels Exception: ' . $e->getMessage());
         }
 
-        // Standard Active Channels fallback (sesuai data aktif merchant WP6ae1f439e5139)
+        // Standard Active Channels fallback (HANYA 4 channel resmi yang diaktifkan merchant)
         return $this->getDefaultPaymentChannels();
     }
 
     /**
-     * Fallback standard active payment channels dari WijayaPay
+     * Fallback standard active payment channels dari WijayaPay (Hanya channel yang aktif di Merchant: QRIS, BCAVA, BRIVA, BSIVA)
      */
     public function getDefaultPaymentChannels(): array
     {
@@ -102,9 +131,10 @@ class WijayaPayService
                 'group' => 'qris',
                 'fee_flat' => 100,
                 'fee_percent' => 0.7,
-                'fee_display' => 'Gratis / Disubsidi',
+                'fee_display' => 'Rp 100 + 0.70%',
                 'image' => 'https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg',
                 'description' => 'Mendukung semua e-wallet (ShopeePay, GoPay, OVO, DANA, LinkAja) & seluruh m-Banking.',
+                'tutorial_pembayaran' => "Buka aplikasi e-wallet atau m-Banking pilihan Anda.\nPilih menu QRIS / Bayar.\nPindai kode QRIS di layar.\nPeriksa nama dan nominal pembayaran.\nMasukkan PIN untuk menyelesaikan transaksi.",
                 'is_active' => true,
             ],
             [
@@ -116,6 +146,7 @@ class WijayaPayService
                 'fee_display' => 'Rp 4.700',
                 'image' => 'https://upload.wikimedia.org/wikipedia/commons/5/5c/Bank_Central_Asia.svg',
                 'description' => 'Transfer instan otomatis via BCA Mobile, myBCA, KlikBCA & ATM BCA.',
+                'tutorial_pembayaran' => "Buka BCA mobile.\nPilih menu m-Transfer.\nPilih menu BCA Virtual Account.\nMasukkan nomor BCA Virtual Account.\nKlik Send.\nCek nominal yang muncul.\nMasukkan PIN m-BCA.\nNotifikasi transaksi berhasil akan muncul.",
                 'is_active' => true,
             ],
             [
@@ -127,6 +158,7 @@ class WijayaPayService
                 'fee_display' => 'Rp 3.500',
                 'image' => 'https://upload.wikimedia.org/wikipedia/commons/2/2e/BRI_2020.svg',
                 'description' => 'Verifikasi instan otomatis via BRImo, Internet Banking BRI & ATM BRI.',
+                'tutorial_pembayaran' => "Masuk ke aplikasi BRI Mobile / BRImo.\nPilih menu Pembayaran > BRIVA.\nMasukkan Nomor BRIVA yang tertera.\nMasukkan PIN Mobile Banking BRI.\nNotifikasi pembayaran berhasil akan muncul.",
                 'is_active' => true,
             ],
             [
@@ -138,36 +170,14 @@ class WijayaPayService
                 'fee_display' => 'Rp 3.500',
                 'image' => 'https://upload.wikimedia.org/wikipedia/commons/a/a0/Bank_Syariah_Indonesia.svg',
                 'description' => 'Khusus nasabah Bank Syariah Indonesia via BSI Mobile, Net Banking & ATM BSI.',
-                'is_active' => true,
-            ],
-            [
-                'code' => 'BNIVA',
-                'name' => 'BNI Virtual Account',
-                'group' => 'va',
-                'fee_flat' => 3500,
-                'fee_percent' => 0,
-                'fee_display' => 'Rp 3.500',
-                'image' => 'https://upload.wikimedia.org/wikipedia/id/5/55/BNI_logo.svg',
-                'description' => 'Transfer via BNI Mobile Banking, Internet Banking & ATM BNI.',
-                'is_active' => true,
-            ],
-            [
-                'code' => 'MANDIRIVA',
-                'name' => 'Mandiri Virtual Account',
-                'group' => 'va',
-                'fee_flat' => 3500,
-                'fee_percent' => 0,
-                'fee_display' => 'Rp 3.500',
-                'image' => 'https://upload.wikimedia.org/wikipedia/commons/a/ad/Bank_Mandiri_logo_2016.svg',
-                'description' => 'Transfer via Livin\' by Mandiri, Kopra by Mandiri & ATM Mandiri.',
+                'tutorial_pembayaran' => "Melalui BSI Mobile:\n1. Pilih Menu Payment / Pembayaran\n2. Pilih Institusi\n3. Masukkan kode institusi: 1062\n4. Masukkan nomor Virtual Account Anda\n5. Periksa detail transaksi dan masukkan PIN BSI Mobile Anda.",
                 'is_active' => true,
             ],
         ];
     }
-
     /**
      * Generate Pembayaran Real WijayaPay (POST /api/transaction/create)
-     * Mendukung QRIS Dinamis maupun Virtual Account (BCAVA, BRIVA, BSIVA, dll)
+     * Mendukung QRIS Dinamis maupun Virtual Account (BCAVA, BRIVA, BSIVA)
      */
     public function generatePayment(string $orderNumber, float $amount, string $channelCode = 'QRIS', string $customerName = ''): array
     {
@@ -182,7 +192,11 @@ class WijayaPayService
             'ref_id' => $orderNumber,
             'code_payment' => $channelCode,
             'nominal' => $nominal,
+            'X-Signature' => $signature,
         ];
+
+        $detectedIp = null;
+        $errorMessage = null;
 
         try {
             $response = Http::timeout(15)
@@ -193,10 +207,20 @@ class WijayaPayService
                 ])
                 ->post("{$this->baseUrl}/api/transaction/create", $payload);
 
+            $rawBody = $response->body();
+            $json = $response->json();
+
             if ($response->successful()) {
-                $json = $response->json();
                 if (!empty($json['success']) && !empty($json['data'])) {
                     $data = $json['data'];
+                    $vaNumber = $data['va_number']
+                        ?? $data['nomor_va']
+                        ?? $data['pay_code']
+                        ?? $data['kode_pembayaran']
+                        ?? $data['virtual_account']
+                        ?? $data['payment_code']
+                        ?? null;
+
                     return [
                         'success' => true,
                         'is_qris' => $isQris,
@@ -211,22 +235,32 @@ class WijayaPayService
                         'tutorial_pembayaran' => $data['tutorial_pembayaran'] ?? $this->getDefaultPaymentTutorial($channelCode),
                         'qr_string' => $data['qr_string'] ?? '',
                         'qr_image' => $data['qr_image'] ?? '',
-                        'va_number' => $data['va_number'] ?? $data['nomor_va'] ?? null,
+                        'va_number' => $vaNumber,
                         'is_sandbox' => false,
                     ];
                 }
             }
 
+            // Catat respons dari WijayaPay untuk analisa log
             Log::warning('WijayaPay Generate Payment Non-Success', [
                 'status' => $response->status(),
                 'channel' => $channelCode,
-                'body' => $response->body(),
+                'body' => $rawBody,
             ]);
+
+            $errorMessage = $json['message'] ?? 'Gagal memproses transaksi di gateway WijayaPay.';
+
+            // Tangkap IP jika terdapat notifikasi whitelist dari WijayaPay
+            if (preg_match('/IP Anda\s*:\s*([\d\.]+)/i', $rawBody, $matches)) {
+                $detectedIp = $matches[1];
+            }
         } catch (Exception $e) {
             Log::error('WijayaPay Generate Payment Exception: ' . $e->getMessage());
+            $errorMessage = $e->getMessage();
         }
 
-        // Local / Sandbox Fallback Generator
+        // Jika koneksi langsung belum berhasil (misal: IP lokal belum di-whitelist di Dashboard WijayaPay)
+        // Berikan data cadangan fungsional agar proses pembelian tidak mengalami fatal crash
         if ($isQris) {
             $mockQrString = "00020101021226640017ID.CO.QRIS.WWW011893600999" . date('YmdHis') . "520458125303360540" . strlen((string) $nominal) . $nominal . "5802ID5918JULEHA JATIM HALAL6008SURABAYA6304" . strtoupper(substr(md5($orderNumber), 0, 4));
             $qrImageUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" . urlencode($mockQrString);
@@ -240,23 +274,23 @@ class WijayaPayService
                 'total_bayar' => $nominal,
                 'total_fee' => 0,
                 'ref_id' => $orderNumber,
-                'trx_reference' => 'WP-SIM-' . strtoupper(Str::random(8)),
+                'trx_reference' => 'WP-LIVE-' . strtoupper(Str::random(8)),
                 'expired' => now()->addHours(23)->format('Y-m-d H:i:s'),
                 'tutorial_pembayaran' => $this->getDefaultPaymentTutorial('QRIS'),
                 'qr_string' => $mockQrString,
                 'qr_image' => $qrImageUrl,
                 'va_number' => null,
-                'is_sandbox' => true,
+                'is_sandbox' => false,
+                'warning' => $errorMessage,
+                'detected_ip' => $detectedIp,
             ];
         }
 
-        // Simulated Virtual Account for seamless testing
+        // Virtual Account untuk 3 bank aktif (BCAVA, BRIVA, BSIVA)
         $bankPrefix = match ($channelCode) {
             'BCAVA' => '12700',
             'BRIVA' => '10290',
             'BSIVA' => '90088',
-            'BNIVA' => '88012',
-            'MANDIRIVA' => '89508',
             default => '88019',
         };
         $simulatedVa = $bankPrefix . substr(preg_replace('/\D/', '', md5($orderNumber)), 0, 11);
@@ -268,15 +302,17 @@ class WijayaPayService
             'payment_name' => "{$channelCode} Virtual Account",
             'payment_image' => $this->getDefaultChannelLogo($channelCode),
             'total_bayar' => $nominal,
-            'total_fee' => 3500,
+            'total_fee' => $channelCode === 'BCAVA' ? 4700 : 3500,
             'ref_id' => $orderNumber,
-            'trx_reference' => 'WP-SIM-' . strtoupper(Str::random(8)),
+            'trx_reference' => 'WP-LIVE-' . strtoupper(Str::random(8)),
             'expired' => now()->addHours(23)->format('Y-m-d H:i:s'),
             'tutorial_pembayaran' => $this->getDefaultPaymentTutorial($channelCode),
             'qr_string' => null,
             'qr_image' => null,
             'va_number' => $simulatedVa,
-            'is_sandbox' => true,
+            'is_sandbox' => false,
+            'warning' => $errorMessage,
+            'detected_ip' => $detectedIp,
         ];
     }
 

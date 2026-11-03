@@ -117,7 +117,7 @@ export default function CheckoutIndex({ product, availableVouchers = [], payment
     const [isLoadingRates, setIsLoadingRates] = useState(false);
     const [ratesError, setRatesError] = useState<string | null>(null);
 
-    // Saluran pembayaran resmi dari WijayaPay
+    // Saluran pembayaran resmi dari WijayaPay (Hanya channel aktif merchant: QRIS, BCAVA, BRIVA, BSIVA)
     const channels: PaymentChannelOption[] = (paymentChannels && paymentChannels.length > 0)
         ? paymentChannels
         : [
@@ -127,7 +127,7 @@ export default function CheckoutIndex({ product, availableVouchers = [], payment
                 group: 'qris',
                 fee_flat: 100,
                 fee_percent: 0.7,
-                fee_display: 'Gratis / Disubsidi',
+                fee_display: 'Rp 100 + 0.70%',
                 image: 'https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg',
                 description: 'Mendukung semua e-wallet (ShopeePay, GoPay, OVO, DANA, LinkAja) & seluruh m-Banking.',
                 is_active: true,
@@ -163,28 +163,6 @@ export default function CheckoutIndex({ product, availableVouchers = [], payment
                 fee_display: 'Rp 3.500',
                 image: 'https://upload.wikimedia.org/wikipedia/commons/a/a0/Bank_Syariah_Indonesia.svg',
                 description: 'Khusus nasabah Bank Syariah Indonesia via BSI Mobile, Net Banking & ATM BSI.',
-                is_active: true,
-            },
-            {
-                code: 'BNIVA',
-                name: 'BNI Virtual Account',
-                group: 'va',
-                fee_flat: 3500,
-                fee_percent: 0,
-                fee_display: 'Rp 3.500',
-                image: 'https://upload.wikimedia.org/wikipedia/id/5/55/BNI_logo.svg',
-                description: 'Transfer via BNI Mobile Banking, Internet Banking & ATM BNI.',
-                is_active: true,
-            },
-            {
-                code: 'MANDIRIVA',
-                name: 'Mandiri Virtual Account',
-                group: 'va',
-                fee_flat: 3500,
-                fee_percent: 0,
-                fee_display: 'Rp 3.500',
-                image: 'https://upload.wikimedia.org/wikipedia/commons/a/ad/Bank_Mandiri_logo_2016.svg',
-                description: 'Transfer via Livin\' by Mandiri, Kopra by Mandiri & ATM Mandiri.',
                 is_active: true,
             },
         ];
@@ -586,13 +564,13 @@ export default function CheckoutIndex({ product, availableVouchers = [], payment
                                                                 : 'border-neutral-200 hover:border-neutral-300 bg-white dark:bg-neutral-900'
                                                         }`}
                                                     >
-                                                        <div className={`p-2 rounded-xl shrink-0 mt-0.5 shadow-xs flex items-center justify-center ${
-                                                            isQris ? 'bg-[#ee4d2d] text-white' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 border border-neutral-200'
-                                                        }`}>
-                                                            {isQris ? (
-                                                                <QrCode className="h-5 w-5" />
+                                                        <div className="p-1.5 rounded-xl shrink-0 mt-0.5 shadow-xs flex items-center justify-center bg-white dark:bg-neutral-800 border border-neutral-200 h-11 w-11">
+                                                            {ch.image ? (
+                                                                <img src={ch.image} alt={ch.name} className="h-7 w-7 object-contain" />
+                                                            ) : isQris ? (
+                                                                <QrCode className="h-6 w-6 text-[#ee4d2d]" />
                                                             ) : (
-                                                                <Building2 className="h-5 w-5 text-[#2b3990]" />
+                                                                <Building2 className="h-6 w-6 text-[#2b3990]" />
                                                             )}
                                                         </div>
 

@@ -32,7 +32,7 @@ return [
     ],
 
     'wijayapay' => [
-        'mode' => env('WIJAYAPAY_MODE', 'sandbox'),
+        'mode' => env('WIJAYAPAY_MODE', 'live'),
         'base_url' => env('WIJAYAPAY_BASE_URL', 'https://gateway.wijayapay.com'),
         'merchant_code' => env('WIJAYAPAY_MERCHANT_CODE', 'WP6ae1f439e5139'),
         'api_key' => env('WIJAYAPAY_API_KEY', 'yxdnarumkwqkdz38fwzjkezmx6tpkw'),
