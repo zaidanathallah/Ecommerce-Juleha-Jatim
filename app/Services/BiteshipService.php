@@ -410,6 +410,39 @@ class BiteshipService
     }
 
     /**
+     * Hapus / Batalkan Draft Order di Biteship (DELETE /v1/draft_orders/{id})
+     */
+    public function deleteDraftOrder(string $draftId): array
+    {
+        try {
+            $response = Http::timeout(15)
+                ->withHeaders([
+                    'Authorization' => "Bearer {$this->apiKey}",
+                ])
+                ->delete("{$this->baseUrl}/v1/draft_orders/{$draftId}");
+
+            if ($response->successful()) {
+                return [
+                    'success' => true,
+                    'data' => $response->json(),
+                ];
+            }
+
+            return [
+                'success' => false,
+                'message' => $response->json('error') ?? 'Gagal membatalkan draft order Biteship',
+                'raw' => $response->json(),
+            ];
+        } catch (Exception $e) {
+            Log::error('Biteship Delete Draft Order Exception: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
      * Lacak Resi Pengiriman Real-time via Biteship Tracking API
      * Mendukung GET /v1/trackings/{waybill_id}/couriers/{courier_code} dan GET /v1/trackings/{order_id}
      */

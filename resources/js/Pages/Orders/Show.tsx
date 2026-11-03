@@ -57,6 +57,7 @@ export default function OrderShow({ order }: Props) {
     const isBuyer = currentUser?.id === order.buyer_id;
     const isSeller = currentUser?.id === order.seller_id;
     const isAdmin = currentUser?.role === 'super_admin' || currentUser?.role === 'admin_ekop';
+    const isSuperAdmin = currentUser?.role === 'super_admin';
 
     const isPaid = order.payment_status === 'paid';
     const isCancelled = order.payment_status === 'cancelled';
@@ -567,6 +568,19 @@ export default function OrderShow({ order }: Props) {
                                 PAKET DITERIMA
                             </Badge>
                         )}
+
+                        {!isCancelled && !isDelivered && order.shipping_status !== 'in_transit' && (isBuyer || isSeller || isAdmin) && (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setIsCancelModalOpen(true)}
+                                className="text-xs font-bold rounded-xl border-neutral-300 text-neutral-600 hover:text-red-600 hover:border-red-300 hover:bg-red-50 h-7 px-2.5 gap-1"
+                            >
+                                <XCircle className="h-3.5 w-3.5" />
+                                Batalkan Pesanan
+                            </Button>
+                        )}
                     </div>
                 </div>
 
@@ -809,7 +823,7 @@ export default function OrderShow({ order }: Props) {
                                             </span>
                                         </div>
 
-                                        {!isPaid && !isCancelled && !isExpired && (
+                                        {!isPaid && !isCancelled && !isExpired && isSuperAdmin && (
                                             <form onSubmit={submitSimulateQris} className="pt-1">
                                                 <Button
                                                     type="submit"
@@ -818,7 +832,7 @@ export default function OrderShow({ order }: Props) {
                                                     className="w-full text-xs font-bold border-indigo-200 text-[#2b3990] hover:bg-indigo-50 h-8 gap-1"
                                                 >
                                                     <Sparkles className="h-3.5 w-3.5" />
-                                                    <span>Simulasi Bayar Selesai (Verifikasi Instan LUNAS & Pickup Kurir)</span>
+                                                    <span>Simulasi Bayar Selesai (Khusus Super Admin: Verifikasi Instan LUNAS & Pickup Kurir)</span>
                                                 </Button>
                                             </form>
                                         )}
@@ -925,7 +939,7 @@ export default function OrderShow({ order }: Props) {
                                             </span>
                                         </div>
 
-                                        {!isPaid && !isCancelled && !isExpired && (
+                                        {!isPaid && !isCancelled && !isExpired && isSuperAdmin && (
                                             <form onSubmit={submitSimulateQris} className="pt-1">
                                                 <Button
                                                     type="submit"
@@ -934,7 +948,7 @@ export default function OrderShow({ order }: Props) {
                                                     className="w-full text-xs font-bold border-orange-200 text-[#ee4d2d] hover:bg-orange-50 h-8 gap-1"
                                                 >
                                                     <Sparkles className="h-3.5 w-3.5" />
-                                                    <span>Simulasi Bayar Selesai (Verifikasi Instan LUNAS & Pickup Kurir)</span>
+                                                    <span>Simulasi Bayar Selesai (Khusus Super Admin: Verifikasi Instan LUNAS & Pickup Kurir)</span>
                                                 </Button>
                                             </form>
                                         )}

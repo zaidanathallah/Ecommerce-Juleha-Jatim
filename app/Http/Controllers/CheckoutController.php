@@ -573,16 +573,31 @@ class CheckoutController extends Controller
         $user = Auth::user();
         $order = Order::with('items')->where('order_number', $orderNumber)->firstOrFail();
 
-        // Otorisasi: hanya pembeli pemilik pesanan atau admin
-        if ($order->buyer_id !== $user->id && !$user->isSuperAdmin() && !$user->isAdminEkop()) {
+        // Otorisasi: hanya pembeli pemilik pesanan, penjual, atau admin
+        if ($order->buyer_id !== $user->id && $order->seller_id !== $user->id && !$user->isSuperAdmin() && !$user->isAdminEkop()) {
             abort(403, 'Anda tidak berhak membatalkan pesanan ini.');
         }
 
-        if ($order->payment_status !== Order::PAYMENT_PENDING && $order->payment_status !== Order::PAYMENT_AWAITING_CONFIRMATION) {
-            return back()->with('error', 'Hanya pesanan yang belum dibayar yang dapat dibatalkan.');
+        // Cek jika pesanan sudah dalam perjalanan kurir atau sudah selesai
+        if ($order->shipping_status === Order::SHIPPING_IN_TRANSIT || $order->shipping_status === Order::SHIPPING_DELIVERED) {
+            return back()->with('error', 'Pesanan sedang dalam proses pengantaran kurir atau sudah selesai, tidak dapat dibatalkan.');
         }
 
-        $reason = $request->input('reason', 'Dibatalkan oleh pembeli');
+        if ($order->payment_status === Order::PAYMENT_CANCELLED || $order->shipping_status === Order::SHIPPING_CANCELLED) {
+            return back()->with('error', 'Pesanan ini sudah dibatalkan sebelumnya.');
+        }
+
+        $reason = $request->input('reason', 'Dibatalkan oleh pembeli/penjual');
+
+        // Batalkan juga draft / order pengiriman di Biteship jika ada
+        if (!empty($order->biteship_order_id)) {
+            try {
+                $this->biteshipService->deleteDraftOrder($order->biteship_order_id);
+                $this->biteshipService->cancelOrder($order->biteship_order_id, $reason);
+            } catch (\Exception $e) {
+                Log::warning("Biteship cancel failed for order {$order->order_number}: " . $e->getMessage());
+            }
+        }
 
         DB::transaction(function () use ($order, $reason) {
             $order->update([
@@ -883,10 +898,16 @@ class CheckoutController extends Controller
     }
 
     /**
-     * Simulasi Pembayaran QRIS Dinamis LUNAS (Verifikasi LUNAS & Pickup Kurir Otomatis)
+     * Simulasi Pembayaran QRIS Dinamis LUNAS (Khusus Pengujian Super Admin)
      */
     public function simulateQrisPaid(string $orderNumber): RedirectResponse
     {
+        /** @var User $user */
+        $user = Auth::user();
+        if (!$user || !$user->isSuperAdmin()) {
+            abort(403, 'Akses ditolak. Fitur simulasi pembayaran ini hanya khusus untuk Super Admin.');
+        }
+
         $order = Order::where('order_number', $orderNumber)->firstOrFail();
 
         if ($order->payment_status !== Order::PAYMENT_PAID) {
